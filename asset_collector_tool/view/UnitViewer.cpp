@@ -1,0 +1,571 @@
+// Copyright (C) 2012-2017 Promotion Software GmbH
+
+
+//[-------------------------------------------------------]
+//[ Includes                                              ]
+//[-------------------------------------------------------]
+#include "asset_collector_tool/PrecompiledHeader.h"
+#include "asset_collector_tool/view/UnitViewer.h"
+#include "ui_UnitViewer.h" // Automatically created by Qt's uic (output directory is "tmp\qt\uic\qsf_editor" within the hand configured Visual Studio files, another directory when using CMake)
+
+
+#include <qsf_editor/EditorHelper.h>
+#include <qsf/QsfHelper.h>
+#include <qsf/log/LogSystem.h>
+
+//Assets 
+#include <qsf/asset/helper/AssetDependencyCollector.h>
+#include <qsf/asset/AssetProxy.h>
+#include <qsf/asset/project/AssetPackage.h>
+#include <qsf/asset/project/Project.h>
+#include <qsf_editor/asset/AssetEditHelper.h>
+#include <qsf_editor/asset/import/AssetImportManager.h>
+
+//access mods
+#include <em5/modding/ModSystem.h>
+#include <em5\EM5Helper.h>
+#include <em5/plugin/Plugin.h>
+
+//open url
+#include <qsf\platform\PlatformSystem.h>
+
+#include <qsf\message\MessageSystem.h>
+#include <qsf/log/LogSystem.h>
+
+
+#include <qsf/prototype/PrototypeSystem.h>
+#include <qsf/prototype/PrototypeManager.h>
+#include <qsf/prototype/PrototypeHelper.h>
+#include "qsf_editor/selection/layer/LayerSelectionManager.h"
+#include <qsf/asset/Asset.h>
+#include <qsf/prototype/helper/PrefabContent.h>
+#include <qsf/prototype/BasePrototypeManager.h>
+
+#include <qsf/renderer/mesh/MeshComponent.h>
+#include <qsf/renderer/debug/DebugBoxComponent.h>
+#include <qsf/prototype/helper/PrefabContent.h>
+
+//ops
+
+#include <qsf_editor_base/operation/CompoundOperation.h>
+#include <qsf_editor_base/operation/entity/CreateEntityOperation.h>
+#include <qsf_editor_base/operation/entity/DestroyEntityOperation.h>
+#include <qsf_editor_base/operation/layer/CreateLayerOperation.h>
+#include <qsf_editor_base/operation/layer/SetLayerPropertyOperation.h>
+#include <qsf_editor_base/operation/data/BackupPrototypeOperationData.h>
+#include <qsf_editor_base/operation/data/BackupComponentOperationData.h>
+#include <qsf_editor_base/operation/component/CreateComponentOperation.h>
+#include <qsf_editor_base/operation/component/DestroyComponentOperation.h>
+#include <qsf_editor_base/operation/component/SetComponentPropertyOperation.h>
+#include <qsf_editor/operation/entity/EntityOperationHelper.h>
+
+#include <qsf/map/map.h>
+#include <qsf_editor/map/MapHelper.h>
+#include <qsf/map/EntityHelper.h>
+#include <qsf\map\Entity.h>
+#include <qsf\component\base\MetadataComponent.h>
+#include <em5\component\vehicle\VehicleComponent.h>
+#include <em5\component\vehicle\RoadVehicleComponent.h>
+#include <em5\plugin\Jobs.h>
+#include <qsf/component/link/LinkComponent.h>
+//[-------------------------------------------------------]
+//[ Namespace                                             ]
+//[-------------------------------------------------------]
+namespace user
+{
+	namespace editor
+	{
+
+		using boost::lexical_cast;
+		using boost::bad_lexical_cast;
+		//[-------------------------------------------------------]
+		//[ Public definitions                                    ]
+		//[-------------------------------------------------------]
+		const uint32 UnitViewer::PLUGINABLE_ID = qsf::StringHash("qsf::editor::UnitViewer");
+
+
+		//[-------------------------------------------------------]
+		//[ Public methods                                        ]
+		//[-------------------------------------------------------]
+		UnitViewer::UnitViewer(qsf::editor::ViewManager* viewManager, QWidget* qWidgetParent) :
+			View(viewManager, qWidgetParent),
+			mUiUnitViewer(nullptr)
+		{
+			// Add the created Qt dock widget to the given Qt main window and tabify it for better usability
+			addViewAndTabify(reinterpret_cast<QMainWindow&>(*qWidgetParent), Qt::RightDockWidgetArea);
+
+		}
+
+		UnitViewer::~UnitViewer()
+		{
+			mTireJob.unregister();
+			// Destroy the UI view instance
+			if (nullptr != mUiUnitViewer)
+			{
+				qsf::editor::EntitySelectionManager& entitySelectionManager = QSF_EDITOR_SELECTION_SYSTEM.getSafe<qsf::editor::EntitySelectionManager>();
+				entitySelectionManager.Selected.disconnect(boost::bind(&UnitViewer::onSelectionChanged, this, _1));
+				delete mUiUnitViewer;
+			}
+		}
+
+
+		//[-------------------------------------------------------]
+		//[ Protected virtual qsf::editor::View methods           ]
+		//[-------------------------------------------------------]
+		void UnitViewer::retranslateUi()
+		{
+		
+			// Retranslate the content of the UI, this automatically clears the previous content
+			mUiUnitViewer->retranslateUi(this);
+		}
+
+		void UnitViewer::changeVisibility(bool visible)
+		{
+			// Lazy evaluation: If the view is shown the first time, create its content
+			if (visible && nullptr == mUiUnitViewer)
+			{
+				// Setup the view content
+				QWidget* contentWidget = new QWidget(this);
+				{
+
+					// Load content to widget
+					mUiUnitViewer = new Ui::UnitViewer();
+					mUiUnitViewer->setupUi(contentWidget);
+				}
+
+				// Set content to view
+				setWidget(contentWidget);
+				// Connect Qt signals/slots
+				connect(mUiUnitViewer->open_door,SIGNAL(clicked(bool)),this,SLOT(onPushOpenDoorButton(bool)));
+				connect(mUiUnitViewer->close_door, SIGNAL(clicked(bool)), this, SLOT(onPushCloseDoorButton(bool)));
+				connect(mUiUnitViewer->blinker,SIGNAL(clicked(bool)),this,SLOT(OnPushBlinker(bool)));
+				connect(mUiUnitViewer->bluelight, SIGNAL(clicked(bool)), this, SLOT(OnPushBlueLight(bool)));
+				connect(mUiUnitViewer->headlight, SIGNAL(clicked(bool)), this, SLOT(OnPushHeadLight(bool)));
+				connect(mUiUnitViewer->rotatetires, SIGNAL(clicked(bool)), this, SLOT(OnPushRotateTires(bool)));
+				connect(mUiUnitViewer->select_entity, SIGNAL(clicked(bool)), this, SLOT(onPushSelectEntity(bool)));
+				//connect(mUiUnitViewer->setsimulting, SIGNAL(clicked(bool)), this, SLOT(OnPushSetSimulating(bool)));
+				//connect(mUITrainTrackTool->pushButton_fill_tree_view, SIGNAL(clicked(bool)), this, SLOT(CreatePathEntities(bool)));
+				/*connect(mUiUnitViewer->pushCheckUnit, SIGNAL(clicked(bool)), this, SLOT(onPushSelectButton(bool)));
+				connect(mUiUnitViewer->loadexternallog, SIGNAL(clicked(bool)), this, SLOT(OnLoadLogFile(bool)));
+				connect(mUiUnitViewer->searhprototype, SIGNAL(clicked(bool)), this, SLOT(OnPushSearchForPrototype(bool)));
+				connect(mUiUnitViewer->export_2, SIGNAL(clicked(bool)), this, SLOT(OnSaveLogFile(bool)));*/
+
+				//connect(mUiUnitViewer->comboBoxType, SIGNAL(currentIndexChanged(int)), this, SLOT(onCurrentIndexChanged(int)));
+				qsf::editor::EntitySelectionManager& entitySelectionManager = QSF_EDITOR_SELECTION_SYSTEM.getSafe<qsf::editor::EntitySelectionManager>();
+				auto con2 = &entitySelectionManager.Selected.connect(boost::bind(&UnitViewer::onSelectionChanged, this, _1), boost::signals2::at_back);
+				if (con2 == nullptr)
+				{
+					QSF_LOG_PRINTS(INFO, "entitySelectionManager :: Slot connection failed 2 ")
+				}
+				
+			}
+			else if (!visible && nullptr == mUiUnitViewer)
+			{
+
+			}
+
+		}
+
+
+		//[-------------------------------------------------------]
+		//[ Private methods                                       ]
+		//[-------------------------------------------------------]
+		void UnitViewer::rebuildGui()
+		{
+		}
+
+		void UnitViewer::onPushOpenDoorButton(const bool pressed)
+		{
+			for (auto a : GetSelectedEntity())
+			{
+				auto comp = a->getComponent<em5::VehicleComponent>();
+				if(comp == nullptr)
+				continue;
+				for(auto b : comp->getVehicleDoors())
+				{
+					auto Door = QSF_MAINMAP.getEntityById(b); 
+					if(Door == nullptr)
+					continue;
+					em5::DoorComponent* DoorC = Door->getComponent<em5::DoorComponent>();
+					if(DoorC == nullptr)
+					continue;
+					if(DoorC->getDoorState() != DoorC->DOOR_CLOSED)
+					continue;
+					DoorC->openDoor();
+
+				}
+			}
+			for (auto Door : GetSelectedEntity())
+			{
+				auto comp = Door->getComponent<em5::DoorComponent>();
+				if (comp == nullptr)
+					continue;
+					em5::DoorComponent* DoorC = Door->getComponent<em5::DoorComponent>();
+					if (DoorC == nullptr)
+						continue;
+					if (DoorC->getDoorState() != DoorC->DOOR_CLOSED)
+						continue;
+					DoorC->openDoor();
+
+			}
+		}
+
+		void UnitViewer::onPushCloseDoorButton(const bool pressed)
+		{
+			for (auto a : GetSelectedEntity())
+			{
+				auto comp = a->getComponent<em5::VehicleComponent>();
+				if (comp == nullptr)
+					continue;
+				for (auto b : comp->getVehicleDoors())
+				{
+					auto Door = QSF_MAINMAP.getEntityById(b);
+					if (Door == nullptr)
+						continue;
+					em5::DoorComponent* DoorC = Door->getComponent<em5::DoorComponent>();
+					if (DoorC == nullptr)
+						continue;
+					if (DoorC->getDoorState() != DoorC->DOOR_OPEN)
+						continue;
+					DoorC->closeDoor();
+
+				}
+			}
+			for (auto Door : GetSelectedEntity())
+			{
+				auto comp = Door->getComponent<em5::DoorComponent>();
+				if (comp == nullptr)
+					continue;
+				em5::DoorComponent* DoorC = Door->getComponent<em5::DoorComponent>();
+				if (DoorC == nullptr)
+					continue;
+				if (DoorC->getDoorState() != DoorC->DOOR_OPEN)
+					continue;
+				DoorC->closeDoor();
+
+			}
+		}
+
+		void UnitViewer::onSelectionChanged(uint64 Id)
+		{
+			auto ent = QSF_MAINMAP.getEntityById(Id);
+			if(ent == nullptr)
+			{
+				mUiUnitViewer->bluelight->setChecked(false);
+				mUiUnitViewer->headlight->setChecked(false);
+				mUiUnitViewer->blinker->setChecked(false);
+				return;
+			}
+			auto Vec = ent->getComponent<em5::VehicleComponent>();
+			if (Vec == nullptr)
+			{
+				mUiUnitViewer->bluelight->setChecked(false);
+				mUiUnitViewer->headlight->setChecked(false);
+				mUiUnitViewer->blinker->setChecked(false);
+				return;
+			}
+			auto RoV = ent->getComponent<em5::RoadVehicleComponent>();
+			if (RoV == nullptr)
+			{
+				mUiUnitViewer->bluelight->setChecked(false);
+				mUiUnitViewer->headlight->setChecked(false);
+				mUiUnitViewer->blinker->setChecked(false);
+				return;
+			}
+			ResetWheelsAfterDeselection();
+			AffectedByTire.clear();
+			bool BL = false;
+			for (auto a : RoV->getVehicleLightIdsByType(qsf::game::LightControllerComponent::LIGHTPOSITION_BLUE))
+			{
+				if(QSF_MAINMAP.getEntityById(a) == nullptr)
+				continue;
+				BL = QSF_MAINMAP.getEntityById(a)->getComponent<qsf::game::LightControllerComponent>()->isActive();
+				break;
+			}
+			bool HL = false;
+			for (auto a : RoV->getVehicleLightIdsByType(qsf::game::LightControllerComponent::LIGHTPOSITION_HEAD))
+			{
+				if (QSF_MAINMAP.getEntityById(a) == nullptr)
+					continue;
+				HL = QSF_MAINMAP.getEntityById(a)->getComponent<qsf::game::LightControllerComponent>()->isActive();
+				break;
+			}
+			bool Blinker = false;
+			for (auto a : RoV->getVehicleLightIdsByType(qsf::game::LightControllerComponent::LIGHTPOSITION_LEFT_BLINKER))
+			{
+				if (QSF_MAINMAP.getEntityById(a) == nullptr)
+					continue;
+				Blinker = QSF_MAINMAP.getEntityById(a)->getComponent<qsf::game::LightControllerComponent>()->isActive();
+				break;
+			}
+			mUiUnitViewer->bluelight->setChecked(BL);
+			mUiUnitViewer->headlight->setChecked(HL);
+			mUiUnitViewer->blinker->setChecked(Blinker);
+		}
+
+		void UnitViewer::OnPushBlinker(const bool pressed)
+		{
+		
+			bool NewWantedState = mUiUnitViewer->blinker->isChecked();
+			bool AnythingDone = false;
+			for (auto a : GetSelectedEntity())
+			{
+				auto RoV = a->getComponent<em5::RoadVehicleComponent>();
+				if (RoV != nullptr)
+				{
+					if (RoV->getVehicleLightIdsByType(qsf::game::LightControllerComponent::LIGHTPOSITION_LEFT_BLINKER).empty() && RoV->getVehicleLightIdsByType(qsf::game::LightControllerComponent::LIGHTPOSITION_RIGHT_BLINKER).empty())
+					{
+						QSF_LOG_PRINTS(INFO, "Blinker Light vector is empty")
+					}
+					else
+					{
+						for (auto LB : RoV->getVehicleLightIdsByType(qsf::game::LightControllerComponent::LIGHTPOSITION_LEFT_BLINKER))
+						{
+							QSF_MAINMAP.getEntityById(LB)->getComponent<qsf::game::LightControllerComponent>()->setActive(NewWantedState);
+						}
+						for (auto LB : RoV->getVehicleLightIdsByType(qsf::game::LightControllerComponent::LIGHTPOSITION_RIGHT_BLINKER))
+						{
+							QSF_MAINMAP.getEntityById(LB)->getComponent<qsf::game::LightControllerComponent>()->setActive(NewWantedState);
+						}
+						AnythingDone = true;
+					}
+				}
+			}
+			if(AnythingDone)
+				mUiUnitViewer->blinker->setChecked(NewWantedState);
+		}
+
+		void UnitViewer::OnPushBlueLight(const bool pressed)
+		{
+			
+			bool NewWantedState = mUiUnitViewer->bluelight->isChecked();
+			bool AnythingDone = false;
+			for (auto a : GetSelectedEntity())
+			{
+				auto RoV = a->getComponent<em5::RoadVehicleComponent>();
+				if (RoV != nullptr)
+				{
+					if (RoV->getVehicleLightIdsByType(qsf::game::LightControllerComponent::LIGHTPOSITION_BLUE).empty())
+					{
+						QSF_LOG_PRINTS(INFO,"Blue Light vector is empty")
+						//everything emptY?
+					}
+					else
+					{
+						for (auto LB : RoV->getVehicleLightIdsByType(qsf::game::LightControllerComponent::LIGHTPOSITION_BLUE))
+						{
+							QSF_MAINMAP.getEntityById(LB)->getComponent<qsf::game::LightControllerComponent>()->setActive(NewWantedState);
+						}
+						AnythingDone = true;
+					}
+				}
+			}
+			if (AnythingDone)
+				mUiUnitViewer->bluelight->setChecked(NewWantedState);
+		}
+
+		void UnitViewer::OnPushHeadLight(const bool pressed)
+		{
+			bool NewWantedState = mUiUnitViewer->headlight->isChecked();
+			bool AnythingDone = false;
+				for (auto a : GetSelectedEntity())
+				{
+					auto RoV = a->getComponent<em5::RoadVehicleComponent>();
+					if (RoV != nullptr)
+					{
+						if (RoV->getVehicleLightIdsByType(qsf::game::LightControllerComponent::LIGHTPOSITION_HEAD).empty())
+						{
+							//everything emptY?
+							QSF_LOG_PRINTS(INFO, "Head Light vector is empty")
+						}
+						else
+						{
+							for (auto LB : RoV->getVehicleLightIdsByType(qsf::game::LightControllerComponent::LIGHTPOSITION_HEAD))
+							{
+								QSF_MAINMAP.getEntityById(LB)->getComponent<qsf::game::LightControllerComponent>()->setActive(NewWantedState);
+							}
+							AnythingDone = true;
+						}
+					}
+				}
+			if (AnythingDone)
+				mUiUnitViewer->headlight->setChecked(NewWantedState);
+		}
+
+		void UnitViewer::OnPushSetSimulating(const bool pressed)
+		{
+			/*bool NewWantedState = mUiUnitViewer->setsimulting->isChecked();
+			QSF_MAINMAP.setSimulatingMode(NewWantedState);
+			mUiUnitViewer->setsimulting->setChecked(NewWantedState);*/
+		}
+
+		void UnitViewer::OnPushRotateTires(const bool pressed)
+		{
+			bool NewWantedState = mUiUnitViewer->rotatetires->isChecked();
+			if(NewWantedState)
+			{
+			AffectedByTire.clear();
+			for (auto a : GetSelectedEntity())
+			{
+				auto RC = a->getComponent<em5::RoadVehicleComponent>();
+				if(RC == nullptr)
+				continue;
+				AffectedByTire.push_back(a);
+				mTireJob.registerAt(em5::Jobs::ANIMATION_VEHICLE, boost::bind(&UnitViewer::TireJob, this, _1));
+			}
+			}
+			else
+			{
+				ResetWheelsAfterDeselection();
+				AffectedByTire.clear();
+			}
+			mUiUnitViewer->rotatetires->setChecked(NewWantedState);
+			
+		}
+
+		void UnitViewer::onPushSelectEntity(const bool pressed)
+		{
+			auto content = mUiUnitViewer->entity_selection_line_edit->text().toStdString();
+			uint64 unit;
+			try
+			{
+				unit = boost::lexical_cast<uint64>(content);
+			}
+			catch (const std::exception& e)
+			{
+				QSF_LOG_PRINTS(INFO,"UnitViewer ->" << e.what())
+				return;
+			}
+			if(QSF_MAINMAP.getEntityById(unit) == nullptr)
+			return;
+			qsf::editor::EntitySelectionManager& entitySelectionManager = QSF_EDITOR_SELECTION_SYSTEM.getSafe<qsf::editor::EntitySelectionManager>();
+			entitySelectionManager.clearSelection();
+
+			entitySelectionManager.addIdToSelection(unit);
+		}
+
+		void UnitViewer::TireJob(const qsf::JobArguments & jobArguments)
+		{
+			for (auto a : AffectedByTire)
+			{
+				if(a == nullptr)
+				continue;
+				auto RC = a->getComponent<em5::RoadVehicleComponent>();
+				if (RC == nullptr)
+					continue;
+				for (size_t t = 0; t < RC->VehicleWheelsArray.size(); t++)
+				{
+					qsf::Entity* tire = QSF_MAINMAP.getEntityById(RC->VehicleWheelsArray.get(t));
+					if(tire == nullptr)
+					continue;
+					auto WC =tire->getComponent<em5::WheelComponent>();
+					if(WC == nullptr)
+					continue;
+					const float moveDistance = 3.f * jobArguments.getTimePassed().getSeconds();
+					float Val = -1.f*mUiUnitViewer->horizontalSlider->value();
+					if(WC->getWheelType() == WC->WHEELTYPE_FRONT_LEFT || WC->getWheelType() == WC->WHEELTYPE_FRONT_RIGHT)
+					{
+						WC->updateWheel(moveDistance,Val);
+					}
+					else //no support for chains
+					{
+						WC->updateWheel(moveDistance, 0);
+					}
+				}
+			}
+		}
+
+		void UnitViewer::ResetWheelsAfterDeselection()
+		{
+			mTireJob.unregister();
+			for (auto a : AffectedByTire)
+			{
+				if (a == nullptr)
+					continue;
+				auto RC = a->getComponent<em5::RoadVehicleComponent>();
+				if (RC == nullptr)
+					continue;
+				for (size_t t = 0; t < RC->VehicleWheelsArray.size(); t++)
+				{
+					qsf::Entity* tire = QSF_MAINMAP.getEntityById(RC->VehicleWheelsArray.get(t));
+					if (tire == nullptr)
+						continue;
+					auto WC = tire->getComponent<em5::WheelComponent>();
+					if (WC == nullptr)
+						continue;
+					if (WC->getEntity().getComponent<qsf::LinkComponent>() == nullptr)
+						continue;
+					WC->getEntity().getComponent<qsf::LinkComponent>()->setLocalRotation(WC->getOriginalLocalRotation());
+					}
+				}
+				mUiUnitViewer->rotatetires->setChecked(false);
+				mUiUnitViewer->horizontalSlider->setValue(0);
+		}
+
+		std::vector<qsf::Entity*> UnitViewer::GetSelectedEntity()
+		{
+			std::vector<qsf::Entity*> Entities;
+			for(auto a : QSF_EDITOR_SELECTION_SYSTEM.getSafe<qsf::editor::EntitySelectionManager>().getSelectedIdSet())
+			{
+				auto ent = QSF_MAINMAP.getEntityById(a);
+				if(ent == nullptr)
+				continue;
+				Entities.push_back(ent);
+
+			}
+			return Entities;
+		}
+
+
+
+		
+
+
+		//[-------------------------------------------------------]
+		//[ Protected virtual QWidget methods                     ]
+		//[-------------------------------------------------------]
+		void UnitViewer::showEvent(QShowEvent* qShowEvent)
+		{
+			// Call the base implementation
+			View::showEvent(qShowEvent);
+
+			// Perform a GUI rebuild to ensure the GUI content is up-to-date
+			rebuildGui();
+			//boost::signals2::signal<void(const LogMessage&)> NewMessage;
+
+			// Connect Qt signals/slots
+			//connect(&QSF_EDITOR_OPERATION, &qsf::editor::OperationManager::undoOperationExecuted, this, &UnitViewer::onUndoOperationExecuted);
+			//connect(&QSF_EDITOR_OPERATION, &qsf::editor::OperationManager::redoOperationExecuted, this, &UnitViewer::onRedoOperationExecuted);
+		}
+
+		void UnitViewer::hideEvent(QHideEvent* qHideEvent)
+		{
+			// Call the base implementation
+			View::hideEvent(qHideEvent);
+			// Disconnect Qt signals/slots
+			//disconnect(&QSF_EDITOR_OPERATION, &qsf::editor::OperationManager::undoOperationExecuted, this, &UnitViewer::onUndoOperationExecuted);
+			//disconnect(&QSF_EDITOR_OPERATION, &qsf::editor::OperationManager::redoOperationExecuted, this, &UnitViewer::onRedoOperationExecuted);
+		}
+
+
+		//[-------------------------------------------------------]
+		//[ Private Qt slots (MOC)                                ]
+		//[-------------------------------------------------------]
+		void UnitViewer::onPushSelectButton(const bool pressed)
+		{
+
+			
+		}
+
+		
+
+
+	
+
+		
+
+		//[-------------------------------------------------------]
+		//[ Namespace                                             ]
+		//[-------------------------------------------------------]
+	} // editor
+} // user

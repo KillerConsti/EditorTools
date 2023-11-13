@@ -1,0 +1,259 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="GeneratedQtFiles">
+      <UniqueIdentifier>{20512465-f753-4605-ae0c-f41e070d0aa5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\plugin">
+      <UniqueIdentifier>{8d5a3224-081d-45b3-84c1-5275bbb3b665}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GeneratedQtFiles\moc">
+      <UniqueIdentifier>{5d5afe5d-65d6-42d9-9d40-b7c9df3767ed}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GeneratedQtFiles\uic">
+      <UniqueIdentifier>{69fd5cec-3f42-4985-af58-acaec9b58a81}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ressources">
+      <UniqueIdentifier>{fa0a313c-9745-4e9b-beac-402cf8422326}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GeneratedQtFiles\rcc">
+      <UniqueIdentifier>{9dad893a-cf22-4af8-b923-799c811f7173}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\view">
+      <UniqueIdentifier>{c607c049-2686-4250-8c18-b8e66852ff0d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\view\AssetCollectorTool">
+      <UniqueIdentifier>{1e4bdc73-a016-489e-bbcc-84a957000f12}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\terrain_assets">
+      <UniqueIdentifier>{5e5c9df1-ee77-4123-948f-35c1c636e7a6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\terrain_assets\editmodes">
+      <UniqueIdentifier>{f52cb181-d42a-4082-9856-27df4b2140a9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\terrain_assets\tools">
+      <UniqueIdentifier>{89548332-6ed9-49a6-b306-94275dbb1db1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\terrain_assets\tools\terrain">
+      <UniqueIdentifier>{453bfdeb-923c-49db-8a70-ac7feef6572d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\tools">
+      <UniqueIdentifier>{f3b45ec8-5f02-41b8-9703-adafa7e1f08a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\tools\trains">
+      <UniqueIdentifier>{81c4c363-ce3d-4d04-b2e0-a366660248d0}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="asset_collector_tool\Main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="asset_collector_tool\PrecompiledHeader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="asset_collector_tool\plugin\Plugin.cpp">
+      <Filter>Source Files\plugin</Filter>
+    </ClCompile>
+    <ClCompile Include="$(QtMocOutput)\moc_Plugin.cpp">
+      <Filter>GeneratedQtFiles\moc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tmp\qt\rcc\asset_collector_tool\res_ressources.cpp">
+      <Filter>GeneratedQtFiles\rcc</Filter>
+    </ClCompile>
+    <ClCompile Include="asset_collector_tool\view\indicator\AssetCollectorTool.cpp">
+      <Filter>Source Files\view\AssetCollectorTool</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_AssetCollectorTool.cpp">
+      <Filter>GeneratedQtFiles\moc</Filter>
+    </ClCompile>
+    <ClCompile Include="asset_collector_tool\view\indicator\UnitPlacerView.cpp">
+      <Filter>Source Files\view\AssetCollectorTool</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_UnitPlacerView.cpp">
+      <Filter>GeneratedQtFiles\moc</Filter>
+    </ClCompile>
+    <ClCompile Include="asset_collector_tool\view\indicator\ScenarioScriptTool.cpp">
+      <Filter>Source Files\view\AssetCollectorTool</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_ScenarioScriptTool.cpp">
+      <Filter>GeneratedQtFiles\moc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_TerrainEditToolbox.cpp">
+      <Filter>GeneratedQtFiles\moc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_TerrainEditTool.cpp">
+      <Filter>GeneratedQtFiles\moc</Filter>
+    </ClCompile>
+    <ClCompile Include="asset_collector_tool\view\indicator\TerrainEditTool.cpp">
+      <Filter>Source Files\terrain_assets\editmodes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_TerrainpaintingToolbox.cpp">
+      <Filter>GeneratedQtFiles\moc</Filter>
+    </ClCompile>
+    <ClCompile Include="asset_collector_tool\view\indicator\TerrainPaintTool.cpp">
+      <Filter>Source Files\terrain_assets\editmodes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_TerrainPaintTool.cpp">
+      <Filter>GeneratedQtFiles\moc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_TerrainEditColorMapToolbox.cpp">
+      <Filter>GeneratedQtFiles\moc</Filter>
+    </ClCompile>
+    <ClCompile Include="asset_collector_tool\view\indicator\TerrainEditmodeColorMap.cpp">
+      <Filter>Source Files\terrain_assets\editmodes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_TerrainEditmodeColorMap.cpp">
+      <Filter>GeneratedQtFiles\moc</Filter>
+    </ClCompile>
+    <ClCompile Include="asset_collector_tool\qsf_editor\tools\TerrainEditColorMapToolbox.cpp">
+      <Filter>Source Files\terrain_assets\tools\terrain</Filter>
+    </ClCompile>
+    <ClCompile Include="asset_collector_tool\qsf_editor\tools\TerrainEditToolbox.cpp">
+      <Filter>Source Files\terrain_assets\tools\terrain</Filter>
+    </ClCompile>
+    <ClCompile Include="asset_collector_tool\qsf_editor\tools\TerrainpaintingToolbox.cpp">
+      <Filter>Source Files\terrain_assets\tools\terrain</Filter>
+    </ClCompile>
+    <ClCompile Include="asset_collector_tool\tools\TrainTrackTool.cpp">
+      <Filter>Source Files\tools\trains</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_TrainTrackTool.cpp">
+      <Filter>GeneratedQtFiles\moc</Filter>
+    </ClCompile>
+    <ClCompile Include="asset_collector_tool\view\DebugUnitView.cpp">
+      <Filter>Source Files\view</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_DebugUnitView.cpp">
+      <Filter>GeneratedQtFiles\moc</Filter>
+    </ClCompile>
+    <ClCompile Include="asset_collector_tool\view\UnitViewer.cpp">
+      <Filter>Source Files\view</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_UnitViewer.cpp">
+      <Filter>GeneratedQtFiles\moc</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="asset_collector_tool\PrecompiledHeader.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="asset_collector_tool\Export.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_AssetCollectorTool.h">
+      <Filter>GeneratedQtFiles\uic</Filter>
+    </ClInclude>
+    <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_UnitPlacerView.h">
+      <Filter>GeneratedQtFiles\uic</Filter>
+    </ClInclude>
+    <ClInclude Include="asset_collector_tool\view\indicator\ScenarioScriptTool.h">
+      <Filter>Source Files\view\AssetCollectorTool</Filter>
+    </ClInclude>
+    <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_ScenarioScriptTool.h">
+      <Filter>GeneratedQtFiles\uic</Filter>
+    </ClInclude>
+    <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_TerrainEditToolbox.h">
+      <Filter>GeneratedQtFiles\uic</Filter>
+    </ClInclude>
+    <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_TerrainpaintingToolbox.h">
+      <Filter>GeneratedQtFiles\uic</Filter>
+    </ClInclude>
+    <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_TerrainEditColorMapToolbox.h">
+      <Filter>GeneratedQtFiles\uic</Filter>
+    </ClInclude>
+    <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_TerrainEditmodeColorMap.h">
+      <Filter>GeneratedQtFiles\uic</Filter>
+    </ClInclude>
+    <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_TrainTrackTool.h">
+      <Filter>GeneratedQtFiles\uic</Filter>
+    </ClInclude>
+    <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_DebugUnitView.h">
+      <Filter>GeneratedQtFiles\uic</Filter>
+    </ClInclude>
+    <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_UnitViewer.h">
+      <Filter>GeneratedQtFiles\uic</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="asset_collector_tool.pro" />
+    <None Include="asset_collector_tool\plugin\Plugin-inl.h">
+      <Filter>Source Files\plugin</Filter>
+    </None>
+    <None Include="asset_collector_tool\view\indicator\ScenarioScriptTool.ui">
+      <Filter>Source Files\view\AssetCollectorTool</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <QtMOC Include="asset_collector_tool\plugin\Plugin.h">
+      <Filter>Source Files\plugin</Filter>
+    </QtMOC>
+    <QtMOC Include="asset_collector_tool\view\indicator\AssetCollectorTool.h">
+      <Filter>Source Files\view\AssetCollectorTool</Filter>
+    </QtMOC>
+    <QtMOC Include="asset_collector_tool\view\indicator\UnitPlacerView.h">
+      <Filter>Source Files\view\AssetCollectorTool</Filter>
+    </QtMOC>
+    <QtMOC Include="asset_collector_tool\view\indicator\TerrainEditTool.h">
+      <Filter>Source Files\terrain_assets\editmodes</Filter>
+    </QtMOC>
+    <QtMOC Include="asset_collector_tool\view\indicator\TerrainPaintTool.h">
+      <Filter>Source Files\terrain_assets\editmodes</Filter>
+    </QtMOC>
+    <QtMOC Include="asset_collector_tool\view\indicator\TerrainEditmodeColorMap.h">
+      <Filter>Source Files\terrain_assets\editmodes</Filter>
+    </QtMOC>
+    <QtMOC Include="asset_collector_tool\qsf_editor\tools\TerrainEditColorMapToolbox.h">
+      <Filter>Source Files\terrain_assets\tools\terrain</Filter>
+    </QtMOC>
+    <QtMOC Include="asset_collector_tool\qsf_editor\tools\TerrainEditToolbox.h">
+      <Filter>Source Files\terrain_assets\tools\terrain</Filter>
+    </QtMOC>
+    <QtMOC Include="asset_collector_tool\qsf_editor\tools\TerrainpaintingToolbox.h">
+      <Filter>Source Files\terrain_assets\tools\terrain</Filter>
+    </QtMOC>
+    <QtMOC Include="asset_collector_tool\tools\TrainTrackTool.h">
+      <Filter>Source Files\tools\trains</Filter>
+    </QtMOC>
+    <QtMOC Include="asset_collector_tool\view\DebugUnitView.h">
+      <Filter>Source Files\view</Filter>
+    </QtMOC>
+    <QtMOC Include="asset_collector_tool\view\UnitViewer.h">
+      <Filter>Source Files\view</Filter>
+    </QtMOC>
+  </ItemGroup>
+  <ItemGroup>
+    <QtRCC Include="asset_collector_tool\ressources\ressources.qrc">
+      <Filter>ressources</Filter>
+    </QtRCC>
+  </ItemGroup>
+  <ItemGroup>
+    <QtUI Include="asset_collector_tool\view\indicator\AssetCollectorTool.ui">
+      <Filter>Source Files\view\AssetCollectorTool</Filter>
+    </QtUI>
+    <QtUI Include="asset_collector_tool\view\indicator\UnitPlacerView.ui">
+      <Filter>Source Files\view\AssetCollectorTool</Filter>
+    </QtUI>
+    <QtUI Include="asset_collector_tool\qsf_editor\tools\TerrainEditColorMapToolbox.ui">
+      <Filter>Source Files\terrain_assets\tools\terrain</Filter>
+    </QtUI>
+    <QtUI Include="asset_collector_tool\qsf_editor\tools\TerrainEditToolbox.ui">
+      <Filter>Source Files\terrain_assets\tools\terrain</Filter>
+    </QtUI>
+    <QtUI Include="asset_collector_tool\qsf_editor\tools\TerrainpaintingToolbox.ui">
+      <Filter>Source Files\terrain_assets\tools\terrain</Filter>
+    </QtUI>
+    <QtUI Include="asset_collector_tool\tools\TrainTrackTool.ui">
+      <Filter>Source Files\tools\trains</Filter>
+    </QtUI>
+    <QtUI Include="asset_collector_tool\view\DebugUnitView.ui">
+      <Filter>Source Files\view</Filter>
+    </QtUI>
+    <QtUI Include="asset_collector_tool\view\UnitViewer.ui">
+      <Filter>Source Files\view</Filter>
+    </QtUI>
+  </ItemGroup>
+</Project>
