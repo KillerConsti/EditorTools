@@ -22,7 +22,9 @@
 #include <qsf_editor_base/operation/CompoundOperation.h>
 #include <QtWidgets\qtreewidgetitemiterator.h>
 #include <qsf\map\Map.h>
+#include <qsf/debug/request/CompoundDebugDrawRequest.h>
 #include <qsf/job/JobProxy.h>
+#include <qsf/math/Transform.h>
 //[-------------------------------------------------------]
 //[ Forward declarations                                  ]
 //[-------------------------------------------------------]
@@ -138,6 +140,11 @@ namespace user
 			void OnPushSetSimulating(const bool pressed);
 			void OnPushRotateTires(const bool pressed);
 			void onPushSelectEntity(const bool pressed);
+			void onPushAddDebugCircles(const bool pressed);
+			void onPushRemoveDebugCircles(const bool pressed);
+			void onPushUpdateNodes(const bool pressed);
+			void onpushAddAllNodes(const bool pressed);
+
 			
 		private:
 			Ui::UnitViewer*	mUiUnitViewer;	///< UI view instance, can be a null pointer, we have to destroy the instance in case we no longer need it
@@ -146,6 +153,15 @@ namespace user
 			std::vector<qsf::Entity*> AffectedByTire;
 			void TireJob(const qsf::JobArguments& jobArguments);
 			void ResetWheelsAfterDeselection();
+			glm::vec3 ApplyMasterTransformToNode(qsf::Transform* Transform, glm::vec3 NodePos);
+			//Crossings
+			std::vector<uint64> DebugEntitiesFullNodeView;
+			std::vector<uint64> DebugEntities;
+			qsf::CompoundDebugDrawRequest SelectedNodeDebug;
+			uint32 mSelectedNodeDebug;
+			//checks if it element of DebugEntities
+			bool IsEntityAllreadySelected(uint64 Target,std::vector<uint64> CompareList);
+			void UpdateStreetDebugNodes();
 		//[-------------------------------------------------------]
 		//[ CAMP reflection system                                ]
 		//[-------------------------------------------------------]
