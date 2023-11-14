@@ -50,7 +50,7 @@ namespace user
 		//[ Public methods                                        ]
 		//[-------------------------------------------------------]
 		ScenarioScriptTool::ScenarioScriptTool(qsf::editor::ViewManager* viewManager, QWidget* qWidgetParent) :
-			View(viewManager, qWidgetParent),
+			KC_AbstractView(viewManager, qWidgetParent),
 			mUiScenarioScriptTool(nullptr)
 		{
 			// Add the created Qt dock widget to the given Qt main window and tabify it for better usability

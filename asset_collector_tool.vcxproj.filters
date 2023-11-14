@@ -47,6 +47,12 @@
     <Filter Include="Source Files\tools\trains">
       <UniqueIdentifier>{81c4c363-ce3d-4d04-b2e0-a366660248d0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Manager">
+      <UniqueIdentifier>{ed8323c4-9483-439e-9301-7758f7f5ecdc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\component">
+      <UniqueIdentifier>{5bc65a6c-7413-4421-9550-f857a1653260}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="asset_collector_tool\Main.cpp">
@@ -136,6 +142,21 @@
     <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_UnitViewer.cpp">
       <Filter>GeneratedQtFiles\moc</Filter>
     </ClCompile>
+    <ClCompile Include="asset_collector_tool\Manager\GuiManager.cpp">
+      <Filter>Source Files\Manager</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_GuiManager.cpp">
+      <Filter>GeneratedQtFiles\moc</Filter>
+    </ClCompile>
+    <ClCompile Include="asset_collector_tool\component\EditorToolsHelperComponent.cpp">
+      <Filter>Source Files\component</Filter>
+    </ClCompile>
+    <ClCompile Include="asset_collector_tool\view\KC_AbstractView.cpp">
+      <Filter>Source Files\view</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_KC_AbstractView.cpp">
+      <Filter>GeneratedQtFiles\moc</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="asset_collector_tool\PrecompiledHeader.h">
@@ -176,6 +197,12 @@
     </ClInclude>
     <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_UnitViewer.h">
       <Filter>GeneratedQtFiles\uic</Filter>
+    </ClInclude>
+    <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_KC_AbstractView.h">
+      <Filter>GeneratedQtFiles\uic</Filter>
+    </ClInclude>
+    <ClInclude Include="asset_collector_tool\component\EditorToolsHelperComponent.h">
+      <Filter>Source Files\component</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -222,6 +249,12 @@
       <Filter>Source Files\view</Filter>
     </QtMOC>
     <QtMOC Include="asset_collector_tool\view\UnitViewer.h">
+      <Filter>Source Files\view</Filter>
+    </QtMOC>
+    <QtMOC Include="asset_collector_tool\Manager\GuiManager.h">
+      <Filter>Source Files\Manager</Filter>
+    </QtMOC>
+    <QtMOC Include="asset_collector_tool\view\KC_AbstractView.h">
       <Filter>Source Files\view</Filter>
     </QtMOC>
   </ItemGroup>

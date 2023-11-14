@@ -113,6 +113,8 @@
   <ItemGroup>
     <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_AssetCollectorTool.cpp" />
     <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_DebugUnitView.cpp" />
+    <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_GuiManager.cpp" />
+    <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_KC_AbstractView.cpp" />
     <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_ScenarioScriptTool.cpp" />
     <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_TerrainEditColorMapToolbox.cpp" />
     <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_TerrainEditmodeColorMap.cpp" />
@@ -126,7 +128,9 @@
     <ClCompile Include="..\tmp\qt\rcc\asset_collector_tool\res_ressources.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="asset_collector_tool\component\EditorToolsHelperComponent.cpp" />
     <ClCompile Include="asset_collector_tool\Main.cpp" />
+    <ClCompile Include="asset_collector_tool\Manager\GuiManager.cpp" />
     <ClCompile Include="asset_collector_tool\plugin\Plugin.cpp" />
     <ClCompile Include="asset_collector_tool\PrecompiledHeader.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
@@ -144,11 +148,13 @@
     <ClCompile Include="asset_collector_tool\view\indicator\TerrainEditTool.cpp" />
     <ClCompile Include="asset_collector_tool\view\indicator\TerrainPaintTool.cpp" />
     <ClCompile Include="asset_collector_tool\view\indicator\UnitPlacerView.cpp" />
+    <ClCompile Include="asset_collector_tool\view\KC_AbstractView.cpp" />
     <ClCompile Include="asset_collector_tool\view\UnitViewer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_AssetCollectorTool.h" />
     <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_DebugUnitView.h" />
+    <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_KC_AbstractView.h" />
     <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_ScenarioScriptTool.h" />
     <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_TerrainEditColorMapToolbox.h" />
     <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_TerrainEditmodeColorMap.h" />
@@ -157,7 +163,9 @@
     <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_TrainTrackTool.h" />
     <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_UnitPlacerView.h" />
     <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_UnitViewer.h" />
+    <ClInclude Include="asset_collector_tool\component\EditorToolsHelperComponent.h" />
     <ClInclude Include="asset_collector_tool\Export.h" />
+    <QtMOC Include="asset_collector_tool\view\KC_AbstractView.h" />
     <QtMOC Include="asset_collector_tool\view\UnitViewer.h" />
     <QtMOC Include="asset_collector_tool\view\indicator\TerrainEditmodeColorMap.h" />
     <QtMOC Include="asset_collector_tool\view\indicator\TerrainPaintTool.h" />
@@ -166,6 +174,7 @@
     <QtMOC Include="asset_collector_tool\qsf_editor\tools\TerrainEditColorMapToolbox.h" />
     <QtMOC Include="asset_collector_tool\tools\TrainTrackTool.h" />
     <QtMOC Include="asset_collector_tool\view\DebugUnitView.h" />
+    <QtMOC Include="asset_collector_tool\Manager\GuiManager.h" />
     <ClInclude Include="asset_collector_tool\view\indicator\ScenarioScriptTool.h" />
     <QtMOC Include="asset_collector_tool\view\indicator\TerrainEditTool.h" />
     <QtMOC Include="asset_collector_tool\view\indicator\AssetCollectorTool.h" />

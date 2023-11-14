@@ -14,6 +14,7 @@
 
 #include <camp/userobject.hpp>
 
+#include <asset_collector_tool\view\KC_AbstractView.h>
 
 //[-------------------------------------------------------]
 //[ Forward declarations                                  ]
@@ -51,7 +52,7 @@ namespace user
 		*  @note
 		*    - The UI is created via source code
 		*/
-		class ScenarioScriptTool : public qsf::editor::View
+		class ScenarioScriptTool : public KC_AbstractView
 		{
 
 

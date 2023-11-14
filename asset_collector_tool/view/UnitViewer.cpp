@@ -88,7 +88,7 @@ namespace user
 		//[-------------------------------------------------------]
 		//[ Public definitions                                    ]
 		//[-------------------------------------------------------]
-		const uint32 UnitViewer::PLUGINABLE_ID = qsf::StringHash("qsf::editor::UnitViewer");
+		const uint32 UnitViewer::PLUGINABLE_ID = qsf::StringHash("user::editor::UnitViewer");
 
 
 		//[-------------------------------------------------------]
@@ -102,6 +102,9 @@ namespace user
 			// Add the created Qt dock widget to the given Qt main window and tabify it for better usability
 			addViewAndTabify(reinterpret_cast<QMainWindow&>(*qWidgetParent), Qt::RightDockWidgetArea);
 
+			
+			//trial and error
+			//
 		}
 
 		UnitViewer::~UnitViewer()
@@ -131,6 +134,7 @@ namespace user
 
 		void UnitViewer::changeVisibility(bool visible)
 		{
+
 			// Lazy evaluation: If the view is shown the first time, create its content
 			if (visible && nullptr == mUiUnitViewer)
 			{
@@ -142,7 +146,6 @@ namespace user
 					mUiUnitViewer = new Ui::UnitViewer();
 					mUiUnitViewer->setupUi(contentWidget);
 				}
-
 				// Set content to view
 				setWidget(contentWidget);
 				// Connect Qt signals/slots
