@@ -51,6 +51,7 @@
 #include <asset_collector_tool\view\indicator\ScenarioScriptTool.h>
 #include <em5\EM5Helper.h>
 #include <em5\game\Game.h>
+#include <QtCore\qcoreapplication.h>
 //[-------------------------------------------------------]
 //[ Namespace                                             ]
 //[-------------------------------------------------------]
@@ -96,7 +97,9 @@ namespace user
 			if (QSF_EDITOR_APPLICATION.getMainWindow() == nullptr)
 				return;
 				if(EM5_GAME.getInstance() != nullptr)
+				{
 				return;
+				}
 			if (ModifyMenuBar())
 				mWaitUntilEditorReady.unregister();
 		}
@@ -221,7 +224,7 @@ namespace user
 				}
 				catch (const std::exception& e)
 				{
-					auto EM = new QErrorMessage(OldMenuBar);
+					auto EM = new QErrorMessage(nullptr);
 					EM->showMessage(e.what());
 					EM->exec();
 				}

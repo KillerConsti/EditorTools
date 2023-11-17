@@ -53,6 +53,9 @@
     <Filter Include="Source Files\component">
       <UniqueIdentifier>{5bc65a6c-7413-4421-9550-f857a1653260}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\kc_terrain">
+      <UniqueIdentifier>{a4f2ba62-4b22-4099-bcc6-926fa62f3ca3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="asset_collector_tool\Main.cpp">
@@ -157,6 +160,18 @@
     <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_KC_AbstractView.cpp">
       <Filter>GeneratedQtFiles\moc</Filter>
     </ClCompile>
+    <ClCompile Include="asset_collector_tool\kc_terrain\TerrainMaterialGenerator.cpp">
+      <Filter>Source Files\kc_terrain</Filter>
+    </ClCompile>
+    <ClCompile Include="asset_collector_tool\kc_terrain\TerrainComponent.cpp">
+      <Filter>Source Files\kc_terrain</Filter>
+    </ClCompile>
+    <ClCompile Include="asset_collector_tool\kc_terrain\TerrainContext.cpp">
+      <Filter>Source Files\kc_terrain</Filter>
+    </ClCompile>
+    <ClCompile Include="asset_collector_tool\kc_terrain\TerrainDefinition.cpp">
+      <Filter>Source Files\kc_terrain</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="asset_collector_tool\PrecompiledHeader.h">
@@ -204,14 +219,29 @@
     <ClInclude Include="asset_collector_tool\component\EditorToolsHelperComponent.h">
       <Filter>Source Files\component</Filter>
     </ClInclude>
+    <ClInclude Include="asset_collector_tool\kc_terrain\TerrainMaterialGenerator.h">
+      <Filter>Source Files\kc_terrain</Filter>
+    </ClInclude>
+    <ClInclude Include="asset_collector_tool\kc_terrain\TerrainComponent.h">
+      <Filter>Source Files\kc_terrain</Filter>
+    </ClInclude>
+    <ClInclude Include="asset_collector_tool\kc_terrain\TerrainComponent-inl.h">
+      <Filter>Source Files\kc_terrain</Filter>
+    </ClInclude>
+    <ClInclude Include="asset_collector_tool\kc_terrain\TerrainDefinition.h">
+      <Filter>Source Files\kc_terrain</Filter>
+    </ClInclude>
+    <ClInclude Include="asset_collector_tool\kc_terrain\TerrainContext.h">
+      <Filter>Source Files\kc_terrain</Filter>
+    </ClInclude>
+    <ClInclude Include="asset_collector_tool\kc_terrain\TerrainContext-inl.h">
+      <Filter>Source Files\kc_terrain</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="asset_collector_tool.pro" />
     <None Include="asset_collector_tool\plugin\Plugin-inl.h">
       <Filter>Source Files\plugin</Filter>
-    </None>
-    <None Include="asset_collector_tool\view\indicator\ScenarioScriptTool.ui">
-      <Filter>Source Files\view\AssetCollectorTool</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -287,6 +317,9 @@
     </QtUI>
     <QtUI Include="asset_collector_tool\view\UnitViewer.ui">
       <Filter>Source Files\view</Filter>
+    </QtUI>
+    <QtUI Include="asset_collector_tool\view\indicator\ScenarioScriptTool.ui">
+      <Filter>Source Files\view\AssetCollectorTool</Filter>
     </QtUI>
   </ItemGroup>
 </Project>
