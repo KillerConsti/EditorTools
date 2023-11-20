@@ -1,3 +1,4 @@
+#include "TerrainComponent.h"
 // Copyright (C) 2012-2019 Promotion Software GmbH
 
 
@@ -12,7 +13,7 @@ namespace kc_terrain
 	//[ Public methods                                        ]
 	//[-------------------------------------------------------]
 	inline TerrainComponent::TerrainComponent(qsf::Prototype* prototype) :
-		RendererComponent(prototype),
+		qsf::TerrainComponent(prototype),
 		// Connected to the CAMP reflection system
 		mHeightMapSize(1025),
 		mColorMapSize(1024),
@@ -26,7 +27,8 @@ namespace kc_terrain
 		mOgreTerrainGroup(nullptr),
 		mTerrainDefinition(nullptr),
 		mIsEditing(false),
-		mColorMap(qsf::getUninitialized<uint64>())
+		mColorMap(qsf::getUninitialized<uint64>()),
+		mPos(glm::vec3(0,0,0))
 	{
 		// Nothing to do in here
 	}
@@ -89,6 +91,17 @@ namespace kc_terrain
 	inline const kc_terrain::TerrainDefinition* TerrainComponent::getTerrainDefinition() const
 	{
 		return mTerrainDefinition;
+	}
+
+	
+
+	inline void TerrainComponent::SetScale(glm::vec3 Scale)
+	{
+	}
+
+	inline glm::vec3 TerrainComponent::GetScale()
+	{
+		return mScale;
 	}
 
 

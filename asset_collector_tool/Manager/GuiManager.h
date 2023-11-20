@@ -91,12 +91,15 @@ namespace user
 			void ExecuteNewContextAction(QAction *action);
 			void ShowDebugGui();
 			void ShowScenarioScriptToolView();
+
 			private:
 			uint64 BuildComponentHolder();
 			void GUIManager::buildInstantiateTemporaryPrototypesOperation(qsf::editor::base::CompoundOperation & compoundOperation, const std::vector<qsf::Prototype*>& temporaryPrototypes, uint32 layerId, bool select);
 			uint64 GUIManager::BuildEntity(glm::vec3 position, std::string layher);
 			qsf::editor::View* DebugToolView;
 			qsf::editor::View* ScenarioScriptToolView;
+			void SetFarClipping();
+			float OldFarClippingValue;
 		};
 
 

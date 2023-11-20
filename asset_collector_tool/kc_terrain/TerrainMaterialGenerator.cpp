@@ -26,7 +26,7 @@
 #include <OGRE/Terrain/OgreTerrain.h>
 #include <OGRE/Terrain/OgreTerrainGroup.h>
 
-
+#include <qsf\log\LogSystem.h>
 //[-------------------------------------------------------]
 //[ Anonymous detail namespace                            ]
 //[-------------------------------------------------------]
@@ -124,9 +124,11 @@ namespace kc_terrain
 	//[-------------------------------------------------------]
 	//[ Public methods                                        ]
 	//[-------------------------------------------------------]
-	TerrainMaterialGenerator::Profile::Profile(Ogre::TerrainMaterialGenerator* parent, const Ogre::String& name, const Ogre::String& desc) :
+	TerrainMaterialGenerator::Profile::Profile(Ogre::TerrainMaterialGenerator* parent, const Ogre::String& name, const Ogre::String& desc,uint64 ColorMap) :
 		Ogre::TerrainMaterialGenerator::Profile(parent, name, desc)
 	{
+		m_profil_ColorMap = ColorMap;
+		QSF_LOG_PRINTS(INFO, "constructor " <<m_profil_ColorMap);
 		// Nothing to do in here
 	}
 
@@ -202,7 +204,7 @@ namespace kc_terrain
 	//[-------------------------------------------------------]
 	//[ Public methods                                        ]
 	//[-------------------------------------------------------]
-	TerrainMaterialGenerator::TerrainMaterialGenerator()
+	TerrainMaterialGenerator::TerrainMaterialGenerator(uint64 ColorMap)
 	{
 		mLayerDecl.samplers.emplace_back("_crgb_ha", Ogre::PF_BYTE_RGBA);
 		mLayerDecl.samplers.emplace_back("_nag_sr_gb", Ogre::PF_BYTE_RGBA);
@@ -212,10 +214,10 @@ namespace kc_terrain
 		mLayerDecl.elements.emplace_back(1, Ogre::TLSS_NORMAL, 0, 2);
 		mLayerDecl.elements.emplace_back(1, Ogre::TLSS_SPECULAR, 2, 1);
 		mLayerDecl.elements.emplace_back(1, Ogre::TLSS_SPECULAR, 3, 1);
-
-		mProfiles.push_back(OGRE_NEW Profile(this, "SM2", "Profile for rendering on Shader Model 2 capable cards"));
+		QSF_LOG_PRINTS(INFO,"TMG"<< ColorMap)
+		mProfiles.push_back(OGRE_NEW Profile(this, "SM2", "Profile for rendering on Shader Model 2 capable cards",ColorMap));
 		setActiveProfile("SM2");
-
+		mColorMap = ColorMap;
 		// Connect our Boost slot to the Boost signal of the QSF asset system
 		QSF_ASSET.AssetsMounted.connect(boost::bind(&TerrainMaterialGenerator::onAssetsMounted, this, _1));
 	}
@@ -267,18 +269,25 @@ namespace kc_terrain
 		{
 			// Global color map transform
 			::detail::setMapTransformMaterialProperty(*terrainMaterial, *terrainComponent, *ogreTerrain, "GlobalColorMapTransform", true);
-
+			qsf::GlobalAssetId ColorMapAsset;
+			if (m_profil_ColorMap == qsf::getUninitialized<uint64>())
+			{
+				ColorMapAsset = qsf::AssetProxy("qsf/texture/default/missing").getGlobalAssetId();
+			}
+			else
+			{
+				ColorMapAsset = m_profil_ColorMap;
+			}
 			// A global color map which spans all terrain chunks, usually only used during runtime for efficiency
 			//static const qsf::GlobalAssetId missingTextureGlobalAssetId = qsf::AssetProxy("qsf/texture/default/missing").getGlobalAssetId();
-			static const qsf::GlobalAssetId missingTextureGlobalAssetId = (16376);
 			const kc_terrain::TerrainDefinition* terrainDefinition = terrainComponent->getTerrainDefinition();
-			qsf::GlobalAssetId globalAssetId = (nullptr != terrainDefinition && terrainDefinition->isValid()) ? terrainDefinition->getColorMap() : qsf::getUninitialized<qsf::GlobalAssetId>();
+			/*qsf::GlobalAssetId globalAssetId = (nullptr != terrainDefinition && terrainDefinition->isValid()) ? terrainDefinition->getColorMap() : qsf::getUninitialized<qsf::GlobalAssetId>();
 			if (qsf::isUninitialized(globalAssetId) || nullptr == QSF_ASSET.getAssetByGlobalAssetId(globalAssetId))
 			{
-				globalAssetId = missingTextureGlobalAssetId;
-			}
-			terrainMaterial->setPropertyById("UseGlobalColorMap", qsf::MaterialPropertyValue::fromBoolean(qsf::isInitialized(globalAssetId)));
-			terrainMaterial->setPropertyById("GlobalColorMap", qsf::MaterialPropertyValue::fromGlobalAssetId(globalAssetId));
+				globalAssetId = ColorMapAsset;
+			}*/
+			terrainMaterial->setPropertyById("UseGlobalColorMap", qsf::MaterialPropertyValue::fromBoolean(qsf::isInitialized(ColorMapAsset)));
+			terrainMaterial->setPropertyById("GlobalColorMap", qsf::MaterialPropertyValue::fromGlobalAssetId(ColorMapAsset));
 		}
 
 		// Global normal map

@@ -52,6 +52,9 @@
 #include <em5\EM5Helper.h>
 #include <em5\game\Game.h>
 #include <QtCore\qcoreapplication.h>
+#include <qsf_editor/renderer/RenderView.h>
+#include "qsf/renderer/window/RenderWindow.h"
+#include <qsf/renderer/component/CameraComponent.h>
 //[-------------------------------------------------------]
 //[ Namespace                                             ]
 //[-------------------------------------------------------]
@@ -161,6 +164,9 @@ namespace user
 			}
 				return Bar2.size() > 0;*/
 
+				//finally load our views and menus
+
+
 		}
 
 		void GUIManager::RemoveFog()
@@ -244,6 +250,7 @@ namespace user
 			//QMenu* submenuD = xmenu->addMenu("D");
 			//QMenu* submenuE = xmenu->addMenu("E");
 			QAction* actionA_Setup = submenuA->addAction("remove fog");
+			QAction* action2_Setup = submenuA->addAction("increase far clipping");
 			QAction* actionB_Setup = submenuB->addAction("Set Global Glossiness");
 			QAction* actionC_Setup = submenuC->addAction("Log Debugger");
 			QAction* actionC_SetupD = submenuC->addAction("Scenario Script Tool");
@@ -269,7 +276,8 @@ namespace user
 			//QSF_LOG_PRINTS(INFO,"Data "<< action->text().toStdString())
 			if (action->text().toStdString() == "remove fog")
 				RemoveFog();
-
+			else if ("increase far clipping" == action->text().toStdString())
+			SetFarClipping();
 			else if (action->text().toStdString() == "Set Global Glossiness")
 				SetGlobalGlossiness();
 			else if (action->text().toStdString() == "Log Debugger")
@@ -313,6 +321,23 @@ namespace user
 				QSF_SAFE_DELETE(ScenarioScriptToolView);
 			}
 		}
+
+		void GUIManager::SetFarClipping()
+		{
+			QSF_EDITOR_APPLICATION.getMainWindow()->getRenderView();
+			auto renderWindow = &QSF_EDITOR_APPLICATION.getMainWindow()->getRenderView().getRenderWindow();
+			auto cameraComponent = renderWindow->getCameraComponent();
+			if(cameraComponent->getFarClipDistance() != 2000.f )
+			{
+				OldFarClippingValue = cameraComponent->getFarClipDistance();
+				cameraComponent->setFarClipDistance(2000.f);
+			}
+			else
+			{
+				cameraComponent->setFarClipDistance(cameraComponent->getFarClipDistance());
+
+			}
+			}
 
 
 

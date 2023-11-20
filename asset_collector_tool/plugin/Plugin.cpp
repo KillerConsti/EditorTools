@@ -30,6 +30,7 @@
 #include <asset_collector_tool\view\KC_AbstractView.h>
 #include <asset_collector_tool\kc_terrain\TerrainComponent.h>
 #include <qsf/plugin/QsfAssetTypes.h>
+#include <qsf/renderer/terrain/TerrainComponent.h>
 //[-------------------------------------------------------]
 //[ Namespace                                             ]
 //[-------------------------------------------------------]
@@ -59,9 +60,11 @@ namespace user
 				// Declare CAMP reflection system classes
 				// -> Use Qt's "QT_TR_NOOP()"-macro in order to enable Qt's "lupdate"-program to find the internationalization texts
 				QSF_START_CAMP_CLASS_EXPORT(kc_terrain::TerrainComponent, "KC TerrainComponent" ,"Killers first terrain")
-					QSF_CAMP_IS_COMPONENT_DERIVED(qsf::RendererComponent)
+					QSF_CAMP_IS_COMPONENT_DERIVED(qsf::TerrainComponent)
 					//QSF_ADD_CAMP_PROPERTY(New Global Glossiness, EditorToolsHelperComponent::GetGlobalGlossiness, EditorToolsHelperComponent::SetGlobalGlossiness, "set it directly with the tool", 0.75f)
-					QSF_ADD_CAMP_PROPERTY(New Global Glossiness, kc_terrain::TerrainComponent::GetColorMap, kc_terrain::TerrainComponent::SetNewColorMap, "set it directly with the tool", qsf::getUninitialized<uint64>()).tag("AssetType", qsf::QsfAssetTypes::MATERIAL.getName())
+					QSF_ADD_CAMP_PROPERTY(New Color Map, kc_terrain::TerrainComponent::GetColorMap, kc_terrain::TerrainComponent::SetNewColorMap, "set it directly with the tool", qsf::getUninitialized<uint64>()).tag("AssetType", qsf::QsfAssetTypes::TEXTURE.getName())
+					QSF_ADD_CAMP_PROPERTY(Set Position Offset, kc_terrain::TerrainComponent::getPosition, kc_terrain::TerrainComponent::SetPosition, "set it directly with the tool", glm::vec3())
+					QSF_ADD_CAMP_PROPERTY(KC Terrain size, kc_terrain::TerrainComponent::getTerrainWorldSize, kc_terrain::TerrainComponent::setTerrainWorldSize, "set it directly with the tool", 1500)
 					QSF_END_CAMP_CLASS_EXPORT
 
 					QSF_START_CAMP_CLASS_EXPORT(EditorToolsHelperComponent, "This sets global glossiness", "you may just attach it to core entity")

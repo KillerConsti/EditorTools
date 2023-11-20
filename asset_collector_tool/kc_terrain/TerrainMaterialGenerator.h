@@ -15,6 +15,7 @@
 #include <OGRE/OgreGpuProgramParams.h>
 #include <OGRE/Terrain/OgreTerrainPrerequisites.h>
 #include <OGRE/Terrain/OgreTerrainMaterialGenerator.h>
+#include <qsf\asset\AssetProxy.h>
 #undef TRANSPARENT	// Header hell: The OGRE headers include some nasty macros
 
 
@@ -53,7 +54,7 @@ namespace kc_terrain
 		//[ Public methods                                        ]
 		//[-------------------------------------------------------]
 		public:
-			Profile(Ogre::TerrainMaterialGenerator* parent, const Ogre::String& name, const Ogre::String& desc);
+			Profile(Ogre::TerrainMaterialGenerator* parent, const Ogre::String& name, const Ogre::String& desc,uint64 mColorMap);
 			virtual ~Profile();
 
 
@@ -83,7 +84,7 @@ namespace kc_terrain
 		private:
 			Ogre::String mMatName;
 			Ogre::String mMatNameComp;
-
+			uint64 m_profil_ColorMap;
 
 		};
 
@@ -96,7 +97,7 @@ namespace kc_terrain
 		*  @brief
 		*    Default constructor
 		*/
-		TerrainMaterialGenerator();
+		TerrainMaterialGenerator(uint64 ColorMAp);
 
 		/**
 		*  @brief
@@ -110,7 +111,7 @@ namespace kc_terrain
 	//[-------------------------------------------------------]
 	private:
 		void onAssetsMounted(const qsf::Assets& assets);
-
+		uint64 mColorMap;
 
 	};
 

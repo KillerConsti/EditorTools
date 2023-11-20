@@ -28,8 +28,11 @@
 
 #include <OGRE/Terrain/OgreTerrain.h>
 #include <OGRE/Terrain/OgreTerrainGroup.h>
-
+#include <ogre\Ogre.h>
 #include <OGRE/OgreMaterialManager.h>
+
+#include <em5\EM5Helper.h>
+#include <em5\game\Game.h>
 //[-------------------------------------------------------]
 //[ Namespace                                             ]
 //[-------------------------------------------------------]
@@ -105,6 +108,21 @@ namespace kc_terrain
 			// Promote the property change
 			promotePropertyChange(TERRAIN_WORLD_SIZE);
 		}
+		Relead();
+	}
+
+	 void TerrainComponent::SetPosition(glm::vec3 newpos)
+	{
+		setPosition(
+			getEntity().getComponent<qsf::TransformComponent>()->getPosition(),newpos);
+		//getOgreTerrain()->setSize
+		mPos = newpos;
+		Relead();
+	}
+
+	 glm::vec3 TerrainComponent::getPosition()
+	{
+		return mPos;
 	}
 
 	void TerrainComponent::setSkirtSize(float skirtSize)
@@ -282,29 +300,14 @@ namespace kc_terrain
 		return mTerrainDefinition;
 	}
 
-	void TerrainComponent::SetNewColorMap(qsf::GlobalAssetId NewAssetId)
+	void TerrainComponent::SetNewColorMap(qsf::AssetProxy NewAssetId)
 	{
+		mColorMap = NewAssetId;
+		Relead();
 	return;
-		static qsf::MaterialManager& materialManager = QSF_MATERIAL.getMaterialManager();
-		QSF_LOG_PRINTS(INFO, "matname: " << 1)
-		if(mTerrainContext->GetMaterialGenerator() != nullptr)
-		QSF_LOG_PRINTS(INFO,"matgen is not null")
-		if(getOgreTerrain() == nullptr)
-		QSF_LOG_PRINTS(INFO,"Ogre Terrain is null")
-			QSF_LOG_PRINTS(INFO, getOgreTerrain()->getMaterialName().c_str())
-			qsf::Material* terrainMaterial = materialManager.findElement(qsf::StringHash(getOgreTerrain()->getMaterialName().c_str()));
-			//326081
-		terrainMaterial->setPropertyById("GlobalColorMap", qsf::MaterialPropertyValue::fromGlobalAssetId(326081));
-		
-		mTerrainContext->GetMaterialGenerator()->generate(getOgreTerrain());
-		Ogre::MaterialManager::getSingleton().reloadAll();
-		//mTerrainContext->GetMaterialGenerator()->u
-		mTerrainContext->TerrainContext::releaseContextReference();
-		mTerrainContext = new kc_terrain::TerrainContext();
-		mTerrainContext->addContextReference();
 	}
 
-	qsf::GlobalAssetId TerrainComponent::GetColorMap()
+	qsf::AssetProxy TerrainComponent::GetColorMap()
 	{
 		return mColorMap;
 	}
@@ -329,7 +332,7 @@ namespace kc_terrain
 		{
 			if (qsf::TransformComponent::POSITION == propertyId && nullptr != mOgreTerrainGroup)
 			{
-				setPosition(static_cast<const qsf::TransformComponent&>(component).getPosition());
+				setPosition(static_cast<const qsf::TransformComponent&>(component).getPosition(),mPos);
 			}
 
 			// Rotation and scale are not supported by the OGRE terrain
@@ -344,7 +347,8 @@ namespace kc_terrain
 		{
 			// Add a context reference
 			mTerrainContext = new kc_terrain::TerrainContext();
-			mTerrainContext->addContextReference();
+			uint64 ColorMap = GetColorMap().getAsset() != nullptr ? GetColorMap().getAsset()->getGlobalAssetId() : qsf::getUninitialized<uint64>();
+			mTerrainContext->addContextReference(ColorMap);
 
 			// Request OGRE terrain globals instance
 			mOgreTerrainGlobalOptions = mTerrainContext->getOgreTerrainGlobalOptions();
@@ -365,7 +369,7 @@ namespace kc_terrain
 				if (nullptr != transformComponent)
 				{
 					// Position
-					setPosition(transformComponent->getPosition());
+					setPosition(transformComponent->getPosition(),mPos);
 
 					// Rotation and scale are not supported by the OGRE terrain
 				}
@@ -431,6 +435,7 @@ namespace kc_terrain
 
 			// Release a context reference
 			mTerrainContext->TerrainContext::releaseContextReference();
+			QSF_SAFE_DELETE(mTerrainContext);
 		}
 	}
 
@@ -729,7 +734,7 @@ namespace kc_terrain
 		}
 	}
 
-	void TerrainComponent::setPosition(const glm::vec3& position)
+	void TerrainComponent::setPosition(const glm::vec3& position,glm::vec3 Offset)
 	{
 		if (nullptr != mOgreTerrainGroup)
 		{
@@ -737,10 +742,227 @@ namespace kc_terrain
 			Ogre::Vector3 ogrePosition(qsf::Convert::getOgreVector3(position));
 			ogrePosition.x -= offset;
 			//nasty position hack
-			ogrePosition.y += 10.f;
+			ogrePosition.y += 0.f;
 			ogrePosition.z += offset;
 			mOgreTerrainGroup->setOrigin(ogrePosition);
 		}
+		//getOgreEntity()->getParentSceneNode()->setPosition(Ogre::Vector3(Offset.x,Offset.y,Offset.z));
+		if(getOgreSceneNode() != nullptr)
+		getOgreSceneNode()->setScale(Ogre::Vector3(1+Offset.x, 1+Offset.y, 1+Offset.z));
+	}
+
+	std::vector<float> TerrainComponent::SaveHeightMap()
+	{
+		int partsize = getOgreTerrainGroup()->getTerrainSize() + 1;
+		int partsize2 = getOgreTerrainGroup()->getTerrain(0,1)->getSize();
+		QSF_LOG_PRINTS(INFO, "partsize" << partsize)
+			QSF_LOG_PRINTS(INFO, "partsize2" << partsize2)
+		//scalemap
+		std::vector<float> HeightMap;
+		for (size_t t = 0; t < getHeightMapSize() - 1; t++)
+		{
+			for (size_t j = 0; j < getHeightMapSize() - 1; j++)
+			{
+				HeightMap.push_back(ReadHeightValue(glm::vec2(t, j)));
+
+			}
+		}
+		return HeightMap;
+	}
+
+	float TerrainComponent::ReadHeightValue(glm::vec2 point)
+	{
+		int xTerrain = 0;
+		int xRemaining = (int)point.x;
+		int yTerrain = 0;
+		int yRemaining = (int)point.y;
+		int partsize = getOgreTerrainGroup()->getTerrainSize();
+		
+		//QSF_LOG_PRINTS(INFO,point.x << " " << point.y);
+		//we have a pattern like 4x4 (so in total 16 Terrains ... now find the correct one)
+		//remaining is the point on the selected Terrain
+		while (true)
+		{
+			if ((xRemaining - partsize) >= 0)
+			{
+				xTerrain++;
+				xRemaining = xRemaining - partsize;
+			}
+			else
+				break;
+		}
+		while (true)
+		{
+			if ((yRemaining - partsize) >= 0)
+			{
+				yTerrain++;
+				yRemaining = yRemaining - partsize;
+			}
+			else
+				break;
+		}
+		//QSF_LOG_PRINTS(INFO, xTerrain << " " << yTerrain << " " << xRemaining << " " << yRemaining)
+		auto Terrain = getOgreTerrainGroup()->getTerrain(xTerrain, yTerrain);
+		if (Terrain == nullptr)
+		{
+
+			QSF_LOG_PRINTS(INFO, "Terrain is a nullptr" << xTerrain << " " << yTerrain)
+				return 0.f;
+		}
+		return Terrain->getHeightAtPoint(xRemaining, yRemaining);//TerrainEditGUI->GetHeight());
+	}
+	void TerrainComponent::LoadHeightMap(std::vector<float> PointMap)
+	{
+		int index =0;
+		for (size_t t = 0; t < getHeightMapSize() - 1; t++)
+		{
+			for (size_t j = 0; j < getHeightMapSize() - 1; j++)
+			{
+				SetHeightFromValue(glm::vec2(t,j),PointMap.at(index));
+				index++;
+			}
+		}
+		int mParts = 0;
+		for(size_t t=0; t < 20;t++)
+		{
+			if(getOgreTerrainGroup()->getTerrain((long)t,(long)t) == nullptr)
+			{
+				mParts = (int)t+1;
+				break;
+			}
+		}
+		for (long t = 0; t <= (mParts - 1); t++)
+		{
+			for (long i = 0; i <= (mParts - 1); i++)
+			{
+				//QSF_LOG_PRINTS(INFO, " t " << t << " i " << i)
+				if (getOgreTerrainGroup()->getTerrain(t, i) != nullptr)
+				{
+					getOgreTerrainGroup()->getTerrain(t, i)->update(true);
+				}
+
+			}
+
+		}
+	}
+
+	void TerrainComponent::SetHeightFromValue(glm::vec2 point, float NewHeight)
+	{
+		int xTerrain = 0;
+		int xRemaining = (int)point.x;
+		int yTerrain = 0;
+		int yRemaining = (int)point.y;
+		int partsize = getOgreTerrainGroup()->getTerrainSize();
+		//QSF_LOG_PRINTS(INFO,point.x << " " << point.y);
+		//we have a pattern like 4x4 (so in total 16 Terrains ... now find the correct one)
+		//remaining is the point on the selected Terrain
+		while (true)
+		{
+			if ((xRemaining - partsize) >= 0)
+			{
+				xTerrain++;
+				xRemaining = xRemaining - partsize;
+			}
+			else
+				break;
+		}
+		while (true)
+		{
+			if ((yRemaining - partsize) >= 0)
+			{
+				yTerrain++;
+				yRemaining = yRemaining - partsize;
+			}
+			else
+				break;
+		}
+		//QSF_LOG_PRINTS(INFO, xTerrain << " " << yTerrain << " " << xRemaining << " " << yRemaining)
+		auto Terrain = getOgreTerrainGroup()->getTerrain(xTerrain, yTerrain);
+		if (Terrain == nullptr)
+		{
+			QSF_LOG_PRINTS(INFO, "Terrain is a nullptr")
+				return;
+		}
+
+		Terrain->setHeightAtPoint(xRemaining, yRemaining, NewHeight);//TerrainEditGUI->GetHeight());
+	}
+
+	bool TerrainComponent::Relead()
+	{
+
+	//shutdown
+		if(EM5_GAME.getInstance != nullptr)
+		return false;
+		// Get the OGRE scene manager instance
+		Ogre::SceneManager* ogreSceneManager = getOgreSceneManager();
+		std::vector<float> Heightmapdata;
+		if (nullptr != ogreSceneManager)
+		{
+			// Disconnect our Boost slot from the Boost signal of the QSF asset system
+			Heightmapdata = SaveHeightMap();
+			mGlobalTerrainAssetIds.clear();
+
+			// Destroy OGRE terrain group and OGRE terrain globals instance
+			// TODO(co) Terrain shutdown can take ages. I appears that the light map generation, which runs in a separate thread continues running until it's done.
+			// See "PixelBox* Terrain::calculateLightmap(const Rect& rect, const Rect& extraTargetRect, Rect& outFinalRect)" in OGRE terrain. Can we shut down this thread early?
+			removeAllOgreTerrains();
+			delete mOgreTerrainGroup;
+			mOgreTerrainGroup = nullptr;
+			mOgreTerrainGlobalOptions = nullptr;	// Don't destroy the instance, it's managed by the terrain context
+
+													// Release a context reference
+			mTerrainContext->TerrainContext::releaseContextReference();
+			QSF_SAFE_DELETE(mTerrainContext);
+		}
+		//load
+		// Get the OGRE scene manager instance
+		if (nullptr != ogreSceneManager)
+		{
+			// Add a context reference
+			mTerrainContext = new kc_terrain::TerrainContext();
+			uint64 ColorMap = mColorMap.getAsset() != nullptr ? mColorMap.getAsset()->getGlobalAssetId() : qsf::getUninitialized<uint64>();
+			QSF_LOG_PRINTS(INFO, "colormap data " << ColorMap)
+				if (mColorMap.getAsset() != nullptr)
+				{
+					QSF_LOG_PRINTS(INFO, "colormap data " << mColorMap.getAsset()->getGlobalAssetId())
+			}
+			mTerrainContext->addContextReference(ColorMap);
+			// Request OGRE terrain globals instance
+			mOgreTerrainGlobalOptions = mTerrainContext->getOgreTerrainGlobalOptions();
+			QSF_ASSERT(nullptr != mOgreTerrainGlobalOptions, "QSF failed to obtain an global OGRE terrain options instance", QSF_REACT_NONE);
+			// Create OGRE terrain group instance
+			// -> OGRE handles the terrain world size for each single terrain inside the terrain group, for QSF in order to keep things simple for the user the terrain world size is for the whole thing
+			mOgreTerrainGroup = new Ogre::TerrainGroup(ogreSceneManager, Ogre::Terrain::ALIGN_X_Z, 65, mTerrainWorldSize / static_cast<float>(mTerrainChunksPerEdge));
+			{
+				// mOgreTerrainGlobalOptions->setCastsDynamicShadows(true);	// TODO(co) Casting shadow looks fine on the empty map, but creates nasty artefact on other maps?
+				mOgreTerrainGlobalOptions->setSkirtSize(mSkirtSize);
+				updateOgreTerrainMaxPixelError();
+				mOgreTerrainGlobalOptions->setLayerBlendMapSize(mBlendMapSize);
+			}
+			{ // Use transform component, in case there's one
+				const qsf::TransformComponent* transformComponent = getEntity().getComponent<qsf::TransformComponent>();
+				if (nullptr != transformComponent)
+				{
+					// Position
+					setPosition(transformComponent->getPosition(),mPos);
+
+					// Rotation and scale are not supported by the OGRE terrain
+				}
+			}
+			buildHeightMap();
+
+			// Update the visibility state of the internal OGRE scene node
+			updateOgreSceneNodeVisibility();
+			LoadHeightMap(Heightmapdata);
+			// We want to listen on component property changes inside the core entity: Get "qsf::BoostSignalComponent" instance or create it in case it does not exist, yet
+			QSF_LOG_PRINTS(INFO, "l")
+
+			// Done
+			return true;
+		}
+
+		// Error!
+		return false;
 	}
 
 

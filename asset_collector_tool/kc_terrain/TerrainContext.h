@@ -51,7 +51,7 @@ namespace kc_terrain
 		*  @note
 		*    - If this is the first reference, the internal global terrain options are created automatically
 		*/
-		void addContextReference();
+		void addContextReference(uint64 ColorMap);
 
 		/**
 		*  @brief

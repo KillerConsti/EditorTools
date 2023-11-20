@@ -14,6 +14,7 @@
 #include "qsf/reflection/type/CampQsfAssetProxy.h"
 #include <asset_collector_tool\kc_terrain\TerrainDefinition.h>
 #include <asset_collector_tool\kc_terrain\TerrainContext.h>
+#include <qsf/renderer/terrain/TerrainComponent.h>
 //[-------------------------------------------------------]
 //[ Forward declarations                                  ]
 //[-------------------------------------------------------]
@@ -59,7 +60,7 @@ namespace kc_terrain
 	*    with an optimized cached asset global color map. For editing the terrain color map, we keep the uncompressed source asset as tif. It's the job of the editor to generate the optimized
 	*    cached asset global color map.
 	*/
-	class TerrainComponent : public qsf::RendererComponent
+	class TerrainComponent : public qsf::TerrainComponent
 	{
 
 
@@ -271,6 +272,13 @@ namespace kc_terrain
 
 		kc_terrain::TerrainDefinition* getTerrainDefinition();	// If the instance doesn't exist yet because e.g. the terrain component isn't running, the instance will be created and loaded
 		inline const kc_terrain::TerrainDefinition* getTerrainDefinition() const;
+		void SetPosition(glm::vec3 newpos);
+		glm::vec3 getPosition();
+
+		void SetScale(glm::vec3 Scale);
+		glm::vec3 GetScale();
+		glm::vec3 mPos;
+		glm::vec3 mScale;
 
 		//[-------------------------------------------------------]
 		//[ Collision                                             ]
@@ -352,9 +360,9 @@ namespace kc_terrain
 
 		/*killers stuff here*/
 
-		void SetNewColorMap(qsf::GlobalAssetId NewAssetId);
-		qsf::GlobalAssetId GetColorMap();
-		qsf::GlobalAssetId mColorMap;
+		void SetNewColorMap(qsf::AssetProxy NewAssetId);
+		qsf::AssetProxy GetColorMap();
+		qsf::AssetProxy mColorMap;
 
 
 		Ogre::Terrain* getOgreTerrain() const;
@@ -393,9 +401,11 @@ namespace kc_terrain
 		void defineTerrain();
 		void removeAllOgreTerrains();
 		void buildHeightMap();
-		void setPosition(const glm::vec3& position);
-		
-
+		void setPosition(const glm::vec3& position,glm::vec3 Offset);
+		std::vector<float> SaveHeightMap();
+		 void LoadHeightMap(std::vector<float> PointMap);
+		 float TerrainComponent::ReadHeightValue(glm::vec2 point);
+		 void TerrainComponent::SetHeightFromValue(glm::vec2 point,float NewHeight);
 	//[-------------------------------------------------------]
 	//[ Private data                                          ]
 	//[-------------------------------------------------------]
@@ -417,6 +427,7 @@ namespace kc_terrain
 		bool						mIsEditing;
 		kc_terrain::TerrainContext* mTerrainContext;
 
+		bool Relead();
 	//[-------------------------------------------------------]
 	//[ CAMP reflection system                                ]
 	//[-------------------------------------------------------]

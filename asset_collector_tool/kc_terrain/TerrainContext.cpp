@@ -29,7 +29,7 @@ namespace kc_terrain
 	//[-------------------------------------------------------]
 	//[ Public static methods                                 ]
 	//[-------------------------------------------------------]
-	void TerrainContext::addContextReference()
+	void TerrainContext::addContextReference(uint64 ColorMap)
 	{
 		// Check context
 		if (!mContextCounter)
@@ -39,7 +39,7 @@ namespace kc_terrain
 
 			{ // Terrain material generator
 				Ogre::TerrainMaterialGeneratorPtr terrainMaterialGeneratorPtr;
-				mGenerator = OGRE_NEW TerrainMaterialGenerator();
+				mGenerator = OGRE_NEW TerrainMaterialGenerator(ColorMap);
 				terrainMaterialGeneratorPtr.bind(mGenerator);
 				mTerrainGlobals->setDefaultMaterialGenerator(terrainMaterialGeneratorPtr);
 				mTerrainGlobals->setQueryFlags(0);	// Don't allow it to e.g. pick the terrain
@@ -58,7 +58,7 @@ namespace kc_terrain
 			QSF_LOG_PRINTS(INFO, "QSF OGRE global terrain options de-initialization");
 			delete mTerrainGlobals;
 			mTerrainGlobals = nullptr;
-			QSF_SAFE_DELETE(mGenerator);
+			//mGenerator;
 		}
 	}
 
