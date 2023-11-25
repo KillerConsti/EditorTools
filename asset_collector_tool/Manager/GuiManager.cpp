@@ -327,10 +327,10 @@ namespace user
 			QSF_EDITOR_APPLICATION.getMainWindow()->getRenderView();
 			auto renderWindow = &QSF_EDITOR_APPLICATION.getMainWindow()->getRenderView().getRenderWindow();
 			auto cameraComponent = renderWindow->getCameraComponent();
-			if(cameraComponent->getFarClipDistance() != 2000.f )
+			if(cameraComponent->getFarClipDistance() != 6000.f )
 			{
 				OldFarClippingValue = cameraComponent->getFarClipDistance();
-				cameraComponent->setFarClipDistance(2000.f);
+				cameraComponent->setFarClipDistance(6000.f);
 			}
 			else
 			{

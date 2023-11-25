@@ -115,13 +115,14 @@
     <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_DebugUnitView.cpp" />
     <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_GuiManager.cpp" />
     <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_KC_AbstractView.cpp" />
+    <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_OldTerrainTexturingTool.cpp" />
     <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_ScenarioScriptTool.cpp" />
     <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_TerrainEditColorMapToolbox.cpp" />
     <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_TerrainEditmodeColorMap.cpp" />
     <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_TerrainEditTool.cpp" />
     <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_TerrainEditToolbox.cpp" />
-    <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_TerrainpaintingToolbox.cpp" />
-    <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_TerrainPaintTool.cpp" />
+    <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_TerrainTexturingTool.cpp" />
+    <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_TerrainTexturingToolbox.cpp" />
     <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_TrainTrackTool.cpp" />
     <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_UnitPlacerView.cpp" />
     <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_UnitViewer.cpp" />
@@ -143,14 +144,15 @@
     <ClCompile Include="$(QtMocOutput)\moc_Plugin.cpp" />
     <ClCompile Include="asset_collector_tool\qsf_editor\tools\TerrainEditColorMapToolbox.cpp" />
     <ClCompile Include="asset_collector_tool\qsf_editor\tools\TerrainEditToolbox.cpp" />
-    <ClCompile Include="asset_collector_tool\qsf_editor\tools\TerrainpaintingToolbox.cpp" />
+    <ClCompile Include="asset_collector_tool\qsf_editor\tools\TerrainTexturingToolbox.cpp" />
     <ClCompile Include="asset_collector_tool\tools\TrainTrackTool.cpp" />
     <ClCompile Include="asset_collector_tool\view\DebugUnitView.cpp" />
     <ClCompile Include="asset_collector_tool\view\indicator\AssetCollectorTool.cpp" />
+    <ClCompile Include="asset_collector_tool\view\indicator\OldTerrainTexturingTool.cpp" />
     <ClCompile Include="asset_collector_tool\view\indicator\ScenarioScriptTool.cpp" />
     <ClCompile Include="asset_collector_tool\view\indicator\TerrainEditmodeColorMap.cpp" />
     <ClCompile Include="asset_collector_tool\view\indicator\TerrainEditTool.cpp" />
-    <ClCompile Include="asset_collector_tool\view\indicator\TerrainPaintTool.cpp" />
+    <ClCompile Include="asset_collector_tool\view\indicator\TerrainTexturingTool.cpp" />
     <ClCompile Include="asset_collector_tool\view\indicator\UnitPlacerView.cpp" />
     <ClCompile Include="asset_collector_tool\view\KC_AbstractView.cpp" />
     <ClCompile Include="asset_collector_tool\view\UnitViewer.cpp" />
@@ -163,7 +165,7 @@
     <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_TerrainEditColorMapToolbox.h" />
     <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_TerrainEditmodeColorMap.h" />
     <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_TerrainEditToolbox.h" />
-    <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_TerrainpaintingToolbox.h" />
+    <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_TerrainTexturingToolbox.h" />
     <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_TrainTrackTool.h" />
     <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_UnitPlacerView.h" />
     <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_UnitViewer.h" />
@@ -172,9 +174,9 @@
     <QtMOC Include="asset_collector_tool\view\KC_AbstractView.h" />
     <QtMOC Include="asset_collector_tool\view\UnitViewer.h" />
     <QtMOC Include="asset_collector_tool\view\indicator\TerrainEditmodeColorMap.h" />
-    <QtMOC Include="asset_collector_tool\view\indicator\TerrainPaintTool.h" />
+    <QtMOC Include="asset_collector_tool\view\indicator\TerrainTexturingTool.h" />
     <QtMOC Include="asset_collector_tool\qsf_editor\tools\TerrainEditToolbox.h" />
-    <QtMOC Include="asset_collector_tool\qsf_editor\tools\TerrainpaintingToolbox.h" />
+    <QtMOC Include="asset_collector_tool\qsf_editor\tools\TerrainTexturingToolbox.h" />
     <QtMOC Include="asset_collector_tool\qsf_editor\tools\TerrainEditColorMapToolbox.h" />
     <QtMOC Include="asset_collector_tool\tools\TrainTrackTool.h" />
     <QtMOC Include="asset_collector_tool\view\DebugUnitView.h" />
@@ -185,6 +187,7 @@
     <ClInclude Include="asset_collector_tool\kc_terrain\TerrainContext.h" />
     <ClInclude Include="asset_collector_tool\kc_terrain\TerrainDefinition.h" />
     <ClInclude Include="asset_collector_tool\kc_terrain\TerrainMaterialGenerator.h" />
+    <QtMOC Include="asset_collector_tool\view\indicator\OldTerrainTexturingTool.h" />
     <ClInclude Include="asset_collector_tool\view\indicator\ScenarioScriptTool.h" />
     <QtMOC Include="asset_collector_tool\view\indicator\TerrainEditTool.h" />
     <QtMOC Include="asset_collector_tool\view\indicator\AssetCollectorTool.h" />
@@ -196,7 +199,7 @@
     <QtUI Include="asset_collector_tool\view\UnitViewer.ui">
       <FileType>Document</FileType>
     </QtUI>
-    <QtUI Include="asset_collector_tool\qsf_editor\tools\TerrainpaintingToolbox.ui">
+    <QtUI Include="asset_collector_tool\qsf_editor\tools\TerrainTexturingToolbox.ui">
       <FileType>Document</FileType>
       <SubType>Designer</SubType>
     </QtUI>

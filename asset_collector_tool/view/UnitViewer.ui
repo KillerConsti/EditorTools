@@ -84,53 +84,11 @@
           </item>
          </layout>
         </widget>
-        <widget class="QWidget" name="horizontalLayoutWidget_2">
-         <property name="geometry">
-          <rect>
-           <x>16</x>
-           <y>10</y>
-           <width>251</width>
-           <height>51</height>
-          </rect>
-         </property>
-         <layout class="QHBoxLayout" name="horizontalLayout_4">
-          <item>
-           <widget class="QPushButton" name="bluelight">
-            <property name="text">
-             <string>bluelight</string>
-            </property>
-            <property name="checkable">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="blinker">
-            <property name="text">
-             <string>blinker</string>
-            </property>
-            <property name="checkable">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="headlight">
-            <property name="text">
-             <string>headlight</string>
-            </property>
-            <property name="checkable">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
         <widget class="QWidget" name="verticalLayoutWidget_2">
          <property name="geometry">
           <rect>
-           <x>20</x>
-           <y>60</y>
+           <x>30</x>
+           <y>120</y>
            <width>201</width>
            <height>80</height>
           </rect>
@@ -156,6 +114,110 @@
            <widget class="QPushButton" name="rotatetires">
             <property name="text">
              <string>Rotate Tires</string>
+            </property>
+            <property name="checkable">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="gridLayoutWidget">
+         <property name="geometry">
+          <rect>
+           <x>30</x>
+           <y>20</y>
+           <width>239</width>
+           <height>83</height>
+          </rect>
+         </property>
+         <layout class="QGridLayout" name="gridLayout">
+          <item row="0" column="2">
+           <widget class="QPushButton" name="headlight">
+            <property name="text">
+             <string>headlight</string>
+            </property>
+            <property name="checkable">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QPushButton" name="bluelight">
+            <property name="text">
+             <string>bluelight</string>
+            </property>
+            <property name="checkable">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QPushButton" name="trafficwarnerbutton">
+            <property name="toolTip">
+             <string>LIGHT_POSITION UNDEFINDED + DESCRIPTION = &quot;traffic&quot;</string>
+            </property>
+            <property name="text">
+             <string>trafficwarner</string>
+            </property>
+            <property name="checkable">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QPushButton" name="blinker">
+            <property name="text">
+             <string>blinker</string>
+            </property>
+            <property name="checkable">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QPushButton" name="brakeButton">
+            <property name="text">
+             <string>brake</string>
+            </property>
+            <property name="checkable">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="QPushButton" name="reverseButton">
+            <property name="toolTip">
+             <string>LIGHT_POSITION UNDEFINDED + DESCRIPTION = &quot;reverse&quot;</string>
+            </property>
+            <property name="text">
+             <string>reverse</string>
+            </property>
+            <property name="checkable">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QPushButton" name="interiorbutton">
+            <property name="toolTip">
+             <string>LIGHT_POSITION UNDEFINDED + DESCRIPTION = &quot;interior&quot;</string>
+            </property>
+            <property name="text">
+             <string>interior</string>
+            </property>
+            <property name="checkable">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QPushButton" name="enviromentbutton">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;LIGHT_POSITION UNDEFINDED + DESCRIPTION = &amp;quot;umfeld&amp;quot;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="text">
+             <string>enviroment</string>
             </property>
             <property name="checkable">
              <bool>true</bool>

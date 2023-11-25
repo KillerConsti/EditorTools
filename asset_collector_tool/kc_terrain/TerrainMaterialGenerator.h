@@ -70,22 +70,26 @@ namespace kc_terrain
 			virtual void updateParams(const Ogre::MaterialPtr& ogreMaterial, const Ogre::Terrain* ogreTerrain) override;
 			virtual void updateParamsForCompositeMap(const Ogre::MaterialPtr& ogreMaterial, const Ogre::Terrain* ogreTerrain) override;
 			virtual void requestOptions(Ogre::Terrain* ogreTerrain) override;
-
+			void SetColorMap(uint64 ColorMap);
+			void SetBlendMaps(std::vector<std::string> Blendtextures);
 		//[-------------------------------------------------------]
 		//[ Private methods                                       ]
 		//[-------------------------------------------------------]
 		private:
 			void createMaterial(const Ogre::String& matName, const Ogre::Terrain* ogreTerrain);
-
+			
 
 		//[-------------------------------------------------------]
 		//[ Private data                                          ]
 		//[-------------------------------------------------------]
 		private:
-			Ogre::String mMatName;
+			
 			Ogre::String mMatNameComp;
 			uint64 m_profil_ColorMap;
-
+			//up to 6 blendtextures
+			std::vector<std::string> m_Blendtextures; 
+			public: 
+				Ogre::String mMatName;
 		};
 
 
@@ -104,7 +108,7 @@ namespace kc_terrain
 		*    Destructor
 		*/
 		virtual ~TerrainMaterialGenerator();
-
+		void RefreshMaterial( const Ogre::Terrain* ogreTerrain);
 
 	//[-------------------------------------------------------]
 	//[ Private methods                                       ]

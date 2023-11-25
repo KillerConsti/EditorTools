@@ -145,7 +145,12 @@ namespace user
 			void onPushUpdateNodes(const bool pressed);
 			void onpushAddAllNodes(const bool pressed);
 
-			
+			void onPushbrakeButton(const bool pressed);
+			void onPushtrafficwarnerbutton(const bool pressed);
+			void onPushreverseButtonbutton(const bool pressed);
+			void onPushtinteriorbutton(const bool pressed);
+			void onPushenviromentbutton(const bool pressed);
+
 		private:
 			Ui::UnitViewer*	mUiUnitViewer;	///< UI view instance, can be a null pointer, we have to destroy the instance in case we no longer need it
 		std::vector<qsf::Entity*> GetSelectedEntity();			
@@ -162,6 +167,7 @@ namespace user
 			//checks if it element of DebugEntities
 			bool IsEntityAllreadySelected(uint64 Target,std::vector<uint64> CompareList);
 			void UpdateStreetDebugNodes();
+			void OnSelectionChange_SetAdditionalLightButtons(QPushButton* Buttonname,std::string Lightdescription);
 		//[-------------------------------------------------------]
 		//[ CAMP reflection system                                ]
 		//[-------------------------------------------------------]

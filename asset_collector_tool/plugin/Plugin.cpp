@@ -16,8 +16,8 @@
 #include <asset_collector_tool\view\indicator\ScenarioScriptTool.h>
 #include <asset_collector_tool/view/indicator/TerrainEditTool.h>
 #include <asset_collector_tool\qsf_editor\tools\TerrainEditToolbox.h>
-#include <asset_collector_tool\qsf_editor\tools\TerrainpaintingToolbox.h>
-#include <asset_collector_tool/view/indicator/TerrainPaintTool.h>
+#include <asset_collector_tool\qsf_editor\tools\TerrainTexturingToolbox.h>
+#include <asset_collector_tool/view/indicator/TerrainTexturingTool.h>
 #include <asset_collector_tool/qsf_editor/tools/TerrainEditColorMapToolbox.h>
 #include "asset_collector_tool/view/indicator/TerrainEditmodeColorMap.h"
 #include <asset_collector_tool\tools\TrainTrackTool.h>
@@ -31,6 +31,7 @@
 #include <asset_collector_tool\kc_terrain\TerrainComponent.h>
 #include <qsf/plugin/QsfAssetTypes.h>
 #include <qsf/renderer/terrain/TerrainComponent.h>
+#include <asset_collector_tool\view\indicator\OldTerrainTexturingTool.h>
 //[-------------------------------------------------------]
 //[ Namespace                                             ]
 //[-------------------------------------------------------]
@@ -65,6 +66,7 @@ namespace user
 					QSF_ADD_CAMP_PROPERTY(New Color Map, kc_terrain::TerrainComponent::GetColorMap, kc_terrain::TerrainComponent::SetNewColorMap, "set it directly with the tool", qsf::getUninitialized<uint64>()).tag("AssetType", qsf::QsfAssetTypes::TEXTURE.getName())
 					QSF_ADD_CAMP_PROPERTY(Set Position Offset, kc_terrain::TerrainComponent::getPosition, kc_terrain::TerrainComponent::SetPosition, "set it directly with the tool", glm::vec3())
 					QSF_ADD_CAMP_PROPERTY(KC Terrain size, kc_terrain::TerrainComponent::getTerrainWorldSize, kc_terrain::TerrainComponent::setTerrainWorldSize, "set it directly with the tool", 1500)
+					QSF_ADD_CAMP_PROPERTY(Reload, kc_terrain::TerrainComponent::GetUpdate, kc_terrain::TerrainComponent::SetUpdate, "set it directly with the tool", false).tag("Serializable", false)
 					QSF_END_CAMP_CLASS_EXPORT
 
 					QSF_START_CAMP_CLASS_EXPORT(EditorToolsHelperComponent, "This sets global glossiness", "you may just attach it to core entity")
@@ -111,7 +113,16 @@ namespace user
 				);
 
 				addCampClass(
-					camp::Class::declare<TerrainPaintTool>()
+					camp::Class::declare<TerrainTexturingTool>()
+					.tag("Name", QT_TR_NOOP("ID_EM5EDITOR_EDITMODE_FIRECOMPONENT_NAME21"))			// Text: "Fire entity"
+					.tag("Description", QT_TR_NOOP("ID_EM5EDITOR_EDITMODE_FIRECOMPONENT_DESCRIPTION21"))	// Text: "Fire entity edit mode"
+					.base<qsf::editor::EditMode>()
+					.constructor1<qsf::editor::EditModeManager*>()
+					.getClass()
+				);
+
+				addCampClass(
+					camp::Class::declare<OldTerrainTexturingTool>()
 					.tag("Name", QT_TR_NOOP("ID_EM5EDITOR_EDITMODE_FIRECOMPONENT_NAME21"))			// Text: "Fire entity"
 					.tag("Description", QT_TR_NOOP("ID_EM5EDITOR_EDITMODE_FIRECOMPONENT_DESCRIPTION21"))	// Text: "Fire entity edit mode"
 					.base<qsf::editor::EditMode>()
@@ -137,12 +148,12 @@ namespace user
 					.getClass()
 				);
 
-
+#define FinalBuild
 #ifdef FinalBuild
 
 
 				addCampClass(
-					camp::Class::declare<TerrainpaintingToolbox>()
+					camp::Class::declare<TerrainTexturingToolbox>()
 					.tag("Name", QT_TR_NOOP("[KC] Terrain Texturing Tool"))			// Text: "Fire entity"
 					.tag("Description", QT_TR_NOOP("ID_EM5EDITOR_EDITMODE_FIRECOMPONENT_DESCRIPTION21"))	// Text: "Fire entity edit mode"
 					.base<qsf::editor::Tool>()

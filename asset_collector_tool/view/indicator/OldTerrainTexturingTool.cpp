@@ -5,8 +5,8 @@
 //[ Includes                                              ]
 //[-------------------------------------------------------]
 #include "asset_collector_tool/PrecompiledHeader.h"
-#include "asset_collector_tool/view/indicator/TerrainPaintTool.h"
-#include <asset_collector_tool\qsf_editor\tools\TerrainpaintingToolbox.h>
+#include "asset_collector_tool/view/indicator/OldTerrainTexturingTool.h"
+#include <asset_collector_tool\qsf_editor\tools\TerrainTexturingToolbox.h>
 
 #include <qsf_editor/operation/utility/RebuildGuiOperation.h>
 #include <qsf_editor/application/manager/CameraManager.h>
@@ -122,13 +122,13 @@ namespace user
 		//[-------------------------------------------------------]
 		//[ Public definitions                                    ]
 		//[-------------------------------------------------------]
-		const uint32 TerrainPaintTool::PLUGINABLE_ID = qsf::StringHash("user::editor::TerrainPaintTool");
+		const uint32 OldTerrainTexturingTool::PLUGINABLE_ID = qsf::StringHash("user::editor::OldTerrainTexturingTool");
 
 
 		//[-------------------------------------------------------]
 		//[ Public methods                                        ]
 		//[-------------------------------------------------------]
-		TerrainPaintTool::TerrainPaintTool(qsf::editor::EditModeManager* editModeManager) :
+		OldTerrainTexturingTool::OldTerrainTexturingTool(qsf::editor::EditModeManager* editModeManager) :
 			EditMode(editModeManager)
 		{
 			timer = 0;
@@ -136,12 +136,12 @@ namespace user
 		}
 
 
-		TerrainPaintTool::~TerrainPaintTool()
+		OldTerrainTexturingTool::~OldTerrainTexturingTool()
 		{
 		}
 
 
-		bool TerrainPaintTool::evaluateBrushPosition(const QPoint & mousePosition, glm::vec3 & position)
+		bool OldTerrainTexturingTool::evaluateBrushPosition(const QPoint & mousePosition, glm::vec3 & position)
 		{
 			float closestDistance = -1.0f;
 			mTerrainComponent = nullptr;
@@ -216,7 +216,7 @@ namespace user
 		//[-------------------------------------------------------]
 
 
-		void TerrainPaintTool::PaintJob(const qsf::JobArguments & jobArguments)
+		void OldTerrainTexturingTool::PaintJob(const qsf::JobArguments & jobArguments)
 		{
 			GetSelectedLayerColor();
 			mDebugDrawProxy.registerAt(QSF_MAINMAP.getDebugDrawManager());
@@ -235,13 +235,14 @@ namespace user
 
 		}
 
-		float TerrainPaintTool::GetCustomIntensity(float distancetoMidpoint, TerrainpaintingToolbox::TerrainEditMode2 Mode)
+		float OldTerrainTexturingTool::GetCustomIntensity(float distancetoMidpoint, TerrainTexturingToolbox::TerrainEditMode2 Mode)
 		{
 			return 0.0f;
 		}
 
-		void TerrainPaintTool::RaiseTerrain(glm::vec2 MapPoint)
+		void OldTerrainTexturingTool::RaiseTerrain(glm::vec2 MapPoint)
 		{
+			QSF_LOG_PRINTS(INFO,"Raise Terrain")
 			if (TerrainEditGUI == nullptr)
 				return;
 
@@ -264,6 +265,7 @@ namespace user
 							if (TerrainEditGUI->GetBrushShape() == TerrainEditGUI->Circle)
 							{
 								RaisePoint(glm::vec2(t, j), BrushIntensity);
+								return;
 								counter++;
 							}
 							else if (TerrainEditGUI->GetBrushShape() == TerrainEditGUI->Cone)
@@ -272,6 +274,7 @@ namespace user
 								//intensity formula here
 								float IntensityMod = 1.0f - (Distance / TotalRadius);
 								RaisePoint(glm::vec2(t, j), BrushIntensity*IntensityMod);
+								return;
 								counter++;
 							}
 							else if (TerrainEditGUI->GetBrushShape() == TerrainEditGUI->Dome)
@@ -281,6 +284,7 @@ namespace user
 								//intensity formula here
 								float IntensityMod = glm::cos((Distance / TotalRadius) * glm::pi<float>()) * 0.5f + 0.5f;
 								RaisePoint(glm::vec2(t, j), BrushIntensity*IntensityMod);
+								return;
 								counter++;
 
 							}
@@ -296,6 +300,7 @@ namespace user
 					for (int j = MapPointMinY; j < MapPointMaxY; j++)
 					{
 						RaisePoint(glm::vec2(t, j), BrushIntensity);
+						return;
 						counter++;
 					}
 				}
@@ -305,7 +310,7 @@ namespace user
 
 		}
 
-		void TerrainPaintTool::RaisePoint(glm::vec2 point, float Intensity)
+		void OldTerrainTexturingTool::RaisePoint(glm::vec2 point, float Intensity)
 		{
 			int xTerrain = 0;
 			int xRemaining = (int)point.x;
@@ -337,7 +342,6 @@ namespace user
 			yRemaining = partsize - yRemaining;
 			AffectedPoints[xTerrain][yTerrain].push_back(glm::vec2(xRemaining, yRemaining));
 
-			return;
 			//QSF_LOG_PRINTS(INFO, xTerrain << " " << yTerrain << " " << xRemaining << " " << yRemaining)
 
 			auto Terrain = TerrainMaster->getOgreTerrainGroup()->getTerrain(xTerrain, yTerrain);
@@ -354,9 +358,44 @@ namespace user
 				return;
 
 
+
 			const uint32 maximumNumberOfLayers = TMG_getMaxLayers(Terrain);
 			const uint32 numberOfLayers = std::min(maximumNumberOfLayers, static_cast<uint32>(Terrain->getBlendTextureCount()));
 			QSF_LOG_PRINTS(INFO, "numberOfLayers " << numberOfLayers << "a123 " << BlendMapIndex)
+
+				QSF_LOG_PRINTS(INFO, "Terrain layer count" << (int)Terrain->getLayerCount());
+			for (size_t t = 0; t < Terrain->getLayerCount(); t++)
+			{
+				try
+				{
+					QSF_LOG_PRINTS(INFO, "Terrainlayer " << t << " s0 " << Terrain->getLayerTextureName((uint8)t, 0).c_str())
+					auto AP =qsf::AssetProxy(boost::lexical_cast<uint64>(Terrain->getLayerTextureName((uint8)t, 0)));
+					if(AP.getAsset() != nullptr)
+						QSF_LOG_PRINTS(INFO, "Terrainname "<< AP.getLocalAssetName())
+					QSF_LOG_PRINTS(INFO, " s1 " << Terrain->getLayerTextureName((uint8)t, 1).c_str())
+						if (Terrain->getLayerBlendMap((uint8)t) == nullptr)
+							continue;
+					QSF_LOG_PRINTS(INFO, "Layer " << t << " has a blendmap?")
+				}
+				catch (const std::exception& e)
+				{
+					QSF_LOG_PRINTS(INFO,e.what())
+				}
+			}
+			for (size_t t = 0; t < Terrain->getBlendTextureCount(); t++)
+			{
+				try
+				{
+					QSF_LOG_PRINTS(INFO,"Blendtexture Name"<< (int)t)
+					QSF_LOG_PRINTS(INFO,Terrain->getBlendTextureName((uint8)t).c_str())
+				}
+				catch (const std::exception&)
+				{
+
+				}
+			}
+
+
 				for (uint32 layerIndex = 1; layerIndex < 6; ++layerIndex)
 				{
 					if (Terrain->getLayerBlendMap(layerIndex) == nullptr)
@@ -378,8 +417,9 @@ namespace user
 					}
 				}
 
-			/*
 
+			/*
+			
 			ogreTerrain->getLayerBlendMap(1)->setBlendValue(xRemaining, yRemaining, 0);
 			ogreTerrain->getLayerBlendMap(2)->setBlendValue(xRemaining, yRemaining, 0);
 			ogreTerrain->getLayerBlendMap(3)->setBlendValue(xRemaining, yRemaining, 1);
@@ -420,7 +460,7 @@ namespace user
 
 
 
-		glm::vec3 TerrainPaintTool::getPositionUnderMouse()
+		glm::vec3 OldTerrainTexturingTool::getPositionUnderMouse()
 		{
 			glm::vec2 mousePosition = QSF_INPUT.getMouse().getPosition();
 			qsf::RayMapQueryResponse response = qsf::RayMapQueryResponse(qsf::RayMapQueryResponse::POSITION_RESPONSE);
@@ -450,12 +490,12 @@ namespace user
 
 
 
-		void TerrainPaintTool::SaveMap(const qsf::MessageParameters & parameters)
+		void OldTerrainTexturingTool::SaveMap(const qsf::MessageParameters & parameters)
 		{
 			SaveTheFuckingMap();
 		}
 
-		void TerrainPaintTool::SaveTheFuckingMap()
+		void OldTerrainTexturingTool::SaveTheFuckingMap()
 		{
 			if (TerrainEditGUI == nullptr)
 				return;
@@ -481,7 +521,7 @@ namespace user
 			//we need to push this stuff in a assetpackage!
 		}
 
-		void TerrainPaintTool::LoadOldMap()
+		void OldTerrainTexturingTool::LoadOldMap()
 		{
 
 			//SaveTheFuckingMap();
@@ -515,7 +555,7 @@ namespace user
 		}
 
 
-		std::string TerrainPaintTool::GetCurrentTimeForFileName()
+		std::string OldTerrainTexturingTool::GetCurrentTimeForFileName()
 		{
 			auto time = std::time(nullptr);
 			std::stringstream ss;
@@ -525,7 +565,7 @@ namespace user
 			return s;
 		}
 
-		float TerrainPaintTool::ReadValue(glm::vec2 point)
+		float OldTerrainTexturingTool::ReadValue(glm::vec2 point)
 		{
 			int xTerrain = 0;
 			int xRemaining = (int)point.x;
@@ -565,7 +605,7 @@ namespace user
 			return Terrain->getHeightAtPoint(xRemaining, yRemaining);//TerrainEditGUI->GetHeight());
 		}
 
-		inline void TerrainPaintTool::mousePressEvent(QMouseEvent & qMouseEvent)
+		inline void OldTerrainTexturingTool::mousePressEvent(QMouseEvent & qMouseEvent)
 		{
 			if (Qt::RightButton == qMouseEvent.button() && TerrainEditGUI != nullptr && TerrainEditGUI->GetEditMode() == TerrainEditGUI->Set)
 			{
@@ -605,7 +645,7 @@ namespace user
 			//QSF_LOG_PRINTS(INFO,"Radius is"<< Radius)
 		}
 
-		inline void TerrainPaintTool::mouseMoveEvent(QMouseEvent & qMouseEvent)
+		inline void OldTerrainTexturingTool::mouseMoveEvent(QMouseEvent & qMouseEvent)
 		{
 			glm::vec3 mousepos2;
 			if (TerrainEditGUI != nullptr)
@@ -624,7 +664,7 @@ namespace user
 				mouseisvalid = false;
 		}
 
-		void TerrainPaintTool::WriteTerrainTextureList()
+		void OldTerrainTexturingTool::WriteTerrainTextureList()
 		{
 			//find Terrain
 			glm::vec2 Mappoint = ConvertWorldPointToRelativePoint(glm::vec2(oldmouspoint.x, oldmouspoint.z));
@@ -680,7 +720,7 @@ namespace user
 			TerrainEditGUI->SetCurrentTerrainData(TerrainNames, xTerrain, yTerrain);
 		}
 
-		uint64 TerrainPaintTool::GetSelectedLayerColor()
+		uint64 OldTerrainTexturingTool::GetSelectedLayerColor()
 		{
 			std::string LayerColorName = TerrainEditGUI->GetLayerColor();
 			mSelectedLayerColor = qsf::AssetProxy(LayerColorName).getGlobalAssetId();
@@ -689,7 +729,7 @@ namespace user
 		}
 
 
-		int TerrainPaintTool::GetBlendMapWithTextureName(int xTerrain, int yTerrain)
+		int OldTerrainTexturingTool::GetBlendMapWithTextureName(int xTerrain, int yTerrain)
 		{
 			auto Terrain = TerrainMaster->getOgreTerrainGroup()->getTerrain(xTerrain, yTerrain);
 			const uint32 maximumNumberOfLayers = TMG_getMaxLayers(Terrain);
@@ -716,7 +756,7 @@ namespace user
 			return -1;
 		}
 
-		uint8 TerrainPaintTool::TMG_getMaxLayers(const Ogre::Terrain * ogreTerrain) const
+		uint8 OldTerrainTexturingTool::TMG_getMaxLayers(const Ogre::Terrain * ogreTerrain) const
 		{
 			// Count the texture units free
 			uint8 freeTextureUnits = OGRE_MAX_TEXTURE_LAYERS;
@@ -728,7 +768,7 @@ namespace user
 		}
 
 
-		glm::vec2 TerrainPaintTool::ConvertWorldPointToRelativePoint(glm::vec2 WorldPoint)
+		glm::vec2 OldTerrainTexturingTool::ConvertWorldPointToRelativePoint(glm::vec2 WorldPoint)
 		{
 			glm::vec2 copy = WorldPoint;
 			copy = (WorldPoint + Offset) / TerrainMaster->getTerrainWorldSize();
@@ -736,7 +776,7 @@ namespace user
 			return copy;
 		}
 
-		glm::vec2 TerrainPaintTool::ConvertMappointToWorldPoint(glm::vec2 Mappoint)
+		glm::vec2 OldTerrainTexturingTool::ConvertMappointToWorldPoint(glm::vec2 Mappoint)
 		{
 			glm::vec2 copy = Mappoint;
 			copy = copy / (float)Heighmapsize;
@@ -746,7 +786,7 @@ namespace user
 			return copy;
 		}
 
-		void TerrainPaintTool::UpdateTerrains()
+		void OldTerrainTexturingTool::UpdateTerrains()
 		{
 		QSF_LOG_PRINTS(INFO,"Update Started")
 			//we should make sure that we have a 4 x 4 Terrain-pattern (16 tiles).
@@ -822,7 +862,7 @@ namespace user
 		}
 
 
-		bool TerrainPaintTool::onStartup(EditMode * previousEditMode)
+		bool OldTerrainTexturingTool::onStartup(EditMode * previousEditMode)
 		{
 
 			//prevent crashs if terrain is not there yet
@@ -854,7 +894,7 @@ namespace user
 			QSF_LOG_PRINTS(INFO, "we have " << mParts << " x " << mParts << "  Parts");
 			EditMode::onStartup(previousEditMode);
 
-			user::editor::TerrainpaintingToolbox* TET = static_cast<user::editor::TerrainpaintingToolbox*>(this->getManager().getToolWhichSelectedEditMode());
+			user::editor::TerrainTexturingToolbox* TET = static_cast<user::editor::TerrainTexturingToolbox*>(this->getManager().getToolWhichSelectedEditMode());
 			if (TET == nullptr)
 			{
 				QSF_LOG_PRINTS(INFO, "TET is a nullptr");
@@ -898,123 +938,16 @@ namespace user
 			}
 
 			
-			QSF_MATERIAL.getMaterialVariationManager().setMaterialPropertyValue(qsf::StringHash(TerrainMaster->getOgreTerrainGroup()->getTerrain(1, 1)->getMaterialName()), "GlobalColorMap", qsf::MaterialPropertyValue::fromResourceName("1395539927"));
-			//this is it finally!
-			//QSF_MATERIAL.getMaterialManager().
-
-			
-
-
-			/*for(size_t t=0; t <15; t++ )
-			{
-				Ogre::TerrainLayerBlendMap* CurrentBlendMap = nullptr;
-				QSF_LOG_PRINTS(INFO,"t is " << t);
-				try
-				{
-					 CurrentBlendMap = TerrainMaster->getOgreTerrainGroup()->getTerrain((uint8)1, (uint8)1)->getLayerBlendMap((uint8)t);
-					 std::string prefix = "testtesttest" + boost::lexical_cast<std::string>(t);
-					 QSF_LOG_PRINTS(INFO,TerrainMaster->getColorMapSize())
-				}
-				catch (const std::exception& e)
-				{
-					QSF_LOG_PRINTS(INFO,e.what())
-					continue;
-				}
-				if(CurrentBlendMap == nullptr)
-				continue;
-				for (size_t x = 0; x < 20; x++)
-				{
-					for (size_t y = 0; y < 20; y++)
-					{
-						QSF_LOG_PRINTS(INFO, "x and y  " << x << " " << y);
-						CurrentBlendMap->setBlendValue((uint8)x,(uint8)y,1/(20*20)*x*y);
-						QSF_LOG_PRINTS(INFO, "value was set");
-					}
-				}
-				QSF_LOG_PRINTS(INFO, "start update");
-				CurrentBlendMap->dirty();
-				CurrentBlendMap->update();
-				QSF_LOG_PRINTS(INFO, "finish update");
-			}
-			QSF_LOG_PRINTS(INFO, "done");*/
-			/*QSF_LOG_PRINTS(INFO, "do find out matname")
-			auto OE = TerrainMaster->getOgreTerrain();
-			if (OE == nullptr)
-			{
-				QSF_LOG_PRINTS(INFO, "sth happened 3")
-				return false;
-			}
-			if (OE == nullptr || &OE->getMaterial() == nullptr)
-				return false;
-			QSF_LOG_PRINTS(INFO, "sth happened 1")
-			auto OEM = OE->getMaterial();
-			QSF_LOG_PRINTS(INFO, "sth happened")
-
-			{
-				QSF_LOG_PRINTS(INFO,"Materialname :" << OEM.get()->getName());
-			}*/
-
-
-			/*if (QSF_FILE.exists(TerrainMaster->getTerrainAsset().getLocalAssetName() +".json"))
-				{
-
-			boost::property_tree::ptree root;
-			QSF_LOG_PRINTS(INFO,"terrain asset is " << TerrainMaster->getTerrainAsset().getLocalAssetName())
-			qsf::FileStream stream(TerrainMaster->getTerrainAsset().getLocalAssetName()+".json", qsf::File::READ_MODE);
-			qsf::FileHelper::readJson(stream, root);
-
-			boost::optional<uint64> GetBlinker = root.get_child("Properties").get_optional<uint64>("ColorMap");
-			if (GetBlinker)
-			{
-				const Ogre::String& texture_name = qsf::AssetProxy(GetBlinker.get()).getAbsoluteCachedAssetDataFilename();
-				Ogre::String& texture_path = qsf::AssetProxy(GetBlinker.get()).getAbsoluteCachedAssetDataFilename();
-				bool image_loaded = false;
-				std::ifstream ifs(texture_path.c_str(), std::ios::binary | std::ios::in);
-				if (ifs.is_open())
-				{
-					Ogre::String tex_ext;
-					Ogre::String::size_type index_of_extension = texture_path.find_last_of('.');
-					if (index_of_extension != Ogre::String::npos)
-					{
-						tex_ext = texture_path.substr(index_of_extension + 1);
-						Ogre::DataStreamPtr data_stream(new Ogre::FileStreamDataStream(texture_path, &ifs, false));
-						Ogre::Image img;
-						img.load(data_stream, tex_ext);
-						Ogre::TextureManager::getSingleton().loadImage(texture_name,
-							Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME, img, Ogre::TEX_TYPE_2D, 0, 1.0f);
-						image_loaded = true;
-						//QSF_LOG_PRINTS(INFO,img.getColourAt(0,0,0).r << img.getSize())
-							auto path = TerrainEditGUI->GetSavePath();
-						//img.save(path + "\\colormap + "+"__date__" + GetCurrentTimeForFileName() + ".tif");
-						TerrainMaster->getOgreTerrain()->setGlobalColourMapEnabled(true,2000);
-						TerrainMaster->getOgreTerrain()->getGlobalColourMap().get()->loadImage(img);
-
-
-
-					}
-					ifs.close();
-				}
-				QSF_LOG_PRINTS(INFO,"loaded" << image_loaded)
-
-			}
-			else
-			{
-				QSF_LOG_PRINTS(INFO, "Didnt find colormap");
-			}
-			//try to access paint tools
-			}*/
-			//else
-				//QSF_LOG_PRINTS(INFO, "Didnt find terrain asset");
-			//return true;
+			QSF_LOG_PRINTS(INFO,"Old Terrain Painting Tool")
 			if (!PaintJobProxy.isValid())
-				PaintJobProxy.registerAt(em5::Jobs::ANIMATION_VEHICLE, boost::bind(&TerrainPaintTool::PaintJob, this, _1));
-			mSaveMapProxy.registerAt(qsf::MessageConfiguration(qsf::MessageConfiguration("kc::save_heightmap")), boost::bind(&TerrainPaintTool::SaveMap, this, _1));
+				PaintJobProxy.registerAt(em5::Jobs::ANIMATION_VEHICLE, boost::bind(&OldTerrainTexturingTool::PaintJob, this, _1));
+			mSaveMapProxy.registerAt(qsf::MessageConfiguration(qsf::MessageConfiguration("kc::save_heightmap")), boost::bind(&OldTerrainTexturingTool::SaveMap, this, _1));
 
 			//LoadOldMap();
 			return true;
 		}
 
-		void TerrainPaintTool::onShutdown(EditMode * nextEditMode)
+		void OldTerrainTexturingTool::onShutdown(EditMode * nextEditMode)
 		{
 			EditMode::onShutdown(nextEditMode);
 			mSaveMapProxy.unregister();

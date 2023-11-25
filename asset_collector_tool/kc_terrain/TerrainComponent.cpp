@@ -43,15 +43,15 @@ namespace kc_terrain
 	//[-------------------------------------------------------]
 	//[ Public definitions                                    ]
 	//[-------------------------------------------------------]
-	const uint32 TerrainComponent::COMPONENT_ID			   = qsf::StringHash("kc_terrain::TerrainComponent");
-	const uint32 TerrainComponent::HEIGHT_MAP_SIZE		   = qsf::StringHash("HeightMapSize");
-	const uint32 TerrainComponent::COLOR_MAP_SIZE		   = qsf::StringHash("ColorMapSize");
-	const uint32 TerrainComponent::BLEND_MAP_SIZE		   = qsf::StringHash("BlendMapSize");
+	const uint32 TerrainComponent::COMPONENT_ID = qsf::StringHash("kc_terrain::TerrainComponent");
+	const uint32 TerrainComponent::HEIGHT_MAP_SIZE = qsf::StringHash("HeightMapSize");
+	const uint32 TerrainComponent::COLOR_MAP_SIZE = qsf::StringHash("ColorMapSize");
+	const uint32 TerrainComponent::BLEND_MAP_SIZE = qsf::StringHash("BlendMapSize");
 	const uint32 TerrainComponent::TERRAIN_CHUNKS_PER_EDGE = qsf::StringHash("TerrainChunksPerEdge");
-	const uint32 TerrainComponent::TERRAIN_WORLD_SIZE	   = qsf::StringHash("TerrainWorldSize");
-	const uint32 TerrainComponent::SKIRT_SIZE			   = qsf::StringHash("SkirtSize");
-	const uint32 TerrainComponent::MAX_PIXEL_ERROR		   = qsf::StringHash("MaxPixelError");
-	const uint32 TerrainComponent::TERRAIN_ASSET		   = qsf::StringHash("TerrainAsset");
+	const uint32 TerrainComponent::TERRAIN_WORLD_SIZE = qsf::StringHash("TerrainWorldSize");
+	const uint32 TerrainComponent::SKIRT_SIZE = qsf::StringHash("SkirtSize");
+	const uint32 TerrainComponent::MAX_PIXEL_ERROR = qsf::StringHash("MaxPixelError");
+	const uint32 TerrainComponent::TERRAIN_ASSET = qsf::StringHash("TerrainAsset");
 	const uint8  TerrainComponent::RENDER_QUEUE_GROUP_ID = 50;	// See "Ogre::TerrainQuadTreeNode::Movable::Movable()"
 
 
@@ -108,19 +108,17 @@ namespace kc_terrain
 			// Promote the property change
 			promotePropertyChange(TERRAIN_WORLD_SIZE);
 		}
-		Relead();
 	}
 
-	 void TerrainComponent::SetPosition(glm::vec3 newpos)
+	void TerrainComponent::SetPosition(glm::vec3 newpos)
 	{
 		setPosition(
-			getEntity().getComponent<qsf::TransformComponent>()->getPosition(),newpos);
+			getEntity().getComponent<qsf::TransformComponent>()->getPosition(), newpos);
 		//getOgreTerrain()->setSize
 		mPos = newpos;
-		Relead();
 	}
 
-	 glm::vec3 TerrainComponent::getPosition()
+	glm::vec3 TerrainComponent::getPosition()
 	{
 		return mPos;
 	}
@@ -304,7 +302,7 @@ namespace kc_terrain
 	{
 		mColorMap = NewAssetId;
 		Relead();
-	return;
+		return;
 	}
 
 	qsf::AssetProxy TerrainComponent::GetColorMap()
@@ -332,7 +330,7 @@ namespace kc_terrain
 		{
 			if (qsf::TransformComponent::POSITION == propertyId && nullptr != mOgreTerrainGroup)
 			{
-				setPosition(static_cast<const qsf::TransformComponent&>(component).getPosition(),mPos);
+				setPosition(static_cast<const qsf::TransformComponent&>(component).getPosition(), mPos);
 			}
 
 			// Rotation and scale are not supported by the OGRE terrain
@@ -369,7 +367,7 @@ namespace kc_terrain
 				if (nullptr != transformComponent)
 				{
 					// Position
-					setPosition(transformComponent->getPosition(),mPos);
+					setPosition(transformComponent->getPosition(), mPos);
 
 					// Rotation and scale are not supported by the OGRE terrain
 				}
@@ -404,6 +402,8 @@ namespace kc_terrain
 
 	void TerrainComponent::onShutdown()
 	{
+		//mOgreTerrainGroup->setFilenamePrefix(boost::lexical_cast<std::string>(getEntityId()).c_str());
+		//mOgreTerrainGroup->saveAllTerrains(false, true);
 		QSF_SETTINGSGROUP.PropertyChanged.disconnect(boost::bind(&TerrainComponent::onSettingsPropertyChanged, this, _1, _2));
 
 		// Get the OGRE scene manager instance
@@ -734,7 +734,7 @@ namespace kc_terrain
 		}
 	}
 
-	void TerrainComponent::setPosition(const glm::vec3& position,glm::vec3 Offset)
+	void TerrainComponent::setPosition(const glm::vec3& position, glm::vec3 Offset)
 	{
 		if (nullptr != mOgreTerrainGroup)
 		{
@@ -747,18 +747,16 @@ namespace kc_terrain
 			mOgreTerrainGroup->setOrigin(ogrePosition);
 		}
 		//getOgreEntity()->getParentSceneNode()->setPosition(Ogre::Vector3(Offset.x,Offset.y,Offset.z));
-		if(getOgreSceneNode() != nullptr)
-		getOgreSceneNode()->setScale(Ogre::Vector3(1+Offset.x, 1+Offset.y, 1+Offset.z));
 	}
 
 	std::vector<float> TerrainComponent::SaveHeightMap()
 	{
 		int partsize = getOgreTerrainGroup()->getTerrainSize() + 1;
-		int partsize2 = getOgreTerrainGroup()->getTerrain(0,1)->getSize();
+		int partsize2 = getOgreTerrainGroup()->getTerrain(0, 1)->getSize();
 		QSF_LOG_PRINTS(INFO, "partsize" << partsize)
 			QSF_LOG_PRINTS(INFO, "partsize2" << partsize2)
-		//scalemap
-		std::vector<float> HeightMap;
+			//scalemap
+			std::vector<float> HeightMap;
 		for (size_t t = 0; t < getHeightMapSize() - 1; t++)
 		{
 			for (size_t j = 0; j < getHeightMapSize() - 1; j++)
@@ -777,7 +775,7 @@ namespace kc_terrain
 		int yTerrain = 0;
 		int yRemaining = (int)point.y;
 		int partsize = getOgreTerrainGroup()->getTerrainSize();
-		
+
 		//QSF_LOG_PRINTS(INFO,point.x << " " << point.y);
 		//we have a pattern like 4x4 (so in total 16 Terrains ... now find the correct one)
 		//remaining is the point on the selected Terrain
@@ -813,21 +811,21 @@ namespace kc_terrain
 	}
 	void TerrainComponent::LoadHeightMap(std::vector<float> PointMap)
 	{
-		int index =0;
+		int index = 0;
 		for (size_t t = 0; t < getHeightMapSize() - 1; t++)
 		{
 			for (size_t j = 0; j < getHeightMapSize() - 1; j++)
 			{
-				SetHeightFromValue(glm::vec2(t,j),PointMap.at(index));
+				SetHeightFromValue(glm::vec2(t, j), PointMap.at(index));
 				index++;
 			}
 		}
 		int mParts = 0;
-		for(size_t t=0; t < 20;t++)
+		for (size_t t = 0; t < 20; t++)
 		{
-			if(getOgreTerrainGroup()->getTerrain((long)t,(long)t) == nullptr)
+			if (getOgreTerrainGroup()->getTerrain((long)t, (long)t) == nullptr)
 			{
-				mParts = (int)t+1;
+				mParts = (int)t + 1;
 				break;
 			}
 		}
@@ -890,10 +888,6 @@ namespace kc_terrain
 	bool TerrainComponent::Relead()
 	{
 
-	//shutdown
-		if(EM5_GAME.getInstance != nullptr)
-		return false;
-		// Get the OGRE scene manager instance
 		Ogre::SceneManager* ogreSceneManager = getOgreSceneManager();
 		std::vector<float> Heightmapdata;
 		if (nullptr != ogreSceneManager)
@@ -925,10 +919,17 @@ namespace kc_terrain
 				if (mColorMap.getAsset() != nullptr)
 				{
 					QSF_LOG_PRINTS(INFO, "colormap data " << mColorMap.getAsset()->getGlobalAssetId())
-			}
-			mTerrainContext->addContextReference(ColorMap);
+				}
+			defineTerrain();
+				//ogreTerrain->getBlendTextureCount()
+				mTerrainContext->addContextReference(ColorMap);
 			// Request OGRE terrain globals instance
-			mOgreTerrainGlobalOptions = mTerrainContext->getOgreTerrainGlobalOptions();
+
+
+				mOgreTerrainGlobalOptions = mTerrainContext->getOgreTerrainGlobalOptions();
+
+
+
 			QSF_ASSERT(nullptr != mOgreTerrainGlobalOptions, "QSF failed to obtain an global OGRE terrain options instance", QSF_REACT_NONE);
 			// Create OGRE terrain group instance
 			// -> OGRE handles the terrain world size for each single terrain inside the terrain group, for QSF in order to keep things simple for the user the terrain world size is for the whole thing
@@ -939,12 +940,17 @@ namespace kc_terrain
 				updateOgreTerrainMaxPixelError();
 				mOgreTerrainGlobalOptions->setLayerBlendMapSize(mBlendMapSize);
 			}
+
+			
+
+
+
 			{ // Use transform component, in case there's one
 				const qsf::TransformComponent* transformComponent = getEntity().getComponent<qsf::TransformComponent>();
 				if (nullptr != transformComponent)
 				{
 					// Position
-					setPosition(transformComponent->getPosition(),mPos);
+					setPosition(transformComponent->getPosition(), mPos);
 
 					// Rotation and scale are not supported by the OGRE terrain
 				}
@@ -954,10 +960,97 @@ namespace kc_terrain
 			// Update the visibility state of the internal OGRE scene node
 			updateOgreSceneNodeVisibility();
 			LoadHeightMap(Heightmapdata);
-			// We want to listen on component property changes inside the core entity: Get "qsf::BoostSignalComponent" instance or create it in case it does not exist, yet
-			QSF_LOG_PRINTS(INFO, "l")
+			//auto BlendTextureCount = getOgreTerrain()->getBlendTextureCount();
+			//QSF_LOG_PRINTS(INFO,"mTerrainContext->addContextReference(ColorMap); "<< BlendTextureCount)
 
+
+			// We want to listen on component property changes inside the core entity: Get "qsf::BoostSignalComponent" instance or create it in case it does not exist, yet
+
+			//store layer-texture data :)
+			QSF_LOG_PRINTS(INFO,"a1")
+			Ogre::StringVector Textures;
+			Ogre::StringVector Textures2;
+			Ogre::StringVector Textures3;
+			Ogre::StringVector Textures4;
+			Ogre::StringVector Textures5;
+			/*
+					Textures.push_back("em5/material/terrain_layer/terrain_nature_grass01");
+		Textures.push_back("em5/material/terrain_layer/terrain_urban_medieval_cobbles");
+		Textures.push_back("em5/material/terrain_layer/terrain_nature_dirt01_fine");
+		Textures.push_back("em5/material/terrain_layer/terrain_nature_sand01");
+		Textures.push_back("em5/material/terrain_layer/terrain_urban_herringbone01");
+		Textures.push_back("em5/material/terrain_layer/terrain_urban_herringbone01");
+		Textures.push_back("em5/material/terrain_layer/terrain_urban_herringbone01");
+		Textures.push_back("em5/material/terrain_layer/terrain_urban_herringbone01");
+		Textures.push_back("em5/material/terrain_layer/terrain_urban_herringbone01");
+		Textures.push_back("em5/material/terrain_layer/terrain_urban_herringbone01");
+			*/
+			Textures.push_back("em5/material/terrain_layer/terrain_nature_grass01");
+			Textures2.push_back("em5/material/terrain_layer/terrain_urban_medieval_cobbles");
+
+			Textures3.push_back("em5/material/terrain_layer/terrain_nature_dirt01_fine");
+			Textures4.push_back("em5/material/terrain_layer/terrain_nature_sand01");
+			Textures5.push_back("em5/material/terrain_layer/terrain_urban_herringbone01");
+			QSF_LOG_PRINTS(INFO, "a2")
+			Ogre::TerrainGroup::TerrainIterator it = getOgreTerrainGroup2()->getTerrainIterator();
+			int id = 1; // because my ID start at 0
+			while (it.hasMoreElements()) // add the layer to all terrains in the terrainGroup
+			{
+				QSF_LOG_PRINTS(INFO, "a3")
+				id++;
+				Ogre::TerrainGroup::TerrainSlot* a = it.getNext();
+				a->instance->addLayer(0.0f, &Textures);
+				a->instance->addLayer(0.0f, &Textures2);
+				a->instance->addLayer(0.0f, &Textures3);
+				a->instance->addLayer(0.0f, &Textures4);
+
+				a->instance->addLayer(0.0f, &Textures5);
+				a->instance->addLayer(0.0f, &Textures5);
+				a->instance->addLayer(0.0f, &Textures5);
+				a->instance->addLayer(0.0f, &Textures5);
+				a->instance->addLayer(0.0f, &Textures5);
+				a->instance->addLayer(0.0f, &Textures5);
+				/*QSF_LOG_PRINTS(INFO,(int32)a->instance->getBlendTextureCount())
+					for (size_t t = 1; t <= a->instance->getBlendTextureCount(); t++)
+					{
+						QSF_LOG_PRINTS(INFO,a->instance->getBlendTextureName((uint8)t));
+					}*/
+				mTerrainContext->GetMaterialGenerator()->RefreshMaterial(mOgreTerrainGroup->getTerrain(a->x,a->y));
+			}
+			mOgreTerrainGroup->update(false);
+			return true;
+			/*QSF_LOG_PRINTS(INFO, "l")
+				Ogre::StringVector Textures;
+			Textures.push_back("em5/material/terrain_layer/terrain_urban_herringbone01");
+			QSF_LOG_PRINTS(INFO, "ahaba1")
+				getOgreTerrain()->addLayer(0.0f, &Textures);
+			getOgreTerrain()->addLayer(0.0f, &Textures);
+			QSF_LOG_PRINTS(INFO, "ahaba2")
+				mTerrainContext->GetMaterialGenerator()->RefreshMaterial(getOgreTerrain());
+			QSF_LOG_PRINTS(INFO, "ahaba3")
+				//QSF_LOG_PRINTS(INFO, getOgreTerrainGroup()->getTerrain(0, 0)->getBlendTextureName(1));*/
+				if (getOgreTerrainGroup()->getTerrain(0, 0)->getLayerBlendMap(1) != nullptr)
+				{
+					try
+					{
+						for (size_t t = 0; t < 66; t++)
+						{
+							for (size_t j = 0; j < 66; j++)
+								getOgreTerrainGroup()->getTerrain(0, 0)->getLayerBlendMap(1)->setBlendValue(t, j, 255);
+						}
+						getOgreTerrainGroup()->getTerrain(0, 0)->getLayerBlendMap(1)->update();
+					}
+					catch (const std::exception& e)
+					{
+						QSF_LOG_PRINTS(INFO, e.what())
+					}
+				}
+				else
+				{
+					QSF_LOG_PRINTS(INFO, "Terrain not loaded")
+				}
 			// Done
+
 			return true;
 		}
 
@@ -966,7 +1059,7 @@ namespace kc_terrain
 	}
 
 
-//[-------------------------------------------------------]
-//[ Namespace                                             ]
-//[-------------------------------------------------------]
+	//[-------------------------------------------------------]
+	//[ Namespace                                             ]
+	//[-------------------------------------------------------]
 } // qsf

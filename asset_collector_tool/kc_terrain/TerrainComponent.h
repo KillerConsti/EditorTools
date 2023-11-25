@@ -280,6 +280,9 @@ namespace kc_terrain
 		glm::vec3 mPos;
 		glm::vec3 mScale;
 
+
+		void SetUpdate(bool yeah);
+		bool GetUpdate();
 		//[-------------------------------------------------------]
 		//[ Collision                                             ]
 		//[-------------------------------------------------------]
@@ -349,7 +352,7 @@ namespace kc_terrain
 		*    OGRE terrain group, can be a null pointer, do not destroy the instance
 		*/
 		inline Ogre::TerrainGroup* getOgreTerrainGroup() const;
-
+		inline Ogre::TerrainGroup* getOgreTerrainGroup2() const;
 		/**
 		*  @brief
 		*    Get the OGRE terrain

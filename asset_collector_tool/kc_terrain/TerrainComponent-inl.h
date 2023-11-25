@@ -78,6 +78,11 @@ namespace kc_terrain
 		return mOgreTerrainGroup;
 	}
 
+	inline Ogre::TerrainGroup* TerrainComponent::getOgreTerrainGroup2() const
+	{
+		return mOgreTerrainGroup;
+	}
+
 	inline const qsf::AssetProxy& TerrainComponent::getTerrainAsset() const
 	{
 		return mTerrainAsset;
@@ -102,6 +107,17 @@ namespace kc_terrain
 	inline glm::vec3 TerrainComponent::GetScale()
 	{
 		return mScale;
+	}
+
+	inline void TerrainComponent::SetUpdate(bool yeah)
+	{
+		if(yeah)
+		Relead();
+	}
+
+	inline bool TerrainComponent::GetUpdate()
+	{
+		return false;
 	}
 
 

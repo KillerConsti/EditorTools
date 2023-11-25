@@ -19,6 +19,7 @@
 #include "qsf/component/base/TransformComponent.h"
 #include "qsf/asset/Asset.h"
 #include "qsf/asset/AssetSystem.h"
+#include "qsf/asset/AssetProxy.h"
 #include "qsf/QsfHelper.h"
 
 #include <OGRE/OgreMaterialManager.h>
@@ -66,9 +67,9 @@ namespace
 		void setLayerBlendMapComponentUvMultiplier(const Ogre::Terrain& ogreTerrain, uint32 layerIndex, const std::string& layerIndexAsString, qsf::Material& terrainMaterial)
 		{
 			// Gather data
-			const int   blendMapIndex	  = (layerIndex - 1) / 4;
+			const int   blendMapIndex = (layerIndex - 1) / 4;
 			const int   blendMapComponent = (layerIndex - 1) % 4;
-			const float uvMultiplier	  = ogreTerrain.getLayerUVMultiplier(layerIndex);
+			const float uvMultiplier = ogreTerrain.getLayerUVMultiplier(layerIndex);
 
 			// Set terrain material property value
 			terrainMaterial.setPropertyById(qsf::StringHash("LayerBlendMapComponentUvMultiplier" + layerIndexAsString), qsf::MaterialPropertyValue::fromFloat3(static_cast<float>(blendMapIndex), static_cast<float>(blendMapComponent), uvMultiplier));
@@ -107,9 +108,9 @@ namespace
 		}
 
 
-//[-------------------------------------------------------]
-//[ Anonymous detail namespace                            ]
-//[-------------------------------------------------------]
+		//[-------------------------------------------------------]
+		//[ Anonymous detail namespace                            ]
+		//[-------------------------------------------------------]
 	} // detail
 }
 
@@ -124,11 +125,10 @@ namespace kc_terrain
 	//[-------------------------------------------------------]
 	//[ Public methods                                        ]
 	//[-------------------------------------------------------]
-	TerrainMaterialGenerator::Profile::Profile(Ogre::TerrainMaterialGenerator* parent, const Ogre::String& name, const Ogre::String& desc,uint64 ColorMap) :
+	TerrainMaterialGenerator::Profile::Profile(Ogre::TerrainMaterialGenerator* parent, const Ogre::String& name, const Ogre::String& desc, uint64 ColorMap) :
 		Ogre::TerrainMaterialGenerator::Profile(parent, name, desc)
 	{
 		m_profil_ColorMap = ColorMap;
-		QSF_LOG_PRINTS(INFO, "constructor " <<m_profil_ColorMap);
 		// Nothing to do in here
 	}
 
@@ -200,6 +200,11 @@ namespace kc_terrain
 		ogreTerrain->_setLightMapRequired(false, false);
 	}
 
+	void TerrainMaterialGenerator::Profile::SetColorMap(uint64 ColorMap)
+	{
+		m_profil_ColorMap = ColorMap;
+	}
+
 
 	//[-------------------------------------------------------]
 	//[ Public methods                                        ]
@@ -214,8 +219,8 @@ namespace kc_terrain
 		mLayerDecl.elements.emplace_back(1, Ogre::TLSS_NORMAL, 0, 2);
 		mLayerDecl.elements.emplace_back(1, Ogre::TLSS_SPECULAR, 2, 1);
 		mLayerDecl.elements.emplace_back(1, Ogre::TLSS_SPECULAR, 3, 1);
-		QSF_LOG_PRINTS(INFO,"TMG"<< ColorMap)
-		mProfiles.push_back(OGRE_NEW Profile(this, "SM2", "Profile for rendering on Shader Model 2 capable cards",ColorMap));
+		QSF_LOG_PRINTS(INFO, "TMG" << ColorMap)
+			mProfiles.push_back(OGRE_NEW Profile(this, "SM2", "Profile for rendering on Shader Model 2 capable cards", ColorMap));
 		setActiveProfile("SM2");
 		mColorMap = ColorMap;
 		// Connect our Boost slot to the Boost signal of the QSF asset system
@@ -228,13 +233,30 @@ namespace kc_terrain
 		QSF_ASSET.AssetsMounted.disconnect(boost::bind(&TerrainMaterialGenerator::onAssetsMounted, this, _1));
 	}
 
+	void TerrainMaterialGenerator::RefreshMaterial(const Ogre::Terrain* ogreTerrain)
+	{
+		/*QSF_LOG_PRINTS(INFO, "lolli")
+			auto oldProfil = getActiveProfile();
+		QSF_SAFE_DELETE(oldProfil);
+		QSF_LOG_PRINTS(INFO, "lolli2")
+			mProfiles.clear();
+
+			mProfiles.push_back(OGRE_NEW Profile(this, "SM2", "Profile for rendering on Shader Model 2 capable cards", mColorMap));
+			//
+			setActiveProfile("SM2");
+		QSF_LOG_PRINTS(INFO, "lolli2.3")*/
+			kc_terrain::TerrainMaterialGenerator::generate(ogreTerrain);
+		//generate(ogreTerrain);
+
+	}
+
 
 	//[-------------------------------------------------------]
 	//[ Private methods                                       ]
 	//[-------------------------------------------------------]
 	void TerrainMaterialGenerator::Profile::createMaterial(const Ogre::String& matName, const Ogre::Terrain* ogreTerrain)
 	{
-		static qsf::MaterialManager& materialManager = QSF_MATERIAL.getMaterialManager();
+		qsf::MaterialManager& materialManager = QSF_MATERIAL.getMaterialManager();
 		QSF_ASSERT(matName == ogreTerrain->getMaterialName(), "qsf::TerrainMaterialGenerator::Profile::createMaterial(): OGRE terrain material name mismatch", QSF_REACT_NONE);
 
 		// In case the terrain material instance is already there, just update it
@@ -331,82 +353,106 @@ namespace kc_terrain
 
 		// Number of layers and number of blend maps
 		const uint32 maximumNumberOfLayers = getMaxLayers(ogreTerrain);
-		const uint32 numberOfBlendMaps = std::min(ogreTerrain->getBlendTextureCount(maximumNumberOfLayers), ogreTerrain->getBlendTextureCount());
+		uint32 numberOfBlendMaps = std::min(ogreTerrain->getBlendTextureCount(maximumNumberOfLayers), ogreTerrain->getBlendTextureCount());
 		uint32 numberOfLayers = std::min(maximumNumberOfLayers, static_cast<uint32>(ogreTerrain->getLayerCount()));
+		//uint32 numberOfLayers = 3;
 		terrainMaterial->setPropertyById("NumberOfLayers", qsf::MaterialPropertyValue::fromInteger(numberOfLayers));
 		terrainMaterial->setPropertyById("NumberOfBlendMaps", qsf::MaterialPropertyValue::fromInteger(numberOfBlendMaps));
 
 		// Blend maps
+		//numberOfBlendMaps =6;
+		std::vector<std::string> Textures;
+		Textures.push_back("em5/material/terrain_layer/terrain_nature_grass01");
+		Textures.push_back("em5/material/terrain_layer/terrain_urban_medieval_cobbles");
+		Textures.push_back("em5/material/terrain_layer/terrain_nature_dirt01_fine");
+		Textures.push_back("em5/material/terrain_layer/terrain_nature_sand01");
+		Textures.push_back("em5/material/terrain_layer/terrain_urban_herringbone01");
+		Textures.push_back("em5/material/terrain_layer/terrain_urban_herringbone01");
+		Textures.push_back("em5/material/terrain_layer/terrain_urban_herringbone01");
+		Textures.push_back("em5/material/terrain_layer/terrain_urban_herringbone01");
+		Textures.push_back("em5/material/terrain_layer/terrain_urban_herringbone01");
+		Textures.push_back("em5/material/terrain_layer/terrain_urban_herringbone01");
+		//QSF_LOG_PRINTS(INFO,"number of layers " << numberOfLayers << "number of blendmaps" << numberOfBlendMaps<< " BlendTextureCount "<< ogreTerrain->getBlendTextureCount())
 		for (uint32 i = 0; i < numberOfBlendMaps; ++i)
 		{
-			terrainMaterial->setPropertyById(qsf::StringHash("BlendMap" + std::to_string(i)), qsf::MaterialPropertyValue::fromResourceName(ogreTerrain->getBlendTextureName(i)));
+				terrainMaterial->setPropertyById(qsf::StringHash("BlendMap" + std::to_string(i)), qsf::MaterialPropertyValue::fromResourceName(ogreTerrain->getBlendTextureName(i)));
+				//terrainMaterial->setPropertyById(qsf::StringHash("BlendMap" + std::to_string(i)), qsf::MaterialPropertyValue::fromResourceName(Textures.at(i)));
 		}
-
 		// Texture layers
 		for (uint32 layerIndex = 0; layerIndex < numberOfLayers; ++layerIndex)
 		{
+			
 			const std::string layerIndexAsString = std::to_string(layerIndex);
 			bool layerCreated = false;
 
 			// Inside the first texture name of the terrain layer we store the global asset ID of the QSF material the terrain layer is using, we need nothing more
-			const std::string globalAssetIdAsString = ogreTerrain->getLayerTextureName(layerIndex, 0);
+			//nasty hack
+			//if(layerIndex == 0)
+			std::string globalAssetIdAsString = Textures.at(layerIndex);
+			//QSF_LOG_PRINTS(INFO, "material generator"<< layerIndex << " "  << globalAssetIdAsString)
+			uint64 globalAssetId = qsf::getUninitialized<uint64>();
+			//std::string globalAssetIdAsString = ogreTerrain->getLayerTextureName(layerIndex, 0);
+			if(qsf::AssetProxy(globalAssetIdAsString).getAsset() != nullptr)
+				globalAssetId = qsf::AssetProxy(globalAssetIdAsString).getGlobalAssetId();
 			static const qsf::AssetSystem& assetSystem = QSF_ASSET;
-			const qsf::GlobalAssetId globalAssetId = assetSystem.globalAssetIdAsStringToGlobalAssetId(globalAssetIdAsString);
-			if (nullptr != assetSystem.getAssetByGlobalAssetId(globalAssetId))
-			{
-				const qsf::Material* layerMaterial = materialManager.findElement(qsf::StringHash(globalAssetIdAsString));
-				if (nullptr != layerMaterial)
+
+			uint64 globalAssetId__ = qsf::getUninitialized<uint64>();
+			if (nullptr != qsf::AssetProxy(globalAssetIdAsString).getAsset())
+				globalAssetId__ = qsf::AssetProxy(globalAssetIdAsString).getGlobalAssetId();
+
+				if (nullptr != qsf::AssetProxy(globalAssetIdAsString).getAsset())//assetSystem.getAssetByGlobalAssetId(globalAssetId))
 				{
-					// Diffuse height
-					const qsf::MaterialPropertyValue* layerMaterialPropertyValue = layerMaterial->getPropertyById("_crgb_ha");
-					if (nullptr != layerMaterialPropertyValue)
-					{
-						terrainMaterial->setPropertyById(qsf::StringHash("_crgb_ha_" + layerIndexAsString), *layerMaterialPropertyValue);
-					}
-					else
-					{
-						QSF_ERROR("Broken material without _crgb_ha texture", QSF_REACT_NONE);
-					}
+					const qsf::Material* layerMaterial = QSF_MATERIAL.getMaterialManager().findElement(qsf::StringHash(boost::lexical_cast<std::string>(globalAssetId)));
 
-					// Normal specular gloss
-					layerMaterialPropertyValue = layerMaterial->getPropertyById("_nag_sr_gb");
-					if (nullptr != layerMaterialPropertyValue)
+					if (nullptr != layerMaterial)
 					{
-						terrainMaterial->setPropertyById(qsf::StringHash("_nag_sr_gb_" + layerIndexAsString), *layerMaterialPropertyValue);
-					}
-					else
-					{
-						QSF_ERROR("Broken material without _nag_sr_gb texture", QSF_REACT_NONE);
-					}
-
-					{ // World size
-						float worldSize = 1.0f;
-						layerMaterialPropertyValue = layerMaterial->getPropertyById("WorldSize");
+						// Diffuse height
+							const qsf::MaterialPropertyValue* layerMaterialPropertyValue = layerMaterial->getPropertyById("_crgb_ha");
 						if (nullptr != layerMaterialPropertyValue)
 						{
-							worldSize = layerMaterialPropertyValue->getFloatValue();
+							terrainMaterial->setPropertyById(qsf::StringHash("_crgb_ha_" + layerIndexAsString), *layerMaterialPropertyValue);
 						}
-						// TODO(co) We might want to optimize this by e.g. directly setting the shader parameter instead of going over the OGRE terrain instance
-						// TODO(tl) We should check how we can calculate UVMultiplier ourself from world size when we have time
-						const_cast<Ogre::Terrain*>(ogreTerrain)->setLayerWorldSize(layerIndex, worldSize);
+						else
+						{
+							QSF_ERROR("Broken material without _crgb_ha texture", QSF_REACT_NONE);
+						}
+							// Normal specular gloss
+							layerMaterialPropertyValue = layerMaterial->getPropertyById("_nag_sr_gb");
+						if (nullptr != layerMaterialPropertyValue)
+						{
+							terrainMaterial->setPropertyById(qsf::StringHash("_nag_sr_gb_" + layerIndexAsString), *layerMaterialPropertyValue);
+						}
+						else
+						{
+							QSF_ERROR("Broken material without _nag_sr_gb texture", QSF_REACT_NONE);
+						}
+						{ // World size
+							float worldSize = 1.0f;
+							layerMaterialPropertyValue = layerMaterial->getPropertyById("WorldSize");
+							if (nullptr != layerMaterialPropertyValue)
+							{
+								worldSize = layerMaterialPropertyValue->getFloatValue();
+							}
+							// TODO(co) We might want to optimize this by e.g. directly setting the shader parameter instead of going over the OGRE terrain instance
+							// TODO(tl) We should check how we can calculate UVMultiplier ourself from world size when we have time
+							const_cast<Ogre::Terrain*>(ogreTerrain)->setLayerWorldSize(layerIndex, worldSize);
+						}
+							// Set terrain layer material properties
+							::detail::setLayerBlendMapComponentUvMultiplier(*ogreTerrain, layerIndex, layerIndexAsString, *terrainMaterial);
+							::detail::setTerrainLayerMaterialProperties(layerMaterial->getMaterialProperties(), layerIndexAsString, *terrainMaterial);
+							// Layer has been created successfully
+							layerCreated = true;
 					}
-
-					// Set terrain layer material properties
-					::detail::setLayerBlendMapComponentUvMultiplier(*ogreTerrain, layerIndex, layerIndexAsString, *terrainMaterial);
-					::detail::setTerrainLayerMaterialProperties(layerMaterial->getMaterialProperties(), layerIndexAsString, *terrainMaterial);
-
-					// Layer has been created successfully
-					layerCreated = true;
+					else
+					{
+				
+						QSF_ERROR("Terrain layer material " << globalAssetIdAsString << " not found, restart editor, ignore this error and use terrain tool to reevaluate all layer (1)" << globalAssetIdAsString, QSF_REACT_NONE);
+					}
 				}
 				else
 				{
-					QSF_ERROR("Terrain layer material " << globalAssetIdAsString << " not found, restart editor, ignore this error and use terrain tool to reevaluate all layer", QSF_REACT_NONE);
+					QSF_ERROR("Terrain layer asset " << globalAssetId << " not found, restart editor, ignore this error and use terrain tool to reevaluate all layer (2)" << globalAssetIdAsString, QSF_REACT_NONE);
 				}
-			}
-			else
-			{
-				QSF_ERROR("Terrain layer asset " << globalAssetId << " not found, restart editor, ignore this error and use terrain tool to reevaluate all layer", QSF_REACT_NONE);
-			}
 
 			// Error handling: The show must go on
 			if (!layerCreated)
@@ -493,7 +539,7 @@ namespace kc_terrain
 	}
 
 
-//[-------------------------------------------------------]
-//[ Namespace                                             ]
-//[-------------------------------------------------------]
+	//[-------------------------------------------------------]
+	//[ Namespace                                             ]
+	//[-------------------------------------------------------]
 } // qsf

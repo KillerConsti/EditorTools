@@ -5,9 +5,10 @@
 //[ Includes                                              ]
 //[-------------------------------------------------------]
 #include "asset_collector_tool/PrecompiledHeader.h"
-#include "asset_collector_tool/qsf_editor/tools/TerrainpaintingToolbox.h"
-#include <asset_collector_tool\view\indicator\TerrainPaintTool.h>
-#include "ui_TerrainpaintingToolbox.h" // Automatically created by Qt's uic (output directory is "tmp\qt\uic\qsf_editor" within the hand configured Visual Studio files, another directory when using CMake)
+#include "asset_collector_tool/qsf_editor/tools/TerrainTexturingToolbox.h"
+#include <asset_collector_tool\view\indicator\TerrainTexturingTool.h>
+#include <asset_collector_tool\view\indicator\OldTerrainTexturingTool.h>
+#include "ui_TerrainTexturingToolbox.h" // Automatically created by Qt's uic (output directory is "tmp\qt\uic\qsf_editor" within the hand configured Visual Studio files, another directory when using CMake)
 
 #include <qsf_editor/operation/utility/RebuildGuiOperation.h>
 #include <qsf_editor/application/manager/CameraManager.h>
@@ -111,7 +112,7 @@ namespace user
 		//[-------------------------------------------------------]
 		//[ Public definitions                                    ]
 		//[-------------------------------------------------------]
-		const uint32 TerrainpaintingToolbox::PLUGINABLE_ID = qsf::StringHash("qsf::editor::TerrainpaintingToolbox");
+		const uint32 TerrainTexturingToolbox::PLUGINABLE_ID = qsf::StringHash("qsf::editor::TerrainTexturingToolbox");
 
 
 		//[-------------------------------------------------------]
@@ -119,9 +120,9 @@ namespace user
 		//[-------------------------------------------------------]
 
 
-		TerrainpaintingToolbox::TerrainpaintingToolbox(qsf::editor::ToolManager * toolManager) :
+		TerrainTexturingToolbox::TerrainTexturingToolbox(qsf::editor::ToolManager * toolManager) :
 			qsf::editor::Tool(toolManager),
-			mUITerrainpaintingToolbox(new Ui::TerrainpaintingToolbox()),
+			mUITerrainTexturingToolbox(new Ui::TerrainTexturingToolbox()),
 			mMode(Set),
 			mSavepath(""),
 			mColor(Qt::cyan),
@@ -130,20 +131,20 @@ namespace user
 
 		}
 
-		TerrainpaintingToolbox::~TerrainpaintingToolbox()
+		TerrainTexturingToolbox::~TerrainTexturingToolbox()
 		{
 		}
 
-		float TerrainpaintingToolbox::GetBrushRadius()
+		float TerrainTexturingToolbox::GetBrushRadius()
 		{
-			return ((float)mUITerrainpaintingToolbox->horizontalSlider_2->value() / 10.f);
+			return ((float)mUITerrainTexturingToolbox->horizontalSlider_2->value() / 10.f);
 		}
 
 
 
-		TerrainpaintingToolbox::BrushShape TerrainpaintingToolbox::GetBrushShape()
+		TerrainTexturingToolbox::BrushShape TerrainTexturingToolbox::GetBrushShape()
 		{
-			switch (mUITerrainpaintingToolbox->comboBox->currentIndex())
+			switch (mUITerrainTexturingToolbox->comboBox->currentIndex())
 			{
 			case 0:
 				return Dome;
@@ -156,45 +157,45 @@ namespace user
 			}
 		}
 
-		int TerrainpaintingToolbox::GetBrushIntensity()
+		int TerrainTexturingToolbox::GetBrushIntensity()
 		{
-			return (mUITerrainpaintingToolbox->horizontalSlider->value());
+			return (mUITerrainTexturingToolbox->horizontalSlider->value());
 		}
 
-		bool TerrainpaintingToolbox::onStartup(qsf::editor::ToolboxView & toolboxView)
+		bool TerrainTexturingToolbox::onStartup(qsf::editor::ToolboxView & toolboxView)
 		{
-			if (mUITerrainpaintingToolbox != nullptr)
+			if (mUITerrainTexturingToolbox != nullptr)
 
-				mUITerrainpaintingToolbox->setupUi(toolboxView.widget());
-			if (mUITerrainpaintingToolbox == nullptr) //shouldnt happen
+				mUITerrainTexturingToolbox->setupUi(toolboxView.widget());
+			if (mUITerrainTexturingToolbox == nullptr) //shouldnt happen
 				return false;
-			connect(mUITerrainpaintingToolbox->pushButton, SIGNAL(clicked(bool)), this, SLOT(onPushSaveMap(bool)));
-			connect(mUITerrainpaintingToolbox->pushButton_2, SIGNAL(clicked(bool)), this, SLOT(onSetSaveDirectory(bool)));
-			connect(mUITerrainpaintingToolbox->pushButtonSelect, SIGNAL(clicked(bool)), this, SLOT(onPushSelectButton(bool)));
-			//connect(mUITerrainpaintingToolbox->horizontalSlider, SIGNAL(valueChanged(int)), this, SLOT(onMinimumSliderChanged(int)));
-			connect(mUITerrainpaintingToolbox->horizontalSlider_2, SIGNAL(valueChanged(int)), this, SLOT(onRadiusSliderChanged(int)));
+			connect(mUITerrainTexturingToolbox->pushButton, SIGNAL(clicked(bool)), this, SLOT(onPushSaveMap(bool)));
+			connect(mUITerrainTexturingToolbox->pushButton_2, SIGNAL(clicked(bool)), this, SLOT(onSetSaveDirectory(bool)));
+			connect(mUITerrainTexturingToolbox->pushButtonSelect, SIGNAL(clicked(bool)), this, SLOT(onPushSelectButton(bool)));
+			//connect(mUITerrainTexturingToolbox->horizontalSlider, SIGNAL(valueChanged(int)), this, SLOT(onMinimumSliderChanged(int)));
+			connect(mUITerrainTexturingToolbox->horizontalSlider_2, SIGNAL(valueChanged(int)), this, SLOT(onRadiusSliderChanged(int)));
 
-			//connect(mUITerrainpaintingToolbox->lineEdit, SIGNAL(textChanged(QString)), this, SLOT(onEditPrefab(QString)));
-			connect(mUITerrainpaintingToolbox->horizontalSlider, SIGNAL(valueChanged(int)), this, SLOT(OnBrushIntensitySliderChanged(int)));
+			//connect(mUITerrainTexturingToolbox->lineEdit, SIGNAL(textChanged(QString)), this, SLOT(onEditPrefab(QString)));
+			connect(mUITerrainTexturingToolbox->horizontalSlider, SIGNAL(valueChanged(int)), this, SLOT(OnBrushIntensitySliderChanged(int)));
 
 			//Editmodes
 
 
-			connect(mUITerrainpaintingToolbox->comboBox, SIGNAL(currentIndexChanged(int)), SLOT(onChangeBrushType(int)));
+			connect(mUITerrainTexturingToolbox->comboBox, SIGNAL(currentIndexChanged(int)), SLOT(onChangeBrushType(int)));
 			InitSavePath();
 			return true;
 		}
 
-		void TerrainpaintingToolbox::retranslateUi(qsf::editor::ToolboxView & toolboxView)
+		void TerrainTexturingToolbox::retranslateUi(qsf::editor::ToolboxView & toolboxView)
 		{
-			mUITerrainpaintingToolbox->retranslateUi(toolboxView.widget());
+			mUITerrainTexturingToolbox->retranslateUi(toolboxView.widget());
 		}
 
-		void TerrainpaintingToolbox::onShutdown(qsf::editor::ToolboxView & toolboxView)
+		void TerrainTexturingToolbox::onShutdown(qsf::editor::ToolboxView & toolboxView)
 		{
 			QSF_LOG_PRINTS(INFO, "TET is shutdowned")
 				qsf::editor::EditModeManager& editModeManager = QSF_EDITOR_EDITMODE_MANAGER;
-			if (editModeManager.getSelectedEditMode() == editModeManager.get<TerrainPaintTool>())
+			if (editModeManager.getSelectedEditMode() == editModeManager.get<TerrainTexturingTool>())
 			{
 				editModeManager.selectEditModeByPointer(editModeManager.getPreviousEditMode(), editModeManager.getToolWhichSelectedEditMode());
 			}
@@ -206,25 +207,25 @@ namespace user
 		//[-------------------------------------------------------]
 		//[ Private Qt slots (MOC)                                ]
 		//[-------------------------------------------------------]
-		void TerrainpaintingToolbox::onPushSelectButton(const bool pressed)
+		void TerrainTexturingToolbox::onPushSelectButton(const bool pressed)
 		{
 
 			qsf::editor::EditModeManager& editModeManager = QSF_EDITOR_EDITMODE_MANAGER;
-			if (editModeManager.getSelectedEditMode() == editModeManager.get<TerrainPaintTool>())
+			if (editModeManager.getSelectedEditMode() == editModeManager.get<TerrainTexturingTool>())
 			{
 				QSF_LOG_PRINTS(INFO, "Allready in editmode");
 			}
 
-			QSF_EDITOR_EDITMODE_MANAGER.selectEditMode<TerrainPaintTool>(this);
+			QSF_EDITOR_EDITMODE_MANAGER.selectEditMode<TerrainTexturingTool>(this);
 		}
 
 
-		void TerrainpaintingToolbox::onUndoOperationExecuted(const qsf::editor::base::Operation& operation)
+		void TerrainTexturingToolbox::onUndoOperationExecuted(const qsf::editor::base::Operation& operation)
 		{
 
 		}
 
-		void TerrainpaintingToolbox::onRedoOperationExecuted(const qsf::editor::base::Operation& operation)
+		void TerrainTexturingToolbox::onRedoOperationExecuted(const qsf::editor::base::Operation& operation)
 		{
 
 
@@ -233,24 +234,24 @@ namespace user
 
 
 
-		void TerrainpaintingToolbox::OnBrushIntensitySliderChanged(const int value)
-		{
-			std::stringstream ss;
-			ss << mUITerrainpaintingToolbox->horizontalSlider->value();
-			mUITerrainpaintingToolbox->lineEdit->setText(ss.str().c_str());
-		}
-
-		void TerrainpaintingToolbox::onRadiusSliderChanged(const int value)
+		void TerrainTexturingToolbox::OnBrushIntensitySliderChanged(const int value)
 		{
 			std::stringstream ss;
-			ss << 1.0*mUITerrainpaintingToolbox->horizontalSlider_2->value() / 10.0;
-			mUITerrainpaintingToolbox->lineEdit_5->setText(ss.str().c_str());
+			ss << mUITerrainTexturingToolbox->horizontalSlider->value();
+			mUITerrainTexturingToolbox->lineEdit->setText(ss.str().c_str());
+		}
+
+		void TerrainTexturingToolbox::onRadiusSliderChanged(const int value)
+		{
+			std::stringstream ss;
+			ss << 1.0*mUITerrainTexturingToolbox->horizontalSlider_2->value() / 10.0;
+			mUITerrainTexturingToolbox->lineEdit_5->setText(ss.str().c_str());
 		}
 
 
 
 
-		void TerrainpaintingToolbox::onSetSaveDirectory(const bool pressed)
+		void TerrainTexturingToolbox::onSetSaveDirectory(const bool pressed)
 		{
 			QWidget* qtw = new QWidget();
 			auto fileName = QFileDialog::getExistingDirectory(qtw,
@@ -267,12 +268,12 @@ namespace user
 		}
 
 
-		std::string TerrainpaintingToolbox::GetSavePath()
+		std::string TerrainTexturingToolbox::GetSavePath()
 		{
 			return mSavepath;
 		}
 
-		std::string TerrainpaintingToolbox::InitSavePath()
+		std::string TerrainTexturingToolbox::InitSavePath()
 		{
 			for (auto a : QSF_PLUGIN.getPlugins())
 			{
@@ -309,14 +310,14 @@ namespace user
 			return std::string();
 		}
 
-		QColor TerrainpaintingToolbox::getColor()
+		QColor TerrainTexturingToolbox::getColor()
 		{
 			return mColor;
 		}
 
-		void TerrainpaintingToolbox::SetCurrentTerrainData(std::vector<std::string> Data, int xTerrain, int yTerrain)
+		void TerrainTexturingToolbox::SetCurrentTerrainData(std::vector<std::string> Data, int xTerrain, int yTerrain)
 		{
-			auto ListWidget = mUITerrainpaintingToolbox->listWidget;
+			auto ListWidget = mUITerrainTexturingToolbox->listWidget;
 			if (OldTerrain.x != xTerrain && OldTerrain.y != yTerrain)
 			{
 				ListWidget->clear();
@@ -326,25 +327,25 @@ namespace user
 			}
 		}
 
-		std::string TerrainpaintingToolbox::GetLayerColor()
+		std::string TerrainTexturingToolbox::GetLayerColor()
 		{
-			if(mUITerrainpaintingToolbox->listWidget->currentItem() == nullptr)
+			if(mUITerrainTexturingToolbox->listWidget->currentItem() == nullptr)
 				return "";
-			return mUITerrainpaintingToolbox->listWidget->currentItem()->text().toStdString();
+			return mUITerrainTexturingToolbox->listWidget->currentItem()->text().toStdString();
 		}
 
-		void TerrainpaintingToolbox::onChangeBrushType(const int Type)
+		void TerrainTexturingToolbox::onChangeBrushType(const int Type)
 		{
 
 		}
 
-		void TerrainpaintingToolbox::onPushSaveMap(const bool pressed)
+		void TerrainTexturingToolbox::onPushSaveMap(const bool pressed)
 		{
 
 			QSF_MESSAGE.emitMessage(qsf::MessageConfiguration("kc::save_heightmap"));
 		}
 
-		TerrainpaintingToolbox::TerrainEditMode2 TerrainpaintingToolbox::GetEditMode()
+		TerrainTexturingToolbox::TerrainEditMode2 TerrainTexturingToolbox::GetEditMode()
 		{
 			return mMode;
 		}

@@ -24,14 +24,14 @@
 #include "qsf_editor/editmode/EditMode.h"
 #include "qsf_editor/editmode/EditModeManager.h"
 #include <qsf/renderer/terrain/TerrainComponent.h>
-#include <asset_collector_tool\qsf_editor\tools\TerrainpaintingToolbox.h>
+#include <asset_collector_tool\qsf_editor\tools\TerrainTexturingToolbox.h>
 #include <qsf/message/MessageProxy.h>
 //[-------------------------------------------------------]
 //[ Forward declarations                                  ]
 //[-------------------------------------------------------]
 namespace Ui
 {
-	class TerrainPaintTool;
+	class OldTerrainTexturingTool;
 }
 namespace qsf
 {
@@ -64,7 +64,7 @@ namespace user
 		*  @note
 		*    - The UI is created via source code
 		*/
-		class TerrainPaintTool : public qsf::editor::EditMode
+		class OldTerrainTexturingTool : public qsf::editor::EditMode
 		{
 
 
@@ -79,7 +79,7 @@ namespace user
 		//[ Public definitions                                    ]
 		//[-------------------------------------------------------]
 		public:
-			static const uint32 PLUGINABLE_ID;	///< "user::editor::TerrainPaintTool" unique pluginable view ID
+			static const uint32 PLUGINABLE_ID;	///< "user::editor::OldTerrainTexturingTool" unique pluginable view ID
 
 
 		//[-------------------------------------------------------]
@@ -95,13 +95,13 @@ namespace user
 			*  @param[in] qWidgetParent
 			*    Pointer to parent Qt widget, can be a null pointer (in this case you're responsible for destroying this view instance)
 			*/
-			TerrainPaintTool(qsf::editor::EditModeManager* editModeManager);
+			OldTerrainTexturingTool(qsf::editor::EditModeManager* editModeManager);
 
 			/**
 			*  @brief
 			*    Destructor
 			*/
-			virtual ~TerrainPaintTool();
+			virtual ~OldTerrainTexturingTool();
 
 		//[-------------------------------------------------------]
 		//[ Protected virtual qsf::editor::View methods           ]
@@ -123,7 +123,7 @@ namespace user
 			void SetHeight(glm::vec2 MapPoint);
 
 			void IncreaseHeight(glm::vec2 Point,float NewHeight);
-			float GetCustomIntensity(float distancetoMidpoint, TerrainpaintingToolbox::TerrainEditMode2 Mode);
+			float GetCustomIntensity(float distancetoMidpoint, TerrainTexturingToolbox::TerrainEditMode2 Mode);
 			void RaiseTerrain(glm::vec2 Mappoint);
 			void RaisePoint(glm::vec2 Mappoint, float Intensity);
 			int timer;
@@ -138,7 +138,7 @@ namespace user
 
 			float MoveDelta;
 			glm::vec3 OldPos;
-			glm::vec3 TerrainPaintTool::getPositionUnderMouse();
+			glm::vec3 OldTerrainTexturingTool::getPositionUnderMouse();
 			qsf::MessageProxy		mSaveMapProxy;
 			void SaveMap(const qsf::MessageParameters& parameters);
 			void SaveTheFuckingMap();
@@ -182,7 +182,7 @@ namespace user
 			// return a worldpoint point from a mappoint (heighmap which is like 1024² or 2048²)
 			glm::vec2 ConvertMappointToWorldPoint(glm::vec2 WorldPoint);
 			void UpdateTerrains();
-			TerrainpaintingToolbox* TerrainEditGUI;
+			TerrainTexturingToolbox* TerrainEditGUI;
 
 			virtual bool onStartup(EditMode* previousEditMode) override;
 			virtual void onShutdown(EditMode* nextEditMode) override;
@@ -206,4 +206,4 @@ namespace user
 //[-------------------------------------------------------]
 //[ CAMP reflection system                                ]
 //[-------------------------------------------------------]
-QSF_CAMP_TYPE_NONCOPYABLE(user::editor::TerrainPaintTool)
+QSF_CAMP_TYPE_NONCOPYABLE(user::editor::OldTerrainTexturingTool)

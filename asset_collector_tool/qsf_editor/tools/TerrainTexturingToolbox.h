@@ -23,14 +23,13 @@
 #include <qsf_editor_base/operation/CompoundOperation.h>
 #include "qsf_editor/editmode/EditMode.h"
 #include "qsf_editor/editmode/EditModeManager.h"
-#include <qsf/renderer/terrain/TerrainComponent.h>
-#include <ui_TerrainpaintingToolbox.h>
+#include <ui_TerrainTexturingToolbox.h>
 //[-------------------------------------------------------]
 //[ Forward declarations                                  ]
 //[-------------------------------------------------------]
 namespace Ui
 {
-	class TerrainpaintingToolbox;
+	class TerrainTexturingToolbox;
 }
 namespace qsf
 {
@@ -63,7 +62,7 @@ namespace user
 		*  @note
 		*    - The UI is created via source code
 		*/
-		class TerrainpaintingToolbox : public QObject, public qsf::editor::Tool
+		class TerrainTexturingToolbox : public QObject, public qsf::editor::Tool
 		{
 
 
@@ -78,7 +77,7 @@ namespace user
 						//[ Public definitions                                    ]
 						//[-------------------------------------------------------]
 		public:
-			static const uint32 PLUGINABLE_ID;	///< "user::editor::TerrainpaintingToolbox" unique pluginable view ID
+			static const uint32 PLUGINABLE_ID;	///< "user::editor::TerrainTexturingToolbox" unique pluginable view ID
 
 
 												//[-------------------------------------------------------]
@@ -94,14 +93,14 @@ namespace user
 			*  @param[in] qWidgetParent
 			*    Pointer to parent Qt widget, can be a null pointer (in this case you're responsible for destroying this view instance)
 			*/
-			explicit TerrainpaintingToolbox(qsf::editor::ToolManager* toolManager);
+			explicit TerrainTexturingToolbox(qsf::editor::ToolManager* toolManager);
 
 			/**
 			*  @brief
 			*    Destructor
 			*/
-			virtual ~TerrainpaintingToolbox();
-			Ui::TerrainpaintingToolbox*					mUITerrainpaintingToolbox;			///< UI EM5 fire simulation tool instance, always valid, we have to destroy the instance in case we no longer need it
+			virtual ~TerrainTexturingToolbox();
+			Ui::TerrainTexturingToolbox*					mUITerrainTexturingToolbox;			///< UI EM5 fire simulation tool instance, always valid, we have to destroy the instance in case we no longer need it
 			//[-------------------------------------------------------]
 			//[ Protected virtual qsf::editor::Tool methods           ]
 			//[-------------------------------------------------------]
@@ -189,4 +188,4 @@ namespace user
   //[-------------------------------------------------------]
   //[ CAMP reflection system                                ]
   //[-------------------------------------------------------]
-QSF_CAMP_TYPE_NONCOPYABLE(user::editor::TerrainpaintingToolbox)
+QSF_CAMP_TYPE_NONCOPYABLE(user::editor::TerrainTexturingToolbox)

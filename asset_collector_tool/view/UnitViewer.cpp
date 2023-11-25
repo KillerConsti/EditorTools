@@ -154,6 +154,16 @@ namespace user
 				connect(mUiUnitViewer->blinker, SIGNAL(clicked(bool)), this, SLOT(OnPushBlinker(bool)));
 				connect(mUiUnitViewer->bluelight, SIGNAL(clicked(bool)), this, SLOT(OnPushBlueLight(bool)));
 				connect(mUiUnitViewer->headlight, SIGNAL(clicked(bool)), this, SLOT(OnPushHeadLight(bool)));
+
+				//WPT LIGHTS
+				connect(mUiUnitViewer->brakeButton, SIGNAL(clicked(bool)), this, SLOT(onPushbrakeButton(bool)));
+				connect(mUiUnitViewer->trafficwarnerbutton, SIGNAL(clicked(bool)), this, SLOT(onPushtrafficwarnerbutton(bool)));
+				connect(mUiUnitViewer->reverseButton, SIGNAL(clicked(bool)), this, SLOT(onPushreverseButtonbutton(bool)));
+				connect(mUiUnitViewer->interiorbutton, SIGNAL(clicked(bool)), this, SLOT(onPushtinteriorbutton(bool)));
+				connect(mUiUnitViewer->enviromentbutton, SIGNAL(clicked(bool)), this, SLOT(onPushenviromentbutton(bool)));
+
+
+
 				connect(mUiUnitViewer->rotatetires, SIGNAL(clicked(bool)), this, SLOT(OnPushRotateTires(bool)));
 				connect(mUiUnitViewer->select_entity, SIGNAL(clicked(bool)), this, SLOT(onPushSelectEntity(bool)));
 				connect(mUiUnitViewer->PushAddDebugCircles, SIGNAL(clicked(bool)), this, SLOT(onPushAddDebugCircles(bool)));
@@ -287,6 +297,7 @@ namespace user
 				mUiUnitViewer->bluelight->setChecked(false);
 				mUiUnitViewer->headlight->setChecked(false);
 				mUiUnitViewer->blinker->setChecked(false);
+				mUiUnitViewer->brakeButton->setChecked(false);
 				return;
 			}
 			ResetWheelsAfterDeselection();
@@ -315,9 +326,21 @@ namespace user
 				Blinker = QSF_MAINMAP.getEntityById(a)->getComponent<qsf::game::LightControllerComponent>()->isActive();
 				break;
 			}
+			bool Brake = false;
+			for (auto a : RoV->getVehicleLightIdsByType(qsf::game::LightControllerComponent::LIGHTPOSITION_BRAKE))
+			{
+				if (QSF_MAINMAP.getEntityById(a) == nullptr)
+					continue;
+				Blinker = QSF_MAINMAP.getEntityById(a)->getComponent<qsf::game::LightControllerComponent>()->isActive();
+				break;
+			}
 			mUiUnitViewer->bluelight->setChecked(BL);
 			mUiUnitViewer->headlight->setChecked(HL);
 			mUiUnitViewer->blinker->setChecked(Blinker);
+			OnSelectionChange_SetAdditionalLightButtons(mUiUnitViewer->enviromentbutton,"umfeld");
+			OnSelectionChange_SetAdditionalLightButtons(mUiUnitViewer->interiorbutton, "interior");
+			OnSelectionChange_SetAdditionalLightButtons(mUiUnitViewer->reverseButton, "reverse");
+			OnSelectionChange_SetAdditionalLightButtons(mUiUnitViewer->trafficwarnerbutton, "traffic");
 		}
 
 		void UnitViewer::OnPushBlinker(const bool pressed)
@@ -338,10 +361,12 @@ namespace user
 					{
 						for (auto LB : RoV->getVehicleLightIdsByType(qsf::game::LightControllerComponent::LIGHTPOSITION_LEFT_BLINKER))
 						{
+							if (QSF_MAINMAP.getEntityById(LB) == nullptr) continue;
 							QSF_MAINMAP.getEntityById(LB)->getComponent<qsf::game::LightControllerComponent>()->setActive(NewWantedState);
 						}
 						for (auto LB : RoV->getVehicleLightIdsByType(qsf::game::LightControllerComponent::LIGHTPOSITION_RIGHT_BLINKER))
 						{
+							if (QSF_MAINMAP.getEntityById(LB) == nullptr) continue;
 							QSF_MAINMAP.getEntityById(LB)->getComponent<qsf::game::LightControllerComponent>()->setActive(NewWantedState);
 						}
 						AnythingDone = true;
@@ -371,6 +396,7 @@ namespace user
 					{
 						for (auto LB : RoV->getVehicleLightIdsByType(qsf::game::LightControllerComponent::LIGHTPOSITION_BLUE))
 						{
+							if (QSF_MAINMAP.getEntityById(LB) == nullptr) continue;
 							QSF_MAINMAP.getEntityById(LB)->getComponent<qsf::game::LightControllerComponent>()->setActive(NewWantedState);
 						}
 						AnythingDone = true;
@@ -399,6 +425,7 @@ namespace user
 					{
 						for (auto LB : RoV->getVehicleLightIdsByType(qsf::game::LightControllerComponent::LIGHTPOSITION_HEAD))
 						{
+							if (QSF_MAINMAP.getEntityById(LB) == nullptr) continue;
 							QSF_MAINMAP.getEntityById(LB)->getComponent<qsf::game::LightControllerComponent>()->setActive(NewWantedState);
 						}
 						AnythingDone = true;
@@ -509,6 +536,161 @@ namespace user
 			UpdateStreetDebugNodes();
 		}
 
+		void UnitViewer::onPushbrakeButton(const bool pressed)
+		{
+
+			bool NewWantedState = mUiUnitViewer->brakeButton->isChecked();
+			bool AnythingDone = false;
+			for (auto a : GetSelectedEntity())
+			{
+				auto RoV = a->getComponent<em5::RoadVehicleComponent>();
+				if (RoV != nullptr)
+				{
+					if (RoV->getVehicleLightIdsByType(qsf::game::LightControllerComponent::LIGHTPOSITION_BRAKE).empty())
+					{
+						//everything emptY?
+						QSF_LOG_PRINTS(INFO, "Head Light vector is empty")
+					}
+					else
+					{
+						for (auto LB : RoV->getVehicleLightIdsByType(qsf::game::LightControllerComponent::LIGHTPOSITION_BRAKE))
+						{
+							if(QSF_MAINMAP.getEntityById(LB) == nullptr) continue;
+							QSF_MAINMAP.getEntityById(LB)->getComponent<qsf::game::LightControllerComponent>()->setActive(NewWantedState);
+						}
+						AnythingDone = true;
+					}
+				}
+			}
+			if (AnythingDone)
+				mUiUnitViewer->brakeButton->setChecked(NewWantedState);
+			
+		}
+
+		void UnitViewer::onPushtrafficwarnerbutton(const bool pressed)
+		{
+			bool NewWantedState = mUiUnitViewer->trafficwarnerbutton->isChecked();
+			bool AnythingDone = false;
+			for (auto a : GetSelectedEntity())
+			{
+				auto RoV = a->getComponent<em5::RoadVehicleComponent>();
+				if (RoV != nullptr)
+				{
+					if (RoV->getVehicleLightIdsByType(qsf::game::LightControllerComponent::LIGHTPOSITION_UNDEFINED).empty())
+					{
+						//everything emptY?
+						QSF_LOG_PRINTS(INFO, "traffic (warner) light vector is empty")
+					}
+					else
+					{
+						for (auto LB : RoV->getVehicleLightIdsByType(qsf::game::LightControllerComponent::LIGHTPOSITION_UNDEFINED))
+						{
+							auto ent = QSF_MAINMAP.getEntityById(LB);
+							if (ent == nullptr || ent->getComponent<qsf::MetadataComponent>() == nullptr || ent->getComponent<qsf::MetadataComponent>()->getDescription() != "traffic")
+								continue;
+							QSF_MAINMAP.getEntityById(LB)->getComponent<qsf::game::LightControllerComponent>()->setActive(NewWantedState);
+						}
+						AnythingDone = true;
+					}
+				}
+			}
+			if (AnythingDone)
+				mUiUnitViewer->trafficwarnerbutton->setChecked(NewWantedState);
+		}
+
+		void UnitViewer::onPushreverseButtonbutton(const bool pressed)
+		{
+			bool NewWantedState = mUiUnitViewer->reverseButton->isChecked();
+			bool AnythingDone = false;
+			for (auto a : GetSelectedEntity())
+			{
+				auto RoV = a->getComponent<em5::RoadVehicleComponent>();
+				if (RoV != nullptr)
+				{
+					if (RoV->getVehicleLightIdsByType(qsf::game::LightControllerComponent::LIGHTPOSITION_UNDEFINED).empty())
+					{
+						//everything emptY?
+						QSF_LOG_PRINTS(INFO, "reverse light vector is empty")
+					}
+					else
+					{
+						for (auto LB : RoV->getVehicleLightIdsByType(qsf::game::LightControllerComponent::LIGHTPOSITION_UNDEFINED))
+						{
+							auto ent = QSF_MAINMAP.getEntityById(LB);
+							if (ent == nullptr || ent->getComponent<qsf::MetadataComponent>() == nullptr || ent->getComponent<qsf::MetadataComponent>()->getDescription() != "reverse")
+								continue;
+							QSF_MAINMAP.getEntityById(LB)->getComponent<qsf::game::LightControllerComponent>()->setActive(NewWantedState);
+						}
+						AnythingDone = true;
+					}
+				}
+			}
+			if (AnythingDone)
+				mUiUnitViewer->reverseButton->setChecked(NewWantedState);
+		}
+
+		void UnitViewer::onPushtinteriorbutton(const bool pressed)
+		{
+			bool NewWantedState = mUiUnitViewer->interiorbutton->isChecked();
+			bool AnythingDone = false;
+			for (auto a : GetSelectedEntity())
+			{
+				auto RoV = a->getComponent<em5::RoadVehicleComponent>();
+				if (RoV != nullptr)
+				{
+					if (RoV->getVehicleLightIdsByType(qsf::game::LightControllerComponent::LIGHTPOSITION_UNDEFINED).empty())
+					{
+						//everything emptY?
+						QSF_LOG_PRINTS(INFO, "interior (umfeld) light vector is empty")
+					}
+					else
+					{
+						for (auto LB : RoV->getVehicleLightIdsByType(qsf::game::LightControllerComponent::LIGHTPOSITION_UNDEFINED))
+						{
+							auto ent = QSF_MAINMAP.getEntityById(LB);
+							if (ent == nullptr || ent->getComponent<qsf::MetadataComponent>() == nullptr || ent->getComponent<qsf::MetadataComponent>()->getDescription() != "interior")
+								continue;
+							QSF_MAINMAP.getEntityById(LB)->getComponent<qsf::game::LightControllerComponent>()->setActive(NewWantedState);
+						}
+						AnythingDone = true;
+					}
+				}
+			}
+			if (AnythingDone)
+				mUiUnitViewer->interiorbutton->setChecked(NewWantedState);
+		}
+
+		void UnitViewer::onPushenviromentbutton(const bool pressed)
+		{
+			bool NewWantedState = mUiUnitViewer->enviromentbutton->isChecked();
+			bool AnythingDone = false;
+			for (auto a : GetSelectedEntity())
+			{
+				auto RoV = a->getComponent<em5::RoadVehicleComponent>();
+				if (RoV != nullptr)
+				{
+					if (RoV->getVehicleLightIdsByType(qsf::game::LightControllerComponent::LIGHTPOSITION_UNDEFINED).empty())
+					{
+						//everything emptY?
+						QSF_LOG_PRINTS(INFO, "enviroment light vector is empty")
+					}
+					else
+					{
+						for (auto LB : RoV->getVehicleLightIdsByType(qsf::game::LightControllerComponent::LIGHTPOSITION_UNDEFINED))
+						{
+							auto ent = QSF_MAINMAP.getEntityById(LB);
+							if (ent == nullptr || ent->getComponent<qsf::MetadataComponent>() == nullptr || ent->getComponent<qsf::MetadataComponent>()->getDescription() != "umfeld")
+								continue;
+							QSF_MAINMAP.getEntityById(LB)->getComponent<qsf::game::LightControllerComponent>()->setActive(NewWantedState);
+						}
+						AnythingDone = true;
+					}
+				}
+			}
+			if (AnythingDone)
+				mUiUnitViewer->enviromentbutton->setChecked(NewWantedState);
+		}
+
 		bool UnitViewer::IsEntityAllreadySelected(uint64 Target, std::vector<uint64> CompareList)
 		{
 			for (auto a : CompareList)
@@ -589,6 +771,34 @@ namespace user
 			}
 			mSelectedNodeDebug = QSF_DEBUGDRAW.requestDraw(SelectedNodeDebug);
 			}
+
+		void UnitViewer::OnSelectionChange_SetAdditionalLightButtons(QPushButton * Buttonname, std::string Lightdescription)
+		{
+			for (auto a : GetSelectedEntity())
+			{
+				auto RoV = a->getComponent<em5::RoadVehicleComponent>();
+				if (RoV != nullptr)
+				{
+					if (RoV->getVehicleLightIdsByType(qsf::game::LightControllerComponent::LIGHTPOSITION_UNDEFINED).empty())
+					{
+						//everything emptY?
+						QSF_LOG_PRINTS(INFO, "Head Light vector is empty")
+					}
+					else
+					{
+						for (auto LB : RoV->getVehicleLightIdsByType(qsf::game::LightControllerComponent::LIGHTPOSITION_UNDEFINED))
+						{
+							auto ent = QSF_MAINMAP.getEntityById(LB);
+							if (ent == nullptr || ent->getComponent<qsf::MetadataComponent>() == nullptr || ent->getComponent<qsf::MetadataComponent>()->getDescription() != Lightdescription)
+								continue;
+								Buttonname->setChecked(QSF_MAINMAP.getEntityById(LB)->getComponent<qsf::game::LightControllerComponent>()->isActive());
+								return;
+						}
+					}
+				}
+			}
+				Buttonname->setChecked(false);
+		}
 
 
 

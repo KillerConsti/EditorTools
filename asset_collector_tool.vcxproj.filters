@@ -100,15 +100,6 @@
     <ClCompile Include="asset_collector_tool\view\indicator\TerrainEditTool.cpp">
       <Filter>Source Files\terrain_assets\editmodes</Filter>
     </ClCompile>
-    <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_TerrainpaintingToolbox.cpp">
-      <Filter>GeneratedQtFiles\moc</Filter>
-    </ClCompile>
-    <ClCompile Include="asset_collector_tool\view\indicator\TerrainPaintTool.cpp">
-      <Filter>Source Files\terrain_assets\editmodes</Filter>
-    </ClCompile>
-    <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_TerrainPaintTool.cpp">
-      <Filter>GeneratedQtFiles\moc</Filter>
-    </ClCompile>
     <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_TerrainEditColorMapToolbox.cpp">
       <Filter>GeneratedQtFiles\moc</Filter>
     </ClCompile>
@@ -122,9 +113,6 @@
       <Filter>Source Files\terrain_assets\tools\terrain</Filter>
     </ClCompile>
     <ClCompile Include="asset_collector_tool\qsf_editor\tools\TerrainEditToolbox.cpp">
-      <Filter>Source Files\terrain_assets\tools\terrain</Filter>
-    </ClCompile>
-    <ClCompile Include="asset_collector_tool\qsf_editor\tools\TerrainpaintingToolbox.cpp">
       <Filter>Source Files\terrain_assets\tools\terrain</Filter>
     </ClCompile>
     <ClCompile Include="asset_collector_tool\tools\TrainTrackTool.cpp">
@@ -172,6 +160,24 @@
     <ClCompile Include="asset_collector_tool\kc_terrain\TerrainDefinition.cpp">
       <Filter>Source Files\kc_terrain</Filter>
     </ClCompile>
+    <ClCompile Include="asset_collector_tool\qsf_editor\tools\TerrainTexturingToolbox.cpp">
+      <Filter>Source Files\terrain_assets\tools\terrain</Filter>
+    </ClCompile>
+    <ClCompile Include="asset_collector_tool\view\indicator\TerrainTexturingTool.cpp">
+      <Filter>Source Files\terrain_assets\editmodes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_TerrainTexturingTool.cpp">
+      <Filter>GeneratedQtFiles\moc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_TerrainTexturingToolbox.cpp">
+      <Filter>GeneratedQtFiles\moc</Filter>
+    </ClCompile>
+    <ClCompile Include="asset_collector_tool\view\indicator\OldTerrainTexturingTool.cpp">
+      <Filter>Source Files\terrain_assets\editmodes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_OldTerrainTexturingTool.cpp">
+      <Filter>GeneratedQtFiles\moc</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="asset_collector_tool\PrecompiledHeader.h">
@@ -193,9 +199,6 @@
       <Filter>GeneratedQtFiles\uic</Filter>
     </ClInclude>
     <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_TerrainEditToolbox.h">
-      <Filter>GeneratedQtFiles\uic</Filter>
-    </ClInclude>
-    <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_TerrainpaintingToolbox.h">
       <Filter>GeneratedQtFiles\uic</Filter>
     </ClInclude>
     <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_TerrainEditColorMapToolbox.h">
@@ -237,6 +240,9 @@
     <ClInclude Include="asset_collector_tool\kc_terrain\TerrainContext-inl.h">
       <Filter>Source Files\kc_terrain</Filter>
     </ClInclude>
+    <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_TerrainTexturingToolbox.h">
+      <Filter>GeneratedQtFiles\uic</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="asset_collector_tool.pro" />
@@ -257,9 +263,6 @@
     <QtMOC Include="asset_collector_tool\view\indicator\TerrainEditTool.h">
       <Filter>Source Files\terrain_assets\editmodes</Filter>
     </QtMOC>
-    <QtMOC Include="asset_collector_tool\view\indicator\TerrainPaintTool.h">
-      <Filter>Source Files\terrain_assets\editmodes</Filter>
-    </QtMOC>
     <QtMOC Include="asset_collector_tool\view\indicator\TerrainEditmodeColorMap.h">
       <Filter>Source Files\terrain_assets\editmodes</Filter>
     </QtMOC>
@@ -267,9 +270,6 @@
       <Filter>Source Files\terrain_assets\tools\terrain</Filter>
     </QtMOC>
     <QtMOC Include="asset_collector_tool\qsf_editor\tools\TerrainEditToolbox.h">
-      <Filter>Source Files\terrain_assets\tools\terrain</Filter>
-    </QtMOC>
-    <QtMOC Include="asset_collector_tool\qsf_editor\tools\TerrainpaintingToolbox.h">
       <Filter>Source Files\terrain_assets\tools\terrain</Filter>
     </QtMOC>
     <QtMOC Include="asset_collector_tool\tools\TrainTrackTool.h">
@@ -286,6 +286,15 @@
     </QtMOC>
     <QtMOC Include="asset_collector_tool\view\KC_AbstractView.h">
       <Filter>Source Files\view</Filter>
+    </QtMOC>
+    <QtMOC Include="asset_collector_tool\qsf_editor\tools\TerrainTexturingToolbox.h">
+      <Filter>Source Files\terrain_assets\tools\terrain</Filter>
+    </QtMOC>
+    <QtMOC Include="asset_collector_tool\view\indicator\TerrainTexturingTool.h">
+      <Filter>Source Files\terrain_assets\editmodes</Filter>
+    </QtMOC>
+    <QtMOC Include="asset_collector_tool\view\indicator\OldTerrainTexturingTool.h">
+      <Filter>Source Files\terrain_assets\editmodes</Filter>
     </QtMOC>
   </ItemGroup>
   <ItemGroup>
@@ -306,9 +315,6 @@
     <QtUI Include="asset_collector_tool\qsf_editor\tools\TerrainEditToolbox.ui">
       <Filter>Source Files\terrain_assets\tools\terrain</Filter>
     </QtUI>
-    <QtUI Include="asset_collector_tool\qsf_editor\tools\TerrainpaintingToolbox.ui">
-      <Filter>Source Files\terrain_assets\tools\terrain</Filter>
-    </QtUI>
     <QtUI Include="asset_collector_tool\tools\TrainTrackTool.ui">
       <Filter>Source Files\tools\trains</Filter>
     </QtUI>
@@ -320,6 +326,9 @@
     </QtUI>
     <QtUI Include="asset_collector_tool\view\indicator\ScenarioScriptTool.ui">
       <Filter>Source Files\view\AssetCollectorTool</Filter>
+    </QtUI>
+    <QtUI Include="asset_collector_tool\qsf_editor\tools\TerrainTexturingToolbox.ui">
+      <Filter>Source Files\terrain_assets\tools\terrain</Filter>
     </QtUI>
   </ItemGroup>
 </Project>

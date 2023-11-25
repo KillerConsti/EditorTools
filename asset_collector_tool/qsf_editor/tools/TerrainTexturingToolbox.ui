@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>TerrainpaintingToolbox</class>
- <widget class="QWidget" name="TerrainpaintingToolbox">
+ <class>TerrainTexturingToolbox</class>
+ <widget class="QWidget" name="TerrainTexturingToolbox">
   <property name="windowModality">
    <enum>Qt::WindowModal</enum>
   </property>
