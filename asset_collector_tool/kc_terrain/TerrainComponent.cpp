@@ -996,7 +996,6 @@ namespace kc_terrain
 			int id = 1; // because my ID start at 0
 			while (it.hasMoreElements()) // add the layer to all terrains in the terrainGroup
 			{
-				QSF_LOG_PRINTS(INFO, "a3")
 				id++;
 				Ogre::TerrainGroup::TerrainSlot* a = it.getNext();
 				a->instance->addLayer(0.0f, &Textures);
@@ -1018,6 +1017,7 @@ namespace kc_terrain
 				mTerrainContext->GetMaterialGenerator()->RefreshMaterial(mOgreTerrainGroup->getTerrain(a->x,a->y));
 			}
 			mOgreTerrainGroup->update(false);
+			
 			return true;
 			/*QSF_LOG_PRINTS(INFO, "l")
 				Ogre::StringVector Textures;

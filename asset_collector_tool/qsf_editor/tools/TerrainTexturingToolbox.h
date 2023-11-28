@@ -130,7 +130,6 @@ namespace user
 			std::string path;
 			std::string GetSavePath();			
 			std::string InitSavePath();
-			void OverwriteSavePath();
 			std::string mSavepath;
 			QColor getColor();
 			QColor mColor;

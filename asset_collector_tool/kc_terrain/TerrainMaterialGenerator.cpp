@@ -205,6 +205,41 @@ namespace kc_terrain
 		m_profil_ColorMap = ColorMap;
 	}
 
+	void TerrainMaterialGenerator::Profile::CreateEditableColorMap(const Ogre::Terrain * ogreTerrain)
+	{
+		qsf::GlobalAssetId ColorMapAsset;
+		if (m_profil_ColorMap == qsf::getUninitialized<uint64>())
+		{
+			ColorMapAsset = qsf::AssetProxy("qsf/texture/default/missing").getGlobalAssetId();
+		}
+		else
+		{
+			ColorMapAsset = m_profil_ColorMap;
+		}
+
+		//Ogre::ResourceGroupManager::getSingleton().addResourceLocation(pathcopy.c_str(), Heightmaps);
+		auto Filepath = qsf::AssetProxy(ColorMapAsset).getLocalAssetName();
+		Ogre::Image OI;
+		OI.load(Ogre::String(Filepath).c_str(), Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
+		uint32 i_height = OI.getHeight();
+		uint32 i_width = OI.getWidth();
+		//copy image into buffer :)
+		QSF_LOG_PRINTS(INFO,"get color at")
+			try
+		{
+			//this works
+			auto val = OI.getColourAt(0, 0, 0);
+			QSF_LOG_PRINTS(INFO, val.r << " "<< val.g  <<" " << val.b)
+		}
+		catch (const std::exception&)
+		{
+
+		}
+		
+		
+
+	}
+
 
 	//[-------------------------------------------------------]
 	//[ Public methods                                        ]
@@ -247,6 +282,8 @@ namespace kc_terrain
 		QSF_LOG_PRINTS(INFO, "lolli2.3")*/
 			kc_terrain::TerrainMaterialGenerator::generate(ogreTerrain);
 		//generate(ogreTerrain);
+		
+		static_cast<TerrainMaterialGenerator::Profile*>(getActiveProfile())->CreateEditableColorMap(ogreTerrain);
 
 	}
 

@@ -218,7 +218,7 @@ namespace user
 
 		void TerrainTexturingTool::PaintJob(const qsf::JobArguments & jobArguments)
 		{
-			GetSelectedLayerColor();
+			//QSF_LOG_PRINTS(INFO,GetSelectedLayerColor());
 			mDebugDrawProxy.registerAt(QSF_MAINMAP.getDebugDrawManager());
 			mDebugDrawProxy.addRequest(qsf::CircleDebugDrawRequest(oldmouspoint, qsf::CoordinateSystem::getUp(), Radius, qsf::Color4::GREEN));
 			if (!mouseisvalid)
@@ -228,10 +228,12 @@ namespace user
 				return;
 			if (yo_mousepoint == oldmouspoint)
 				return;
+			//QSF_LOG_PRINTS(INFO, "Start Work" << GetSelectedLayerColor())
 			yo_mousepoint = oldmouspoint;
 			glm::vec2 Mappoint = ConvertWorldPointToRelativePoint(glm::vec2(oldmouspoint.x, oldmouspoint.z));
-			Mappoint = Mappoint*Heighmapsize;
+			Mappoint = Mappoint*BlendMapSize;
 			RaiseTerrain(Mappoint);
+			//QSF_LOG_PRINTS(INFO, "Finish Work")
 
 		}
 
@@ -249,10 +251,10 @@ namespace user
 			float TotalRadius = Radius * Scale;
 			float BrushIntensity = TerrainEditGUI->GetBrushIntensity()*0.25f;
 			//QSF_LOG_PRINTS(INFO,"Mappoint "<< MapPoint.x <<" y " << MapPoint.y)
-			int MapPointMinX = glm::clamp((int)glm::ceil(MapPoint.x - TotalRadius), 0, (int)Heighmapsize);
-			int MapPointMaxX = glm::clamp((int)glm::floor(MapPoint.x + TotalRadius), 0, (int)Heighmapsize);
-			int MapPointMinY = glm::clamp((int)glm::ceil(MapPoint.y - TotalRadius), 0, (int)Heighmapsize);
-			int MapPointMaxY = glm::clamp((int)glm::floor(MapPoint.y + TotalRadius), 0, (int)Heighmapsize);
+			int MapPointMinX = glm::clamp((int)glm::ceil(MapPoint.x - TotalRadius), 0, (int)BlendMapSize);
+			int MapPointMaxX = glm::clamp((int)glm::floor(MapPoint.x + TotalRadius), 0, (int)BlendMapSize);
+			int MapPointMinY = glm::clamp((int)glm::ceil(MapPoint.y - TotalRadius), 0, (int)BlendMapSize);
+			int MapPointMaxY = glm::clamp((int)glm::floor(MapPoint.y + TotalRadius), 0, (int)BlendMapSize);
 			int counter = 0;
 			//QSF_LOG_PRINTS(INFO, "aha 2")
 			if (TerrainEditGUI->GetBrushShape() != TerrainEditGUI->Quad)
@@ -307,17 +309,14 @@ namespace user
 					}
 				}
 			}
-			//QSF_LOG_PRINTS(INFO, "RaisePoint update Terrain")
-			RaisePoint(glm::vec2(1, 1), BrushIntensity);
 			UpdateTerrains();
-			//QSF_LOG_PRINTS(INFO, "RaisePoint Terrain 2")
-			//QSF_LOG_PRINTS(INFO, "counter " << counter)
+			//QSF_LOG_PRINTS(INFO,"finish of function")
 
 		}
 
 		void TerrainTexturingTool::RaisePoint(glm::vec2 point, float Intensity)
 		{
-			QSF_LOG_PRINTS(INFO,"Raise Point 1")
+			//QSF_LOG_PRINTS(INFO,"Raise Point 1")
 			int xTerrain = 0;
 			int xRemaining = (int)point.x;
 			int yTerrain = 0;
@@ -345,17 +344,33 @@ namespace user
 				else
 					break;
 			}
-			yRemaining = partsize - yRemaining;
-			AffectedPoints[xTerrain][yTerrain].push_back(glm::vec2(xRemaining, yRemaining));
-			//QSF_LOG_PRINTS(INFO, xTerrain << " " << yTerrain << " " << xRemaining << " " << yRemaining)
+			
+			yRemaining = partsize - yRemaining; //y is inverted
+			if (yRemaining == 64)
+			{
+				if(yTerrain >= 1)
+				yTerrain--;
+				yRemaining =0;
 
+			}
+			if(xTerrain >= mParts || xTerrain < 0)
+			return;
+			if(yTerrain >= mParts || yTerrain < 0)
+			return;
+			//QSF_LOG_PRINTS(INFO, "Raise Point Terrain:" << xTerrain << " " <<yTerrain)
+			//QSF_LOG_PRINTS(INFO, xTerrain << " " << yTerrain << " " << xRemaining << " " << yRemaining)
+			AffectedPoints[xTerrain][yTerrain].push_back(kc_vec2(xRemaining, yRemaining));
+			//QSF_LOG_PRINTS(INFO, "Raise Point 3")
+			
+			//do remaining stuff in update
+			return;
 			auto Terrain = TerrainMaster->getOgreTerrainGroup()->getTerrain(xTerrain, yTerrain);
 
 
-			QSF_LOG_PRINTS(INFO, "Raise Point 2")
+			//QSF_LOG_PRINTS(INFO, "Raise Point 2")
 			//here was sth
 		//we meed to mirror x for some unknown reason. Maybe this map is also "mirrored"
-			QSF_LOG_PRINTS(INFO, "get blend map index")
+			//QSF_LOG_PRINTS(INFO, "get blend map index")
 		//now apply correct blendmap
 			int BlendMapIndex = GetBlendMapWithTextureName(xTerrain, yTerrain);
 			if (BlendMapIndex == -1)
@@ -363,22 +378,22 @@ namespace user
 
 			const uint32 maximumNumberOfLayers = TMG_getMaxLayers(Terrain);
 			const uint32 numberOfLayers = std::min(maximumNumberOfLayers, static_cast<uint32>(Terrain->getBlendTextureCount()));
-			QSF_LOG_PRINTS(INFO, "numberOfLayers " << numberOfLayers << "a123 " << BlendMapIndex << " Blendtexturecount "<< Terrain->getBlendTextureCount())
+			//QSF_LOG_PRINTS(INFO, "numberOfLayers " << numberOfLayers << "a123 " << BlendMapIndex << " Blendtexturecount "<< Terrain->getBlendTextureCount())
 				for (uint32 layerIndex = 1; layerIndex < 6; ++layerIndex)
 				{
-					QSF_LOG_PRINTS(INFO,"layerIndex" << layerIndex)
+				//	QSF_LOG_PRINTS(INFO,"layerIndex" << layerIndex)
 					if (Terrain->getLayerBlendMap(layerIndex) == nullptr)
 						continue;
 						if (layerIndex == BlendMapIndex)
 						{
 							//QSF_LOG_PRINTS(INFO, "found the layer")
-							QSF_LOG_PRINTS(INFO, "layerIndex == BlendMapIndex and now change sth"<< layerIndex)
+					//		QSF_LOG_PRINTS(INFO, "layerIndex == BlendMapIndex and now change sth"<< layerIndex)
 								Terrain->getLayerBlendMap(layerIndex)->setBlendValue(xRemaining, yRemaining, 1);
 							//QSF_LOG_PRINTS(INFO, "match" << layerIndex)
 						}
 						else
 						{
-							QSF_LOG_PRINTS(INFO, "layerIndex == BlendMapIndex and now change reset it..." << layerIndex)
+						//	QSF_LOG_PRINTS(INFO, "layerIndex == BlendMapIndex and now change reset it..." << layerIndex)
 							Terrain->getLayerBlendMap(layerIndex)->setBlendValue(xRemaining, yRemaining, 0);
 						}
 				}
@@ -504,19 +519,19 @@ namespace user
 					if (x == 0 && y == 0)
 					{
 						TerrainMaster->getOgreTerrainGroup()->defineTerrain(0, 0, "em5/unknown/default/0_0");
-						QSF_LOG_PRINTS(INFO, x << " 1" << y)
+						//QSF_LOG_PRINTS(INFO, x << " 1" << y)
 					}
 					else
 					{
 						TerrainMaster->getOgreTerrainGroup()->defineTerrain(x, y, Ogre::String("chunks/a" + boost::lexical_cast<std::string>(x) + "_" + boost::lexical_cast<std::string>((y)) + ""));
-						QSF_LOG_PRINTS(INFO, x << " " << y)
+						//QSF_LOG_PRINTS(INFO, x << " " << y)
 					}
 				}
 			}
 
 			TerrainMaster->getOgreTerrainGroup()->loadAllTerrains(true);
 			TerrainMaster->getOgreTerrainGroup()->freeTemporaryResources();
-			QSF_LOG_PRINTS(INFO, "Load old map done!")
+			//QSF_LOG_PRINTS(INFO, "Load old map done!")
 		}
 
 
@@ -541,7 +556,7 @@ namespace user
 			//remaining is the point on the selected Terrain
 			while (true)
 			{
-				if ((xRemaining - partsize) >= 0)
+				if ((xRemaining - partsize) > 0)
 				{
 					xTerrain++;
 					xRemaining = xRemaining - partsize;
@@ -551,7 +566,7 @@ namespace user
 			}
 			while (true)
 			{
-				if ((yRemaining - partsize) >= 0)
+				if ((yRemaining - partsize) > 0)
 				{
 					yTerrain++;
 					yRemaining = yRemaining - partsize;
@@ -578,7 +593,7 @@ namespace user
 				if (evaluateBrushPosition(qMouseEvent.pos(), mousepos2))
 				{
 					glm::vec2 Mappoint = ConvertWorldPointToRelativePoint(glm::vec2(mousepos2.x, mousepos2.z));
-					Mappoint = Mappoint*Heighmapsize;
+					Mappoint = Mappoint*BlendMapSize;
 					float value = ReadValue(glm::vec2(glm::round(Mappoint.x), glm::round(Mappoint.y)));
 					//TerrainEditGUI->SetHeight(value);
 					return;
@@ -631,9 +646,11 @@ namespace user
 
 		void TerrainTexturingTool::WriteTerrainTextureList()
 		{
+			if(TerrainEditGUI->GetLayerColor() != "")
+			return;
 			//find Terrain
 			glm::vec2 Mappoint = ConvertWorldPointToRelativePoint(glm::vec2(oldmouspoint.x, oldmouspoint.z));
-			Mappoint = Mappoint*Heighmapsize;
+			Mappoint = Mappoint*BlendMapSize;
 			int xTerrain = 0;
 			int xRemaining = (int)Mappoint.x;
 			int yTerrain = 0;
@@ -713,14 +730,14 @@ namespace user
 					//QSF_LOG_PRINTS(INFO, "layer Index" << Terrain->getLayerTextureName(layerIndex, 0).c_str() << " vs " << mSelectedLayerColor)
 					if (qsf::AssetProxy(Terrain->getLayerTextureName(layerIndex, 0).c_str()).getAsset() != nullptr && qsf::AssetProxy(Terrain->getLayerTextureName(layerIndex, 0).c_str()).getAsset()->getGlobalAssetId() == mSelectedLayerColor)
 					{
-						QSF_LOG_PRINTS(INFO, "found layer Index" << mSelectedLayerColor);
+						//QSF_LOG_PRINTS(INFO, "found layer Index" << mSelectedLayerColor);
 						return layerIndex;
 					}
 				}
-				catch (const std::exception& e)
+				catch (const std::exception& /*e*/)
 				{
 					QSF_LOG_PRINTS(INFO, Terrain->getLayerTextureName(layerIndex, 0) << " and selected color is " << mSelectedLayerColor)
-					QSF_LOG_PRINTS(INFO, e.what());
+					//QSF_LOG_PRINTS(INFO, e.what());
 				}
 
 
@@ -751,7 +768,7 @@ namespace user
 		glm::vec2 TerrainTexturingTool::ConvertMappointToWorldPoint(glm::vec2 Mappoint)
 		{
 			glm::vec2 copy = Mappoint;
-			copy = copy / (float)Heighmapsize;
+			copy = copy / (float)BlendMapSize;
 			copy = copy * TerrainMaster->getTerrainWorldSize();
 			copy = copy - Offset;
 			copy.y = -1.f * copy.y;
@@ -760,21 +777,35 @@ namespace user
 
 		void TerrainTexturingTool::UpdateTerrains()
 		{
-		QSF_LOG_PRINTS(INFO,"Update Started")
+			//QSF_LOG_PRINTS(INFO,"update started ")
+		//QSF_LOG_PRINTS(INFO,"Update Started")
 			//we should make sure that we have a 4 x 4 Terrain-pattern (16 tiles).
 			//we assume it here by t = x and y = i
 			for (long t = 0; t <= (mParts - 1); t++)
 			{
 				for (long i = 0; i <= (mParts - 1); i++)
 				{
-
 					//QSF_LOG_PRINTS(INFO, " t " << t << " i " << i)
 					if (TerrainMaster->getOgreTerrainGroup()->getTerrain(t, i) != nullptr)
 					{
-						//QSF_LOG_PRINTS(INFO, "Update works on "<< t << " " << i)
+						
 						//Write Blend Map Data
 						if(AffectedPoints[t][i].empty())
 							continue;
+						//QSF_LOG_PRINTS(INFO, "Update works on " << t << " " << i)
+						std::sort(AffectedPoints[t][i].begin(), AffectedPoints[t][i].end());
+
+						AffectedPoints[t][i].erase(
+							std::unique(
+								AffectedPoints[t][i].begin(),
+								AffectedPoints[t][i].end(),
+								[](kc_vec2 const & l, kc_vec2 const & r) {return l.x == r.x && l.y == r.y; }
+							),
+							AffectedPoints[t][i].end()
+						);
+
+
+						//AffectedPoints[t][i].erase(std::unique(AffectedPoints[t][i].begin(), AffectedPoints[t][i].end()), AffectedPoints[t][i].end());
 						int BlendMapIndex = GetBlendMapWithTextureName((long)t, (long)i);
 						if (BlendMapIndex == -1)
 							continue;
@@ -782,35 +813,47 @@ namespace user
 
 						const uint32 maximumNumberOfLayers = TMG_getMaxLayers(Terrain);
 						const uint32 numberOfLayers = std::min(maximumNumberOfLayers, static_cast<uint32>(Terrain->getBlendTextureCount()));
-						QSF_LOG_PRINTS(INFO, "numberOfLayers " << numberOfLayers << "a123 " << BlendMapIndex)
-						//Terrain->getMaterial()-> MaterialPropertyValue::fromResourceName(ogreTerrain->getGlobalColourMap()->getName()));
-						//QSF_LOG_PRINTS(INFO, "TerrainName " << Terrain->getMaterialName().c_str());
-						//Terrain->getMaterial()->get
-						//TerrainMaster->context
+						
+
 							for (uint32 layerIndex = 1; layerIndex < 6; ++layerIndex)
 							{
+								bool MapChanged = false;
 							auto CurrentBlendMap = Terrain->getLayerBlendMap(layerIndex);
 							if(CurrentBlendMap == nullptr)
 							continue;
 								//if (Terrain->getLayerBlendMap(layerIndex) == nullptr)
 									//continue;
+							
 								for (auto points : AffectedPoints[t][i])
 								{
-
+									//if(layerIndex == 1)
+									//QSF_LOG_PRINTS(INFO,points.x << " "<< points.y << " and map is << "<< t << " " << i)
+									//we need to recalc why we get 64 :)
+									if(points.x >= partsize || points.y >= partsize)
+									continue;
 									try
 									{
+										//QSF_LOG_PRINTS(INFO, "eval point "<<points.x <<" " << points.y)
 										if (layerIndex == BlendMapIndex)
 										{
 											//QSF_LOG_PRINTS(INFO, "found the layer")
+											if(CurrentBlendMap->getBlendValue(points.x, points.y) == 1)
+											continue;
 											CurrentBlendMap->setBlendValue(points.x, points.y, 1);
+											MapChanged = true;
 											//QSF_LOG_PRINTS(INFO, "match" << layerIndex)
 										}
 										else
+										{
+											if (CurrentBlendMap->getBlendValue(points.x, points.y) == 0)
+												continue;
 											CurrentBlendMap->setBlendValue(points.x, points.y, 0);
+											MapChanged = true;
+										}
 									}
-									catch (const std::exception& e)
+									catch (const std::exception& /*e*/)
 									{
-										QSF_LOG_PRINTS(INFO,"layer index "<< layerIndex << " " <<e.what())
+										//QSF_LOG_PRINTS(INFO,"layer index "<< layerIndex << " " <<e.what())
 										continue;
 									}
 								}
@@ -818,19 +861,22 @@ namespace user
 								
 								if (Terrain->getLayerBlendMap(layerIndex) != nullptr)
 								{
+									//if(MapChanged)
+									{
 									CurrentBlendMap->dirty();
 									CurrentBlendMap->update();
+									}
 								}
 								//End
 
 							}
 						AffectedPoints[t][i].clear();
-						QSF_LOG_PRINTS(INFO, "Clear list and update stuff")
+						//QSF_LOG_PRINTS(INFO, "Clear list and update stuff")
 
 					}
 				}
 			}
-		QSF_LOG_PRINTS(INFO, "Update finished")
+		//QSF_LOG_PRINTS(INFO, "Update finished")
 		}
 
 
@@ -853,19 +899,23 @@ namespace user
 			QSF_LOG_PRINTS(INFO, TerrainMaster->getTerrainWorldSize());
 			QSF_LOG_PRINTS(INFO, TerrainMaster->getHeightMapSize());
 			QSF_LOG_PRINTS(INFO, "Blendmapsize" << TerrainMaster->getBlendMapSize());
-			QSF_LOG_PRINTS(INFO, "partsize" << TerrainMaster->getOgreTerrainGroup()->getTerrainSize());
 
 			Offset = (float)(TerrainMaster->getTerrainWorldSize() / 2);
-			percentage = 1.f / (float)TerrainMaster->getTerrainWorldSize(); /// (float)TerrainMaster->getHeightMapSize();
-			Heighmapsize = (float)TerrainMaster->getHeightMapSize();
-			Heighmapsize = (float)TerrainMaster->getBlendMapSize();
-			partsize = TerrainMaster->getOgreTerrainGroup()->getTerrainSize() - 1;
+			BlendMapSize = (float)TerrainMaster->getBlendMapSize();
+			//Heighmapsize = (float)TerrainMaster->getBlendMapSize();
+			Ogre::TerrainGroup::TerrainIterator it = TerrainMaster->getOgreTerrainGroup()->getTerrainIterator();
+			int counter = 0; // because my ID start at 0
+			while (it.hasMoreElements()) // add the layer to all terrains in the terrainGroup
+			{
+				Ogre::TerrainGroup::TerrainSlot* a = it.getNext();
+				counter++;
+			}
 
-
-			QSF_LOG_PRINTS(INFO, "scale" << Heighmapsize / TerrainMaster->getTerrainWorldSize() << " units per meter");
-			Scale = Heighmapsize / TerrainMaster->getTerrainWorldSize();
-			mParts = floor(Heighmapsize / (partsize - 1.f));
-			QSF_LOG_PRINTS(INFO, "we have " << mParts << " x " << mParts << "  Parts");
+			partsize = BlendMapSize / sqrt(counter);
+			mParts = sqrt(counter);
+			QSF_LOG_PRINTS(INFO, "parts " <<counter<< " partsize "<< partsize << " mParts per direction " << mParts);
+			QSF_LOG_PRINTS(INFO, "scale" << BlendMapSize / TerrainMaster->getTerrainWorldSize() << " units per meter");
+			Scale = BlendMapSize / TerrainMaster->getTerrainWorldSize();
 			EditMode::onStartup(previousEditMode);
 
 			user::editor::TerrainTexturingToolbox* TET = static_cast<user::editor::TerrainTexturingToolbox*>(this->getManager().getToolWhichSelectedEditMode());
@@ -876,113 +926,7 @@ namespace user
 			}
 			TerrainEditGUI = TET;
 
-			//this is it finally!
-			//QSF_MATERIAL.getMaterialManager().
-
 			
-
-
-			/*for(size_t t=0; t <15; t++ )
-			{
-				Ogre::TerrainLayerBlendMap* CurrentBlendMap = nullptr;
-				QSF_LOG_PRINTS(INFO,"t is " << t);
-				try
-				{
-					 CurrentBlendMap = TerrainMaster->getOgreTerrainGroup()->getTerrain((uint8)1, (uint8)1)->getLayerBlendMap((uint8)t);
-					 std::string prefix = "testtesttest" + boost::lexical_cast<std::string>(t);
-					 QSF_LOG_PRINTS(INFO,TerrainMaster->getColorMapSize())
-				}
-				catch (const std::exception& e)
-				{
-					QSF_LOG_PRINTS(INFO,e.what())
-					continue;
-				}
-				if(CurrentBlendMap == nullptr)
-				continue;
-				for (size_t x = 0; x < 20; x++)
-				{
-					for (size_t y = 0; y < 20; y++)
-					{
-						QSF_LOG_PRINTS(INFO, "x and y  " << x << " " << y);
-						CurrentBlendMap->setBlendValue((uint8)x,(uint8)y,1/(20*20)*x*y);
-						QSF_LOG_PRINTS(INFO, "value was set");
-					}
-				}
-				QSF_LOG_PRINTS(INFO, "start update");
-				CurrentBlendMap->dirty();
-				CurrentBlendMap->update();
-				QSF_LOG_PRINTS(INFO, "finish update");
-			}
-			QSF_LOG_PRINTS(INFO, "done");*/
-			/*QSF_LOG_PRINTS(INFO, "do find out matname")
-			auto OE = TerrainMaster->getOgreTerrain();
-			if (OE == nullptr)
-			{
-				QSF_LOG_PRINTS(INFO, "sth happened 3")
-				return false;
-			}
-			if (OE == nullptr || &OE->getMaterial() == nullptr)
-				return false;
-			QSF_LOG_PRINTS(INFO, "sth happened 1")
-			auto OEM = OE->getMaterial();
-			QSF_LOG_PRINTS(INFO, "sth happened")
-
-			{
-				QSF_LOG_PRINTS(INFO,"Materialname :" << OEM.get()->getName());
-			}*/
-
-
-			/*if (QSF_FILE.exists(TerrainMaster->getTerrainAsset().getLocalAssetName() +".json"))
-				{
-
-			boost::property_tree::ptree root;
-			QSF_LOG_PRINTS(INFO,"terrain asset is " << TerrainMaster->getTerrainAsset().getLocalAssetName())
-			qsf::FileStream stream(TerrainMaster->getTerrainAsset().getLocalAssetName()+".json", qsf::File::READ_MODE);
-			qsf::FileHelper::readJson(stream, root);
-
-			boost::optional<uint64> GetBlinker = root.get_child("Properties").get_optional<uint64>("ColorMap");
-			if (GetBlinker)
-			{
-				const Ogre::String& texture_name = qsf::AssetProxy(GetBlinker.get()).getAbsoluteCachedAssetDataFilename();
-				Ogre::String& texture_path = qsf::AssetProxy(GetBlinker.get()).getAbsoluteCachedAssetDataFilename();
-				bool image_loaded = false;
-				std::ifstream ifs(texture_path.c_str(), std::ios::binary | std::ios::in);
-				if (ifs.is_open())
-				{
-					Ogre::String tex_ext;
-					Ogre::String::size_type index_of_extension = texture_path.find_last_of('.');
-					if (index_of_extension != Ogre::String::npos)
-					{
-						tex_ext = texture_path.substr(index_of_extension + 1);
-						Ogre::DataStreamPtr data_stream(new Ogre::FileStreamDataStream(texture_path, &ifs, false));
-						Ogre::Image img;
-						img.load(data_stream, tex_ext);
-						Ogre::TextureManager::getSingleton().loadImage(texture_name,
-							Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME, img, Ogre::TEX_TYPE_2D, 0, 1.0f);
-						image_loaded = true;
-						//QSF_LOG_PRINTS(INFO,img.getColourAt(0,0,0).r << img.getSize())
-							auto path = TerrainEditGUI->GetSavePath();
-						//img.save(path + "\\colormap + "+"__date__" + GetCurrentTimeForFileName() + ".tif");
-						TerrainMaster->getOgreTerrain()->setGlobalColourMapEnabled(true,2000);
-						TerrainMaster->getOgreTerrain()->getGlobalColourMap().get()->loadImage(img);
-
-
-
-					}
-					ifs.close();
-				}
-				QSF_LOG_PRINTS(INFO,"loaded" << image_loaded)
-
-			}
-			else
-			{
-				QSF_LOG_PRINTS(INFO, "Didnt find colormap");
-			}
-			//try to access paint tools
-			}*/
-			//else
-				//QSF_LOG_PRINTS(INFO, "Didnt find terrain asset");
-			//return true;
 			if (!PaintJobProxy.isValid())
 				PaintJobProxy.registerAt(em5::Jobs::ANIMATION_VEHICLE, boost::bind(&TerrainTexturingTool::PaintJob, this, _1));
 			mSaveMapProxy.registerAt(qsf::MessageConfiguration(qsf::MessageConfiguration("kc::save_heightmap")), boost::bind(&TerrainTexturingTool::SaveMap, this, _1));

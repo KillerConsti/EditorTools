@@ -56,6 +56,9 @@
     <Filter Include="Source Files\kc_terrain">
       <UniqueIdentifier>{a4f2ba62-4b22-4099-bcc6-926fa62f3ca3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\view\extern">
+      <UniqueIdentifier>{0a7e1620-817c-49ad-a653-31c2319baf9b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="asset_collector_tool\Main.cpp">
@@ -178,6 +181,12 @@
     <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_OldTerrainTexturingTool.cpp">
       <Filter>GeneratedQtFiles\moc</Filter>
     </ClCompile>
+    <ClCompile Include="asset_collector_tool\view\ImageDecompiler.cpp">
+      <Filter>Source Files\view\AssetCollectorTool</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_ImageDecompiler.cpp">
+      <Filter>GeneratedQtFiles\moc</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="asset_collector_tool\PrecompiledHeader.h">
@@ -243,6 +252,9 @@
     <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_TerrainTexturingToolbox.h">
       <Filter>GeneratedQtFiles\uic</Filter>
     </ClInclude>
+    <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_ImageDecompiler.h">
+      <Filter>GeneratedQtFiles\uic</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="asset_collector_tool.pro" />
@@ -296,6 +308,9 @@
     <QtMOC Include="asset_collector_tool\view\indicator\OldTerrainTexturingTool.h">
       <Filter>Source Files\terrain_assets\editmodes</Filter>
     </QtMOC>
+    <QtMOC Include="asset_collector_tool\view\ImageDecompiler.h">
+      <Filter>Source Files\view\AssetCollectorTool</Filter>
+    </QtMOC>
   </ItemGroup>
   <ItemGroup>
     <QtRCC Include="asset_collector_tool\ressources\ressources.qrc">
@@ -329,6 +344,9 @@
     </QtUI>
     <QtUI Include="asset_collector_tool\qsf_editor\tools\TerrainTexturingToolbox.ui">
       <Filter>Source Files\terrain_assets\tools\terrain</Filter>
+    </QtUI>
+    <QtUI Include="asset_collector_tool\view\ImageDecompiler.ui">
+      <Filter>Source Files\view\AssetCollectorTool</Filter>
     </QtUI>
   </ItemGroup>
 </Project>

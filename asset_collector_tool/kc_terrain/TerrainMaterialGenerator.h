@@ -72,6 +72,8 @@ namespace kc_terrain
 			virtual void requestOptions(Ogre::Terrain* ogreTerrain) override;
 			void SetColorMap(uint64 ColorMap);
 			void SetBlendMaps(std::vector<std::string> Blendtextures);
+
+			void CreateEditableColorMap(const Ogre::Terrain* ogreTerrain);
 		//[-------------------------------------------------------]
 		//[ Private methods                                       ]
 		//[-------------------------------------------------------]

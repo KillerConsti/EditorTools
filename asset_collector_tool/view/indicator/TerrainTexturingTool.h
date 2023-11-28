@@ -164,7 +164,7 @@ namespace user
 			bool mIsInsideVisible;
 			float percentage;
 			float Offset;
-			float Heighmapsize;
+			float BlendMapSize;
 			float Scale;
 			int mParts;
 			qsf::WeakPtr<kc_terrain::TerrainComponent> TerrainMaster;
@@ -175,8 +175,35 @@ namespace user
 			int GetBlendMapWithTextureName(int xTerrain,int yTerrain);
 			uint8 TMG_getMaxLayers(const Ogre::Terrain* ogreTerrain) const;
 			void LoadOldMap();
-			
-			std::vector<glm::vec2> AffectedPoints[16][16];
+			/*struct kc_vec2
+			{
+				uint16 x;
+				uint16 y;
+				bool compare(kc_vec2 a, kc_vec2 b) {
+					if (a.x < b.x || a.y <b.y)
+						return 1;
+					else
+						return 0;
+				};
+				std::vector<kc_vec2> AffectedPoints[16][16];*/
+			struct kc_vec2
+			{
+
+				uint16 x;
+				uint16 y;
+				kc_vec2(uint16 _x, uint16 _y)
+				{
+					x =_x;
+					y =_y;
+				}
+				bool operator<(const kc_vec2& a) const
+				{
+					return (x*1000+y < a.x*1000+a.y);
+				}
+			};
+
+
+			std::vector<kc_vec2> AffectedPoints[16][16];
 			// return a relative point from a world point (notice that z axis is mirrored)
 			glm::vec2 ConvertWorldPointToRelativePoint(glm::vec2 WorldPoint);
 			// return a worldpoint point from a mappoint (heighmap which is like 1024² or 2048²)

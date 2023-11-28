@@ -49,6 +49,7 @@
 #include <qsf_editor/application/MainWindow.h>
 #include <asset_collector_tool\view\DebugUnitView.h>
 #include <asset_collector_tool\view\indicator\ScenarioScriptTool.h>
+#include <asset_collector_tool\view\ImageDecompiler.h>
 #include <em5\EM5Helper.h>
 #include <em5\game\Game.h>
 #include <QtCore\qcoreapplication.h>
@@ -70,7 +71,8 @@ namespace user
 
 		GUIManager::GUIManager() :
 			DebugToolView(nullptr),
-			ScenarioScriptToolView(nullptr)
+			ScenarioScriptToolView(nullptr),
+			ImageDecompilerView(nullptr)
 		{
 			//mOnPreNewEmptyMapMessageProxy.registerAt(qsf::MessageConfiguration(qsf::editor::Messages::PRE_NEW_EMPTY_MAP), boost::bind(&GUIManager::onPreNewEmptyMap, this, _1));
 			mWaitUntilEditorReady.registerAt(em5::Jobs::ANIMATION_VEHICLE, boost::bind(&GUIManager::WaitUntilEditorReady, this, _1));
@@ -254,6 +256,7 @@ namespace user
 			QAction* actionB_Setup = submenuB->addAction("Set Global Glossiness");
 			QAction* actionC_Setup = submenuC->addAction("Log Debugger");
 			QAction* actionC_SetupD = submenuC->addAction("Scenario Script Tool");
+			QAction* actionC_SetupE = submenuC->addAction("Image Decoder");
 			//QAction* actionD_Setup = submenuD->addAction("Setup");
 			//QAction* actionE_Setup = submenuE->addAction("Setup");
 
@@ -288,6 +291,10 @@ namespace user
 			{
 				ShowScenarioScriptToolView();
 			}
+			else if (action->text().toStdString() == "Image Decoder")
+			{
+				ShowImageDecoderView();
+			}
 		}
 
 		void GUIManager::ShowDebugGui()
@@ -319,6 +326,22 @@ namespace user
 			else
 			{
 				QSF_SAFE_DELETE(ScenarioScriptToolView);
+			}
+		}
+
+		void GUIManager::ShowImageDecoderView()
+		{
+			if (ImageDecompilerView == nullptr)
+			{
+				QSF_LOG_PRINTS(INFO, "Feed our own menu")
+					auto Manager = &QSF_EDITOR_APPLICATION.getMainWindow()->getViewManager();
+				ImageDecompilerView = new user::editor::ImageDecompiler(Manager, QSF_EDITOR_APPLICATION.getMainWindow()->topLevelWidget());
+				if (ImageDecompilerView == nullptr)
+					QSF_LOG_PRINTS(INFO, "we created a nullptr")
+			}
+			else
+			{
+				QSF_SAFE_DELETE(ImageDecompilerView);
 			}
 		}
 
