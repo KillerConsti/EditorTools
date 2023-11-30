@@ -32,6 +32,8 @@
 #include <qsf/plugin/QsfAssetTypes.h>
 #include <qsf/renderer/terrain/TerrainComponent.h>
 #include <asset_collector_tool\view\indicator\OldTerrainTexturingTool.h>
+
+#include <fstream>
 //[-------------------------------------------------------]
 //[ Namespace                                             ]
 //[-------------------------------------------------------]
@@ -48,6 +50,7 @@ namespace user
 			qsf::Plugin(new em5::PluginVersion())
 		{
 			// Nothing to do in here
+			QSF_LOG_PRINTS(INFO,"even earlier")
 		}
 
 
@@ -239,6 +242,8 @@ namespace user
 
 			// Nothing to do in here
 		}
+
+	
 
 		/*playtime 1*/
 		/*QSF_LOG_PRINTS(INFO, "plugin startup");

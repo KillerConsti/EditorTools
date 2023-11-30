@@ -139,6 +139,13 @@ namespace user
 				QSF_LOG_PRINTS(INFO, "Slot binding was not succesfull")
 			}
 
+			auto Action2 = MyBar->addAction("Tutorials...");
+			KC_MenuAction = Action;
+			if (!MyBar->connect(Action2, SIGNAL(triggered()), this, SLOT(onPushTutorials())))
+			{
+				QSF_LOG_PRINTS(INFO, "Slot binding was not succesfull")
+			}
+
 			//read old fog val
 
 			auto EC = QSF_MAINMAP.getCoreEntity().getComponent<qsf::EnvironmentComponent>();
@@ -265,6 +272,21 @@ namespace user
 			{
 				QSF_LOG_PRINTS(INFO,"aha" << t)
 			}*/
+			auto x = OldMenuBar->actionGeometry(KC_MenuAction).x();
+			auto y = OldMenuBar->actionGeometry(KC_MenuAction).y() + OldMenuBar->actionGeometry(KC_MenuAction).height();
+			connect(xmenu, SIGNAL(triggered(QAction*)), SLOT(ExecuteNewContextAction(QAction*)));
+			xmenu->exec(OldMenuBar->mapToGlobal(QPoint(x, y)));
+		}
+
+		void GUIManager::onPushTutorials()
+		{
+
+			QMenu *xmenu = new QMenu();
+			QMenu* submenuA = xmenu->addMenu("(Chap. 1) Making a unit playable");
+			QAction* actionA_Setup = submenuA->addAction("Basegame");
+			QAction* action2_Setup = submenuA->addAction("Bieberfelde/Beaverfield");
+			QAction* actionB_Setup = submenuA->addAction("Wuppertal/Lüdenscheid/essex");
+
 			auto x = OldMenuBar->actionGeometry(KC_MenuAction).x();
 			auto y = OldMenuBar->actionGeometry(KC_MenuAction).y() + OldMenuBar->actionGeometry(KC_MenuAction).height();
 			connect(xmenu, SIGNAL(triggered(QAction*)), SLOT(ExecuteNewContextAction(QAction*)));

@@ -89,6 +89,8 @@ namespace user
 			private Q_SLOTS:
 
 			void onPushSelectButton2();
+			void onPushTutorials();
+
 			void ExecuteNewContextAction(QAction *action);
 			void ShowDebugGui();
 			void ShowScenarioScriptToolView();
