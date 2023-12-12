@@ -13,36 +13,28 @@
 #include <qsf_editor/view/View.h>
 
 #include <camp/userobject.hpp>
-#include <qsf/job/JobProxy.h>
-#include <qsf/debug/DebugDrawProxy.h>
-#include <qsf/debug/request/CompoundDebugDrawRequest.h>
 
+#include <qsf\log\LogSystem.h>
 #include <qsf/prototype/PrototypeSystem.h>
 #include <qsf/prototype/PrototypeManager.h>
 #include <qsf/prototype/PrototypeHelper.h>
 #include <qsf_editor_base/operation/CompoundOperation.h>
-#include "qsf_editor/editmode/EditMode.h"
-#include "qsf_editor/editmode/EditModeManager.h"
-#include <qsf/renderer/terrain/TerrainComponent.h>
-#include <asset_collector_tool\qsf_editor\tools\TerrainEditToolbox.h>
-#include <qsf/message/MessageProxy.h>
+#include <QtWidgets\qtreewidgetitemiterator.h>
+#include <asset_collector_tool\view\KC_AbstractView.h>
+#include <ogre\Ogre.h>
 
-#include <asset_collector_tool\kc_terrain\TerrainComponent.h>
 //[-------------------------------------------------------]
 //[ Forward declarations                                  ]
 //[-------------------------------------------------------]
 namespace Ui
 {
-	class TerrainEditTool;
+	class OrderInfoPictureCreator;
 }
 namespace qsf
 {
 	namespace editor
 	{
-		namespace base
-		{
-			class Operation;
-		}
+		class AssetEditHelper;
 	}
 }
 
@@ -61,12 +53,13 @@ namespace user
 		//[-------------------------------------------------------]
 		/**
 		*  @brief
-		*    Indicator view class
+		*    Class that is responsible for the Asset Collection and provide the view (window)
+		*	 note that I dont get where the filename "IndicatorView" comes from and therefor i was not able to change these names from the *.cpp, *.h and *.ui files 
 		*
 		*  @note
 		*    - The UI is created via source code
 		*/
-		class TerrainEditTool : public qsf::editor::EditMode
+		class OrderInfoPictureCreator : public qsf::editor::View
 		{
 
 
@@ -81,7 +74,7 @@ namespace user
 		//[ Public definitions                                    ]
 		//[-------------------------------------------------------]
 		public:
-			static const uint32 PLUGINABLE_ID;	///< "user::editor::TerrainEditTool" unique pluginable view ID
+			static const uint32 PLUGINABLE_ID;	///< "user::editor::OrderInfoPictureCreator" unique pluginable view ID
 
 
 		//[-------------------------------------------------------]
@@ -97,102 +90,58 @@ namespace user
 			*  @param[in] qWidgetParent
 			*    Pointer to parent Qt widget, can be a null pointer (in this case you're responsible for destroying this view instance)
 			*/
-			TerrainEditTool(qsf::editor::EditModeManager* editModeManager);
+			OrderInfoPictureCreator(qsf::editor::ViewManager* viewManager, QWidget* qWidgetParent);
 
 			/**
 			*  @brief
 			*    Destructor
 			*/
-			virtual ~TerrainEditTool();
-			void LoadMap(std::string filename,std::string filepath);
+			virtual ~OrderInfoPictureCreator();
+
+
 		//[-------------------------------------------------------]
 		//[ Protected virtual qsf::editor::View methods           ]
 		//[-------------------------------------------------------]
 		protected:
-			//virtual void retranslateUi() override;
-			//virtual void changeVisibility(bool visible) override;
-			virtual bool evaluateBrushPosition(const QPoint& mousePosition, glm::vec3& position);
-			//qsf::TerrainComponent*				   mTerrainComponent;
-			kc_terrain::TerrainComponent*				mTerrainComponent;
+			virtual void retranslateUi() override;
+			virtual void changeVisibility(bool visible) override;
+
+
 		//[-------------------------------------------------------]
 		//[ Protected virtual QWidget methods                     ]
 		//[-------------------------------------------------------]
 		protected:
-			//virtual void showEvent(QShowEvent* qShowEvent) override;
-			//virtual void hideEvent(QHideEvent* qHideEvent) override;
+			virtual void showEvent(QShowEvent* qShowEvent) override;
+			virtual void hideEvent(QHideEvent* qHideEvent) override;
 
-			void PaintJob(const qsf::JobArguments& jobArguments);
-			qsf::JobProxy PaintJobProxy;
-			void SetHeight(glm::vec2 MapPoint);
-			
-			void IncreaseHeight(glm::vec2 Point,float NewHeight);
-			void SmoothMap(glm::vec2 Point);
-			glm::vec3 ApplySmooth(glm::vec2 Point,float Intensity);
-			float GetCustomIntensity(float distancetoMidpoint, TerrainEditToolbox::TerrainEditMode2 Mode);
-			void RaiseTerrain(glm::vec2 Mappoint);
-			void DecreaseTerrain(glm::vec2 Mappoint);
-			void RaisePoint(glm::vec2 Mappoint, float Intensity, bool Decrease);
-			int timer;
 
-			qsf::CompoundDebugDrawRequest DebugRequsts;
-			uint32 mDetailViewSingleTrack;
-			//void 
 		//[-------------------------------------------------------]
 		//[ Private methods                                       ]
 		//[-------------------------------------------------------]
 		private:
-			bool IsActive;
+			/**
+			*  @brief
+			*    Perform a GUI rebuild
+			*/
+			void rebuildGui();
+		//[-------------------------------------------------------]
+		//[ Private Qt slots (MOC)                                ]
+		//[-------------------------------------------------------]
+		private Q_SLOTS:
+			void onPushDecompileButton(const bool pressed);
 
-
-			float MoveDelta;
-			glm::vec3 OldPos;
-			glm::vec3 TerrainEditTool::getPositionUnderMouse();
-			qsf::MessageProxy		mSaveMapProxy;
-			void SaveMap(const qsf::MessageParameters& parameters);
-			void SaveTheFuckingMap();
-			void CopyFromQSFMap(const qsf::MessageParameters& parameters);
-			qsf::MessageProxy		mCopyFromQSFMap;
-			std::string GetCurrentTimeForFileName();
-			float ReadValue(glm::vec2);
-			inline virtual void mousePressEvent(QMouseEvent& qMouseEvent) override;
-			inline virtual void mouseMoveEvent(QMouseEvent& qMouseEvent) override;
+			void OnPushLoadMaterial_or_texture(const bool pressed);
+			void onSetSaveDirectory(const bool pressed);
 
 
 		private:
-			glm::vec3 oldmouspoint;
-			glm::vec3 yo_mousepoint;
-			bool mouseisvalid;
-			boost::container::flat_set <uint64> CreatedUnits;
-			bool WasPressed;
+			bool DecompileImage(std::string TextureName,std::string MaterialName);
 			
-			float Radius;
-			
-
-			//terrains shape
-			float partsize;
-			float mHeight;
-			bool mIsInsideVisible;
-			float percentage;
-			float Offset;
-			float Heighmapsize;
-			float Scale;
-			int mParts;
-			qsf::WeakPtr<kc_terrain::TerrainComponent> TerrainMaster;
-			// return a relative point from a world point (notice that z axis is mirrored)
-			glm::vec2 ConvertWorldPointToRelativePoint(glm::vec2 WorldPoint);
-			// return a worldpoint point from a mappoint (heighmap which is like 1024² or 2048²)
-			glm::vec2 ConvertMappointToWorldPoint(glm::vec2 WorldPoint);
-			void UpdateTerrains();
-			TerrainEditToolbox* TerrainEditGUI;
-
-			virtual bool onStartup(EditMode* previousEditMode) override;
-			virtual void onShutdown(EditMode* nextEditMode) override;
-
-			//new map
-			//void onPreNewEmptyMap(const qsf::MessageParameters& parameters);
-			//qsf::MessageProxy mOnPreNewEmptyMapMessageProxy;
-			//mOnPreNewEmptyMapMessageProxy.registerAt(qsf::MessageConfiguration(qsf::editor::Messages::PRE_NEW_EMPTY_MAP), boost::bind(&Plugin::onPreNewEmptyMap, this, _1));
-			//use post new map instead
+			Ui::OrderInfoPictureCreator*	mUiOrderInfoPictureCreator;	///< UI view instance, can be a null pointer, we have to destroy the instance in case we no longer need it
+			std::string GetSavePath();
+			std::string InitSavePath();
+			std::string mSavepath;
+			std::string path;
 		//[-------------------------------------------------------]
 		//[ CAMP reflection system                                ]
 		//[-------------------------------------------------------]
@@ -212,4 +161,23 @@ namespace user
 //[-------------------------------------------------------]
 //[ CAMP reflection system                                ]
 //[-------------------------------------------------------]
-QSF_CAMP_TYPE_NONCOPYABLE(user::editor::TerrainEditTool)
+QSF_CAMP_TYPE_NONCOPYABLE(user::editor::OrderInfoPictureCreator)
+
+
+
+
+/*
+
+
+//[QSF error] QSF noticed that prototype 12099955740153434413 is using prefab asset "38362" which apparently does not exist
+done
+[QSF warning] Prefab asset em5/prefab/beaverfield_vehicles/fd_bcfd_tanker52.json: QSF noticed that prototype 6084894884677994421 is referencing the base prototype 3710961177554599144, but the base prototype cannot be found in the prefab "em5/prefab/beaverfield_vehicles/fd_bffd_ladder18" (global asset ID 18667)
+
+//low[QSF warning] QSF noticed an issue while parsing Boost ptree: Property unknown: "Speed Change" of "tnt::TrailerComponent"
+
+//done might apply also to Skeletons? And Materials? But Materials are managed by meshs?
+[QSF error] QSF failed to create OGRE entity "6301475433588001582" with mesh "47696". Exception caught: OGRE EXCEPTION(6:FileNotFoundException): Cannot locate resource 47696 in resource group QsfResourceGroup or any other group. in ResourceGroupManager::openResource at G:/Projects/qsf-external-source/ogre/ogre_v2-1-ofenberg/OgreMain/src/OgreResourceGroupManager.cpp (line 757)
+
+
+em5/prefab/beaverfield_vehicles/pd_bcsd_cruiser241
+*/

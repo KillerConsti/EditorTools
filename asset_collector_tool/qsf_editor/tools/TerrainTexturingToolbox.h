@@ -159,7 +159,7 @@ namespace user
 			void onChangeBrushType(const int Type);
 			//void onEditPrefab(QT::QString String);
 			void onPushSaveMap(const bool pressed);
-
+			void onCopyFromQSFTerrain(const bool pressed);
 
 			//[-------------------------------------------------------]
 			//[ Private data                                          ]

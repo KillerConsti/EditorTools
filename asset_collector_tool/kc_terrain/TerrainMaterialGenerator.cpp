@@ -23,11 +23,24 @@
 #include "qsf/QsfHelper.h"
 
 #include <OGRE/OgreMaterialManager.h>
-
+#include <ogre\Ogre.h>
 #include <OGRE/Terrain/OgreTerrain.h>
 #include <OGRE/Terrain/OgreTerrainGroup.h>
-
+#include <ogre\OgreTechnique.h>
 #include <qsf\log\LogSystem.h>
+#include <qsf/file/cache/FileCacheManager.h>
+#include <qsf/Qsf.h>
+#include <qsf/application/Application.h>
+#include <qsf/file/FileSystem.h>
+#include <qsf/renderer/RendererSystem.h>
+#include <qsf/renderer/texture/TextureStreamingManager.h>
+#include <qsf/application/Application.h>
+#include <qsf/renderer/texture/TextureStreamer.h>
+#include <qsf/renderer/material/cache/MaterialSystemCacheManager.h>
+#include <qsf/file/cache/FileCache.h>
+#include <qsf/file/helper/FileListing.h>
+#include <qsf_editor/asset/AssetEditHelper.h>
+#include <qsf/asset/project/AssetPackage.h>
 //[-------------------------------------------------------]
 //[ Anonymous detail namespace                            ]
 //[-------------------------------------------------------]
@@ -150,11 +163,31 @@ namespace kc_terrain
 
 	Ogre::MaterialPtr TerrainMaterialGenerator::Profile::generate(const Ogre::Terrain* ogreTerrain)
 	{
+		//new
+		//if (Ogre::MaterialManager::getSingleton().getByName(ogreTerrain->getMaterialName().c_str()).getPointer() != nullptr)
+			//return;
+		/*Ogre::MaterialPtr mMat = Ogre::MaterialManager::getSingleton().create(ogreTerrain->getMaterialName(), Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME, true);
+		Ogre::Technique* mTech = mMat->createTechnique();
+		Ogre::Pass* mPass = mTech->createPass();
+		Ogre::TextureUnitState* mTexUnitState = mPass->createTextureUnitState();
+		qsf::GlobalAssetId ColorMapAsset;
+		if (m_profil_ColorMap == qsf::getUninitialized<uint64>())
+		{
+			ColorMapAsset = qsf::AssetProxy("qsf/texture/default/missing").getGlobalAssetId();
+		}
+		else
+		{
+			ColorMapAsset = m_profil_ColorMap;
+		}
+
+		Ogre::TexturePtr mTex = Ogre::TextureManager::getSingleton().load(qsf::AssetProxy(ColorMapAsset).getLocalAssetName() + ".dds", "General");
+		mPass->createTextureUnitState()->setTextureName(mTex->getName());
+		return mMat;*/
 		const Ogre::String& matName = ogreTerrain->getMaterialName();
-		mMatName = matName;
-
 		createMaterial(matName, ogreTerrain);
+		//QSF_LOG_PRINTS(INFO,"Is a usefull pointer" << Ogre::MaterialManager::getSingleton().getByName(matName).get())
 
+		//this is a nullptr
 		return Ogre::MaterialManager::getSingleton().getByName(matName);
 	}
 
@@ -224,7 +257,7 @@ namespace kc_terrain
 		uint32 i_height = OI.getHeight();
 		uint32 i_width = OI.getWidth();
 		//copy image into buffer :)
-		QSF_LOG_PRINTS(INFO,"get color at")
+		/*QSF_LOG_PRINTS(INFO,"get color at")
 			try
 		{
 			//this works
@@ -234,7 +267,7 @@ namespace kc_terrain
 		catch (const std::exception&)
 		{
 
-		}
+		}*/
 		
 		
 
@@ -254,7 +287,7 @@ namespace kc_terrain
 		mLayerDecl.elements.emplace_back(1, Ogre::TLSS_NORMAL, 0, 2);
 		mLayerDecl.elements.emplace_back(1, Ogre::TLSS_SPECULAR, 2, 1);
 		mLayerDecl.elements.emplace_back(1, Ogre::TLSS_SPECULAR, 3, 1);
-		QSF_LOG_PRINTS(INFO, "TMG" << ColorMap)
+
 			mProfiles.push_back(OGRE_NEW Profile(this, "SM2", "Profile for rendering on Shader Model 2 capable cards", ColorMap));
 		setActiveProfile("SM2");
 		mColorMap = ColorMap;
@@ -280,19 +313,14 @@ namespace kc_terrain
 			//
 			setActiveProfile("SM2");
 		QSF_LOG_PRINTS(INFO, "lolli2.3")*/
-			kc_terrain::TerrainMaterialGenerator::generate(ogreTerrain);
+		//QSF_APPLICATION
+		//qsf::Qsf::instance()->getFileSystem().getFileCacheManager().clearCache();
+			auto  OgreTerrain = kc_terrain::TerrainMaterialGenerator::generate(ogreTerrain);
+			//OgreTerrain->_dirtyState();
+			//QSF_LOG_PRINTS(INFO,"use count" <<OgreTerrain.useCount())
+				//QSF_LOG_PRINTS(INFO,"pointer " <<OgreTerrain.getPointer());
+		/*const Ogre::String& matName = ogreTerrain->getMaterialName();
 		//generate(ogreTerrain);
-		
-		static_cast<TerrainMaterialGenerator::Profile*>(getActiveProfile())->CreateEditableColorMap(ogreTerrain);
-
-	}
-
-
-	//[-------------------------------------------------------]
-	//[ Private methods                                       ]
-	//[-------------------------------------------------------]
-	void TerrainMaterialGenerator::Profile::createMaterial(const Ogre::String& matName, const Ogre::Terrain* ogreTerrain)
-	{
 		qsf::MaterialManager& materialManager = QSF_MATERIAL.getMaterialManager();
 		QSF_ASSERT(matName == ogreTerrain->getMaterialName(), "qsf::TerrainMaterialGenerator::Profile::createMaterial(): OGRE terrain material name mismatch", QSF_REACT_NONE);
 
@@ -300,6 +328,100 @@ namespace kc_terrain
 		qsf::Material* terrainMaterial = materialManager.findElement(qsf::StringHash(matName));
 		if (nullptr == terrainMaterial)
 		{
+			return;
+		}
+		QSF_LOG_PRINTS(INFO, terrainMaterial->getMaterialId().getHash());
+		//QSF_LOG_PRINTS(INFO,terrainMaterial->getMaterialId().getSourceString());
+
+
+		
+
+		/*if(Ogre::MaterialManager::getSingleton().getByName(matName).get() == nullptr)
+		{
+		QSF_LOG_PRINTS(INFO,"pointer is null")
+		return;
+		}
+		Ogre::MaterialManager::getSingleton().getByName(matName)->_dirtyState();*/
+		//static_cast<TerrainMaterialGenerator::Profile*>(getActiveProfile())->CreateEditableColorMap(ogreTerrain);
+
+	}
+
+	void TerrainMaterialGenerator::UpdateColorMap(const Ogre::Terrain * ogreTerrain)
+	{
+		if (qsf::AssetProxy(mColorMap).getGlobalAssetId() != qsf::getUninitialized<uint64>())
+		{
+			auto mAssetEditHelper = std::shared_ptr<qsf::editor::AssetEditHelper>(new qsf::editor::AssetEditHelper());
+			std::string TargetAssetName = qsf::AssetProxy(mColorMap).getAssetPackage()->getName();
+			mAssetEditHelper->tryEditAsset(qsf::AssetProxy(mColorMap).getGlobalAssetId(),TargetAssetName);
+			if(!mAssetEditHelper->setAssetUploadData(mColorMap, true, true))
+			{ 
+			//QSF_LOG_PRINTS(INFO,"couldnt update colormap?")
+			}
+			mAssetEditHelper->submit();
+		}
+		//auto  OgreTerrain = kc_terrain::TerrainMaterialGenerator::generate(ogreTerrain);
+		//_markChanged();
+		return;
+
+	}
+
+	void TerrainMaterialGenerator::Profile::CreateOgreMaterial(const Ogre::Terrain* Terrain)
+	{
+		return;
+		if(Ogre::MaterialManager::getSingleton().getByName(Terrain->getMaterialName().c_str()).getPointer() != nullptr)
+			return;
+		Ogre::MaterialPtr mMat = Ogre::MaterialManager::getSingleton().create(Terrain->getMaterialName(), Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME, true);
+		Ogre::Technique* mTech = mMat->createTechnique();
+		Ogre::Pass* mPass = mTech->createPass();
+		Ogre::TextureUnitState* mTexUnitState = mPass->createTextureUnitState();
+		qsf::GlobalAssetId ColorMapAsset;
+		if (m_profil_ColorMap == qsf::getUninitialized<uint64>())
+		{
+			ColorMapAsset = qsf::AssetProxy("qsf/texture/default/missing").getGlobalAssetId();
+		}
+		else
+		{
+			ColorMapAsset = m_profil_ColorMap;
+		}
+		
+		Ogre::TexturePtr mTex = Ogre::TextureManager::getSingleton().load(qsf::AssetProxy(ColorMapAsset).getLocalAssetName()+".dds", "General");
+		mPass->createTextureUnitState()->setTextureName(mTex->getName());
+		auto point = Terrain->getGlobalColourMap();
+		//Terrain->mater
+
+		uint8* buffer = new uint8[1024 * 1024 * 8];
+		Ogre::Image ogreImage;
+		ogreImage.loadDynamicImage(buffer, 1024, 1024, Ogre::PixelFormat::PF_FLOAT32_GR);
+		for (size_t t = 0; t < 1024 - 1; t++)
+		{
+			for (size_t j = 0; j < 1024 - 1; j++)
+			{
+				const Ogre::ColourValue ogreColorValue = Ogre::ColourValue((float)t/1024.f, (float)j/1024.f, (float)t/1024.f+j/1024.f);
+				ogreImage.setColourAt(ogreColorValue, t, j, 0);
+			}
+			//ogreImage.setColourAt()
+		}
+		QSF_LOG_PRINTS(INFO,"load image")
+		Ogre::ConstImagePtrList IPL;
+		IPL.push_back(static_cast<const Ogre::Image*>(&ogreImage));
+		point->_loadImages(IPL);
+	}
+	//[-------------------------------------------------------]
+	//[ Private methods                                       ]
+	//[-------------------------------------------------------]
+	void TerrainMaterialGenerator::Profile::createMaterial(const Ogre::String& matName, const Ogre::Terrain* ogreTerrain)
+	{
+		//CreateOgreMaterial(ogreTerrain);
+		//return;
+		qsf::MaterialManager& materialManager = QSF_MATERIAL.getMaterialManager();
+		//if(materialManager.findElement(qsf::StringHash(matName)))
+		QSF_ASSERT(matName == ogreTerrain->getMaterialName(), "qsf::TerrainMaterialGenerator::Profile::createMaterial(): OGRE terrain material name mismatch", QSF_REACT_NONE);
+
+		// In case the terrain material instance is already there, just update it
+		qsf::Material* terrainMaterial = materialManager.findElement(qsf::StringHash(matName));
+		if (nullptr == terrainMaterial)
+		{
+
 			// Create terrain material instance
 			terrainMaterial = materialManager.createMaterial(matName, qsf::StringHash("qsf_terrain"));
 			QSF_CHECK(nullptr != terrainMaterial, "QSF failed to create QSF terrain material " << matName << " instance", return);
@@ -345,8 +467,9 @@ namespace kc_terrain
 			{
 				globalAssetId = ColorMapAsset;
 			}*/
-			terrainMaterial->setPropertyById("UseGlobalColorMap", qsf::MaterialPropertyValue::fromBoolean(qsf::isInitialized(ColorMapAsset)));
-			terrainMaterial->setPropertyById("GlobalColorMap", qsf::MaterialPropertyValue::fromGlobalAssetId(ColorMapAsset));
+			terrainMaterial->setPropertyById("UseGlobalColorMap", qsf::MaterialPropertyValue::fromBoolean(qsf::isInitialized(ColorMapAsset)),qsf::MaterialProperty::Usage::DYNAMIC);
+			terrainMaterial->setPropertyById("GlobalColorMap", qsf::MaterialPropertyValue::fromGlobalAssetId(qsf::getUninitialized<uint64>()), qsf::MaterialProperty::Usage::DYNAMIC);
+			terrainMaterial->setPropertyById("GlobalColorMap", qsf::MaterialPropertyValue::fromGlobalAssetId(ColorMapAsset), qsf::MaterialProperty::Usage::DYNAMIC);
 		}
 
 		// Global normal map
@@ -398,7 +521,7 @@ namespace kc_terrain
 
 		// Blend maps
 		//numberOfBlendMaps =6;
-		std::vector<std::string> Textures;
+		/*std::vector<std::string> Textures;
 		Textures.push_back("em5/material/terrain_layer/terrain_nature_grass01");
 		Textures.push_back("em5/material/terrain_layer/terrain_urban_medieval_cobbles");
 		Textures.push_back("em5/material/terrain_layer/terrain_nature_dirt01_fine");
@@ -408,12 +531,13 @@ namespace kc_terrain
 		Textures.push_back("em5/material/terrain_layer/terrain_urban_herringbone01");
 		Textures.push_back("em5/material/terrain_layer/terrain_urban_herringbone01");
 		Textures.push_back("em5/material/terrain_layer/terrain_urban_herringbone01");
-		Textures.push_back("em5/material/terrain_layer/terrain_urban_herringbone01");
+		Textures.push_back("em5/material/terrain_layer/terrain_urban_herringbone01");*/
 		//QSF_LOG_PRINTS(INFO,"number of layers " << numberOfLayers << "number of blendmaps" << numberOfBlendMaps<< " BlendTextureCount "<< ogreTerrain->getBlendTextureCount())
 		for (uint32 i = 0; i < numberOfBlendMaps; ++i)
 		{
 				terrainMaterial->setPropertyById(qsf::StringHash("BlendMap" + std::to_string(i)), qsf::MaterialPropertyValue::fromResourceName(ogreTerrain->getBlendTextureName(i)));
 				//terrainMaterial->setPropertyById(qsf::StringHash("BlendMap" + std::to_string(i)), qsf::MaterialPropertyValue::fromResourceName(Textures.at(i)));
+				//QSF_LOG_PRINTS(INFO,"Blend Map names "<< i <<" "<< ogreTerrain->getBlendTextureName(i))
 		}
 		// Texture layers
 		for (uint32 layerIndex = 0; layerIndex < numberOfLayers; ++layerIndex)
@@ -425,19 +549,20 @@ namespace kc_terrain
 			// Inside the first texture name of the terrain layer we store the global asset ID of the QSF material the terrain layer is using, we need nothing more
 			//nasty hack
 			//if(layerIndex == 0)
-			std::string globalAssetIdAsString = Textures.at(layerIndex);
+			std::string LayerName = ogreTerrain->getLayerTextureName(layerIndex,0);
+			//std::string globalAssetIdAsString = Textures.at(layerIndex);
 			//QSF_LOG_PRINTS(INFO, "material generator"<< layerIndex << " "  << globalAssetIdAsString)
 			uint64 globalAssetId = qsf::getUninitialized<uint64>();
 			//std::string globalAssetIdAsString = ogreTerrain->getLayerTextureName(layerIndex, 0);
-			if(qsf::AssetProxy(globalAssetIdAsString).getAsset() != nullptr)
-				globalAssetId = qsf::AssetProxy(globalAssetIdAsString).getGlobalAssetId();
+			if(qsf::AssetProxy(LayerName).getAsset() != nullptr)
+				globalAssetId = qsf::AssetProxy(LayerName).getGlobalAssetId();
 			static const qsf::AssetSystem& assetSystem = QSF_ASSET;
 
 			uint64 globalAssetId__ = qsf::getUninitialized<uint64>();
-			if (nullptr != qsf::AssetProxy(globalAssetIdAsString).getAsset())
-				globalAssetId__ = qsf::AssetProxy(globalAssetIdAsString).getGlobalAssetId();
+			if (nullptr != qsf::AssetProxy(LayerName).getAsset())
+				globalAssetId__ = qsf::AssetProxy(LayerName).getGlobalAssetId();
 
-				if (nullptr != qsf::AssetProxy(globalAssetIdAsString).getAsset())//assetSystem.getAssetByGlobalAssetId(globalAssetId))
+				if (nullptr != qsf::AssetProxy(LayerName).getAsset())//assetSystem.getAssetByGlobalAssetId(globalAssetId))
 				{
 					const qsf::Material* layerMaterial = QSF_MATERIAL.getMaterialManager().findElement(qsf::StringHash(boost::lexical_cast<std::string>(globalAssetId)));
 
@@ -483,12 +608,12 @@ namespace kc_terrain
 					else
 					{
 				
-						QSF_ERROR("Terrain layer material " << globalAssetIdAsString << " not found, restart editor, ignore this error and use terrain tool to reevaluate all layer (1)" << globalAssetIdAsString, QSF_REACT_NONE);
+						QSF_ERROR("Terrain layer material " << LayerName << " not found, restart editor, ignore this error and use terrain tool to reevaluate all layer (1)" << LayerName, QSF_REACT_NONE);
 					}
 				}
 				else
 				{
-					QSF_ERROR("Terrain layer asset " << globalAssetId << " not found, restart editor, ignore this error and use terrain tool to reevaluate all layer (2)" << globalAssetIdAsString, QSF_REACT_NONE);
+					QSF_ERROR("Terrain layer asset " << LayerName << " not found, restart editor, ignore this error and use terrain tool to reevaluate all layer (2)" << LayerName, QSF_REACT_NONE);
 				}
 
 			// Error handling: The show must go on
@@ -501,6 +626,10 @@ namespace kc_terrain
 			}
 		}
 	}
+
+
+
+
 
 
 	//[-------------------------------------------------------]

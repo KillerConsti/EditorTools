@@ -63,7 +63,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;GLM_FORCE_RADIANS;QSF_X64;BOOST_AUTO_LINK_TAGGED;BOOST_FILESYSTEM_NO_DEPRECATED;BOOST_THREAD_VERSION=4;BOOST_ENABLE_ASSERT_HANDLER;NDEBUG;_WINDOWS;_USRDLL;QT_NO_KEYWORDS;EDITORPLUGIN_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(QsfDir)external\ogre\include\ogre;$(QsfDir)external\ogre\include;.;..\game_plugin;$(EM5SdkDir)em5;$(QtUicOutput);$(QsfDir)qsf;$(QsfDir)qsf_logic;$(QsfDir)qsf_ai;$(QsfDir)qsf_compositing;$(QsfDir)qsf_game;$(QsfDir)qsf_editor_base;$(QsfDir)qsf_editor;$(QsfDir)external\tbb\include;$(QsfDir)external\vld\include;$(QsfDir)external\boost\include;$(QsfDir)external\camp\include;$(QsfDir)external\glm\include;$(QsfDir)external\bullet\include\bullet;$(QsfDir)external\qt\include;H:\sdk\sample_plugins\asset_collector_tool\asset_collector_tool\extern\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(QsfDir)external\ogre\include\ogre;$(QsfDir)external\ogre\include;.;..\game_plugin;$(EM5SdkDir)em5;$(QtUicOutput);$(QsfDir)qsf;$(QsfDir)qsf_logic;$(QsfDir)qsf_ai;$(QsfDir)qsf_compositing;D:\SteamLibrary\steamapps\common\EMERGENCY 20\sdk\plugin_api\qsf;$(QsfDir)qsf_game;$(QsfDir)qsf_editor_base;$(QsfDir)qsf_editor;$(QsfDir)external\tbb\include;$(QsfDir)external\vld\include;$(QsfDir)external\boost\include;$(QsfDir)external\camp\include;$(QsfDir)external\glm\include;$(QsfDir)external\bullet\include\bullet;$(QsfDir)external\qt\include;H:\sdk\sample_plugins\asset_collector_tool\asset_collector_tool\extern\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <TreatWarningAsError>true</TreatWarningAsError>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -118,6 +118,7 @@
     <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_ImageDecompiler.cpp" />
     <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_KC_AbstractView.cpp" />
     <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_OldTerrainTexturingTool.cpp" />
+    <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_OrderInfoPictureCreator.cpp" />
     <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_ScenarioScriptTool.cpp" />
     <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_TerrainEditColorMapToolbox.cpp" />
     <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_TerrainEditmodeColorMap.cpp" />
@@ -136,6 +137,7 @@
     <ClCompile Include="asset_collector_tool\kc_terrain\TerrainContext.cpp" />
     <ClCompile Include="asset_collector_tool\kc_terrain\TerrainDefinition.cpp" />
     <ClCompile Include="asset_collector_tool\kc_terrain\TerrainMaterialGenerator.cpp" />
+    <ClCompile Include="asset_collector_tool\kc_terrain\TerrainMaterialGeneratorOgreMaterial.cpp" />
     <ClCompile Include="asset_collector_tool\Main.cpp" />
     <ClCompile Include="asset_collector_tool\Manager\GuiManager.cpp" />
     <ClCompile Include="asset_collector_tool\plugin\Plugin.cpp" />
@@ -158,6 +160,7 @@
     <ClCompile Include="asset_collector_tool\view\indicator\TerrainTexturingTool.cpp" />
     <ClCompile Include="asset_collector_tool\view\indicator\UnitPlacerView.cpp" />
     <ClCompile Include="asset_collector_tool\view\KC_AbstractView.cpp" />
+    <ClCompile Include="asset_collector_tool\view\OrderInfoPictureCreator.cpp" />
     <ClCompile Include="asset_collector_tool\view\UnitViewer.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -165,6 +168,7 @@
     <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_DebugUnitView.h" />
     <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_ImageDecompiler.h" />
     <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_KC_AbstractView.h" />
+    <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_OrderInfoPictureCreator.h" />
     <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_ScenarioScriptTool.h" />
     <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_TerrainEditColorMapToolbox.h" />
     <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_TerrainEditmodeColorMap.h" />
@@ -175,6 +179,7 @@
     <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_UnitViewer.h" />
     <ClInclude Include="asset_collector_tool\component\EditorToolsHelperComponent.h" />
     <ClInclude Include="asset_collector_tool\Export.h" />
+    <QtMOC Include="asset_collector_tool\view\OrderInfoPictureCreator.h" />
     <QtMOC Include="asset_collector_tool\view\KC_AbstractView.h" />
     <QtMOC Include="asset_collector_tool\view\UnitViewer.h" />
     <QtMOC Include="asset_collector_tool\view\indicator\TerrainEditmodeColorMap.h" />
@@ -193,6 +198,7 @@
     <ClInclude Include="asset_collector_tool\kc_terrain\TerrainMaterialGenerator.h" />
     <QtMOC Include="asset_collector_tool\view\indicator\OldTerrainTexturingTool.h" />
     <QtMOC Include="asset_collector_tool\view\ImageDecompiler.h" />
+    <ClInclude Include="asset_collector_tool\kc_terrain\TerrainMaterialGeneratorOgreMaterial.h" />
     <ClInclude Include="asset_collector_tool\view\indicator\ScenarioScriptTool.h" />
     <QtMOC Include="asset_collector_tool\view\indicator\TerrainEditTool.h" />
     <QtMOC Include="asset_collector_tool\view\indicator\AssetCollectorTool.h" />
@@ -201,6 +207,9 @@
     <ClInclude Include="asset_collector_tool\PrecompiledHeader.h" />
   </ItemGroup>
   <ItemGroup>
+    <QtUI Include="asset_collector_tool\view\OrderInfoPictureCreator.ui">
+      <FileType>Document</FileType>
+    </QtUI>
     <QtUI Include="asset_collector_tool\view\ImageDecompiler.ui">
       <FileType>Document</FileType>
     </QtUI>

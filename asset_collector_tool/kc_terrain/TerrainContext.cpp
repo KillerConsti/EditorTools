@@ -7,6 +7,7 @@
 #include "asset_collector_tool/PrecompiledHeader.h"
 #include <asset_collector_tool\kc_terrain\TerrainContext.h>
 #include <asset_collector_tool\kc_terrain\TerrainMaterialGenerator.h>
+#include <asset_collector_tool\kc_terrain\TerrainMaterialGeneratorOgreMaterial.h>
 #include "qsf/log/LogSystem.h"
 
 #include <OGRE/Terrain/OgreTerrain.h>
@@ -43,6 +44,8 @@ namespace kc_terrain
 				terrainMaterialGeneratorPtr.bind(mGenerator);
 				mTerrainGlobals->setDefaultMaterialGenerator(terrainMaterialGeneratorPtr);
 				mTerrainGlobals->setQueryFlags(0);	// Don't allow it to e.g. pick the terrain
+				
+				
 			}
 		}
 		++mContextCounter;

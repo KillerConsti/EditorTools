@@ -157,11 +157,10 @@ namespace user
 			void onSetSaveDirectory(const bool pressed);
 			void onPushLoadMap(const bool pressed);
 			
-			
 			void onChangeBrushType(const int Type);
 			//void onEditPrefab(QT::QString String);
 			void onPushSaveMap(const bool pressed);
-
+			void onCopyQSFMAP(const bool pressed);
 
 			//[-------------------------------------------------------]
 			//[ Private data                                          ]

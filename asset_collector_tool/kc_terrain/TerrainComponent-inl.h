@@ -28,7 +28,8 @@ namespace kc_terrain
 		mTerrainDefinition(nullptr),
 		mIsEditing(false),
 		mColorMap(qsf::getUninitialized<uint64>()),
-		mPos(glm::vec3(0,0,0))
+		mPos(glm::vec3(0,0,0)),
+		mInitDone(false)
 	{
 		// Nothing to do in here
 	}

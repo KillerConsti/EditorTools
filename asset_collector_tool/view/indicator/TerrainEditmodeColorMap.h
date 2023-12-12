@@ -23,9 +23,12 @@
 #include <qsf_editor_base/operation/CompoundOperation.h>
 #include "qsf_editor/editmode/EditMode.h"
 #include "qsf_editor/editmode/EditModeManager.h"
-#include <qsf/renderer/terrain/TerrainComponent.h>
+#include <asset_collector_tool\kc_terrain\TerrainComponent.h>
 #include <asset_collector_tool\qsf_editor\tools\TerrainEditColorMapToolbox.h>
 #include <qsf/message/MessageProxy.h>
+#include <asset_collector_tool\extern\include\Magick++.h>
+#include <qsf/debug/request/CompoundDebugDrawRequest.h>
+#include <qsf/math/Color4.h>
 //[-------------------------------------------------------]
 //[ Forward declarations                                  ]
 //[-------------------------------------------------------]
@@ -110,7 +113,7 @@ namespace user
 			//virtual void retranslateUi() override;
 			//virtual void changeVisibility(bool visible) override;
 			virtual bool evaluateBrushPosition(const QPoint& mousePosition, glm::vec3& position);
-			qsf::TerrainComponent*				   mTerrainComponent;
+			kc_terrain::TerrainComponent*				   mTerrainComponent;
 			//[-------------------------------------------------------]
 			//[ Protected virtual QWidget methods                     ]
 			//[-------------------------------------------------------]
@@ -120,13 +123,11 @@ namespace user
 
 			void PaintJob(const qsf::JobArguments& jobArguments);
 			qsf::JobProxy PaintJobProxy;
-			void SetHeight(glm::vec2 MapPoint);
-			glm::vec3 ApplySmooth(glm::vec2 Point, float Intensity);
-			float GetCustomIntensity(float distancetoMidpoint, TerrainEditColorMapToolbox::TerrainEditMode2 Mode);
 			void RaiseTerrain(glm::vec2 Mappoint);
-			void RaisePoint(glm::vec2 Mappoint, float Intensity);
+			bool RaisePoint(glm::vec2 Mappoint, float Intensity);
 			int timer;
-			void IncreaseHeight(glm::vec2 Point, float NewHeight);
+
+			qsf::Color4 GetOldColor(glm::vec2 &MapPoint);
 
 			//void 
 			//[-------------------------------------------------------]
@@ -135,7 +136,8 @@ namespace user
 		private:
 			bool IsActive;
 			qsf::DebugDrawProxy			mDebugDrawProxy; ///< Debug draw proxy for text output
-
+			qsf::CompoundDebugDrawRequest DebugRequsts;
+			uint32 mDetailViewSingleTrack;
 
 			float MoveDelta;
 			glm::vec3 OldPos;
@@ -144,11 +146,35 @@ namespace user
 			void SaveMap(const qsf::MessageParameters& parameters);
 			void SaveTheFuckingMap();
 			std::string GetCurrentTimeForFileName();
-			float ReadValue(glm::vec2);
-			inline virtual void mousePressEvent(QMouseEvent& qMouseEvent) override;
 			inline virtual void mouseMoveEvent(QMouseEvent& qMouseEvent) override;
 
+			Magick::Image* image;
 
+			struct Terrains
+			{
+				long x;
+				long y;
+				Terrains(long _x, long _y)
+				{
+					x = _x;
+					y = _y;
+				}
+				bool operator<(const Terrains& a) const
+				{
+					return (x < a.x);
+				}
+			};
+			std::vector<Terrains> NeedUpdates;
+
+			struct PaintMap
+			{
+				glm::vec2 Pixel;
+				qsf::Color4 NewColor;
+
+
+			};
+
+			std::vector<PaintMap*> PaintedPixels;
 		private:
 			glm::vec3 oldmouspoint;
 			glm::vec3 yo_mousepoint;
@@ -161,24 +187,21 @@ namespace user
 
 			//terrains shape
 			float partsize;
-			float mHeight;
 			bool mIsInsideVisible;
 			float percentage;
 			float Offset;
-			float Heighmapsize;
+			float ColorMapSize;
 			float Scale;
 			int mParts;
-			qsf::WeakPtr<qsf::TerrainComponent> TerrainMaster;
+			qsf::WeakPtr<kc_terrain::TerrainComponent> TerrainMaster;
 			// return a relative point from a world point (notice that z axis is mirrored)
 			glm::vec2 ConvertWorldPointToRelativePoint(glm::vec2 WorldPoint);
 			// return a worldpoint point from a mappoint (heighmap which is like 1024² or 2048²)
-			glm::vec2 ConvertMappointToWorldPoint(glm::vec2 WorldPoint);
 			void UpdateTerrains();
 			TerrainEditColorMapToolbox* TerrainEditGUI;
 			void generateMaterial();
 			virtual bool onStartup(EditMode* previousEditMode) override;
 			virtual void onShutdown(EditMode* nextEditMode) override;
-			bool projectToScreen(const glm::vec3& worldSpacePosition, const glm::vec2& screenSpaceSize, glm::vec2& outClipSpacePosition, glm::vec2& outClipSpaceSize) const;
 			//[-------------------------------------------------------]
 			//[ CAMP reflection system                                ]
 			//[-------------------------------------------------------]

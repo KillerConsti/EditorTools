@@ -12,7 +12,7 @@
 //[-------------------------------------------------------]
 #include "qsf/base/Context.h"
 #include <asset_collector_tool\kc_terrain\TerrainMaterialGenerator.h>
-
+#include <asset_collector_tool\kc_terrain\TerrainMaterialGeneratorOgreMaterial.h>
 //[-------------------------------------------------------]
 //[ Forward declarations                                  ]
 //[-------------------------------------------------------]

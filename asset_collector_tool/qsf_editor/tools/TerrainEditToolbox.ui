@@ -308,6 +308,13 @@ text-decoration: underline;</string>
      </item>
     </layout>
    </item>
+   <item>
+    <widget class="QPushButton" name="CopyQSFMAP">
+     <property name="text">
+      <string>Copy old QSF Map</string>
+     </property>
+    </widget>
+   </item>
   </layout>
  </widget>
  <resources/>

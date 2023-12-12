@@ -228,6 +228,13 @@ text-decoration: underline;</string>
      </item>
     </layout>
    </item>
+   <item>
+    <widget class="QPushButton" name="CopyFromQSFTerrain">
+     <property name="text">
+      <string>Copy From QSF Terrain</string>
+     </property>
+    </widget>
+   </item>
   </layout>
  </widget>
  <resources/>

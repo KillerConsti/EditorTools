@@ -56,6 +56,8 @@
 #include <qsf_editor/renderer/RenderView.h>
 #include "qsf/renderer/window/RenderWindow.h"
 #include <qsf/renderer/component/CameraComponent.h>
+#include <qsf\platform\PlatformSystem.h>
+#include <QtWidgets\qmessagebox.h>
 //[-------------------------------------------------------]
 //[ Namespace                                             ]
 //[-------------------------------------------------------]
@@ -282,10 +284,9 @@ namespace user
 		{
 
 			QMenu *xmenu = new QMenu();
-			QMenu* submenuA = xmenu->addMenu("(Chap. 1) Making a unit playable");
-			QAction* actionA_Setup = submenuA->addAction("Basegame");
-			QAction* action2_Setup = submenuA->addAction("Bieberfelde/Beaverfield");
-			QAction* actionB_Setup = submenuA->addAction("Wuppertal/Lüdenscheid/essex");
+			QMenu* submenuA = xmenu->addMenu("Tutorials");
+			QAction* actionA_Setup = submenuA->addAction("My Videos");
+			QAction* actionB_Setup = submenuA->addAction("Forum/Wiki");
 
 			auto x = OldMenuBar->actionGeometry(KC_MenuAction).x();
 			auto y = OldMenuBar->actionGeometry(KC_MenuAction).y() + OldMenuBar->actionGeometry(KC_MenuAction).height();
@@ -316,6 +317,19 @@ namespace user
 			else if (action->text().toStdString() == "Image Decoder")
 			{
 				ShowImageDecoderView();
+			}
+			else if (action->text().toStdString() == "My Videos")
+			{
+				//QSF_PLATFORM.openUrlExternal("https://youtube.com//playlist?list=PLpmd2BvKtF9M-Yng8wnU7ey7cNmLu9Zgw&si");
+				std::string text = "You can find my videos here \nhttps://youtube.com//playlist?list=PLpmd2BvKtF9M-Yng8wnU7ey7cNmLu9Zgw&si";
+				auto EM = new QMessageBox(nullptr);
+				EM->setText(text.c_str());
+				EM->setStandardButtons(QMessageBox::Ok);
+				int Option = EM->exec();
+			}
+			else if (action->text().toStdString() == "Forum/Wiki")
+			{
+				QSF_PLATFORM.openUrlExternal("https://em-hub.de//");
 			}
 		}
 

@@ -177,7 +177,7 @@ namespace user
 
 			//connect(mUITerrainTexturingToolbox->lineEdit, SIGNAL(textChanged(QString)), this, SLOT(onEditPrefab(QString)));
 			connect(mUITerrainTexturingToolbox->horizontalSlider, SIGNAL(valueChanged(int)), this, SLOT(OnBrushIntensitySliderChanged(int)));
-
+			connect(mUITerrainTexturingToolbox->CopyFromQSFTerrain, SIGNAL(clicked(bool)), this, SLOT(onCopyFromQSFTerrain(bool)));
 			//Editmodes
 
 
@@ -343,6 +343,11 @@ namespace user
 		{
 
 			QSF_MESSAGE.emitMessage(qsf::MessageConfiguration("kc::save_heightmap"));
+		}
+
+		void TerrainTexturingToolbox::onCopyFromQSFTerrain(const bool pressed)
+		{
+			QSF_MESSAGE.emitMessage(qsf::MessageConfiguration("kc::CopyFromQSFTerrain"));
 		}
 
 		TerrainTexturingToolbox::TerrainEditMode2 TerrainTexturingToolbox::GetEditMode()

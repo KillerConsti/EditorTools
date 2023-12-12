@@ -22,6 +22,7 @@
 #include <QtWidgets\qtreewidgetitemiterator.h>
 #include <asset_collector_tool\view\KC_AbstractView.h>
 #include <ogre\Ogre.h>
+
 //[-------------------------------------------------------]
 //[ Forward declarations                                  ]
 //[-------------------------------------------------------]

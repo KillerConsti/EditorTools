@@ -367,10 +367,13 @@ namespace kc_terrain
 		qsf::AssetProxy GetColorMap();
 		qsf::AssetProxy mColorMap;
 
-
+		bool mInitDone;
 		Ogre::Terrain* getOgreTerrain() const;
 
+		
+		void ReloadSubTerrainMaterials(long x, long y);
 
+		void SaveTerrain();
 	//[-------------------------------------------------------]
 	//[ Protected virtual qsf::Component methods              ]
 	//[-------------------------------------------------------]

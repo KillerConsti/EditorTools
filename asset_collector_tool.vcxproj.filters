@@ -187,6 +187,15 @@
     <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_ImageDecompiler.cpp">
       <Filter>GeneratedQtFiles\moc</Filter>
     </ClCompile>
+    <ClCompile Include="asset_collector_tool\kc_terrain\TerrainMaterialGeneratorOgreMaterial.cpp">
+      <Filter>Source Files\kc_terrain</Filter>
+    </ClCompile>
+    <ClCompile Include="asset_collector_tool\view\OrderInfoPictureCreator.cpp">
+      <Filter>Source Files\view\AssetCollectorTool</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_OrderInfoPictureCreator.cpp">
+      <Filter>GeneratedQtFiles\moc</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="asset_collector_tool\PrecompiledHeader.h">
@@ -255,6 +264,12 @@
     <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_ImageDecompiler.h">
       <Filter>GeneratedQtFiles\uic</Filter>
     </ClInclude>
+    <ClInclude Include="asset_collector_tool\kc_terrain\TerrainMaterialGeneratorOgreMaterial.h">
+      <Filter>Source Files\kc_terrain</Filter>
+    </ClInclude>
+    <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_OrderInfoPictureCreator.h">
+      <Filter>GeneratedQtFiles\uic</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="asset_collector_tool.pro" />
@@ -311,6 +326,9 @@
     <QtMOC Include="asset_collector_tool\view\ImageDecompiler.h">
       <Filter>Source Files\view\AssetCollectorTool</Filter>
     </QtMOC>
+    <QtMOC Include="asset_collector_tool\view\OrderInfoPictureCreator.h">
+      <Filter>Source Files\view\AssetCollectorTool</Filter>
+    </QtMOC>
   </ItemGroup>
   <ItemGroup>
     <QtRCC Include="asset_collector_tool\ressources\ressources.qrc">
@@ -346,6 +364,9 @@
       <Filter>Source Files\terrain_assets\tools\terrain</Filter>
     </QtUI>
     <QtUI Include="asset_collector_tool\view\ImageDecompiler.ui">
+      <Filter>Source Files\view\AssetCollectorTool</Filter>
+    </QtUI>
+    <QtUI Include="asset_collector_tool\view\OrderInfoPictureCreator.ui">
       <Filter>Source Files\view\AssetCollectorTool</Filter>
     </QtUI>
   </ItemGroup>

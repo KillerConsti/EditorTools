@@ -26,6 +26,7 @@
 #include <asset_collector_tool\kc_terrain\TerrainComponent.h>
 #include <asset_collector_tool\qsf_editor\tools\TerrainTexturingToolbox.h>
 #include <qsf/message/MessageProxy.h>
+#include <qsf/debug/request/CompoundDebugDrawRequest.h>
 //[-------------------------------------------------------]
 //[ Forward declarations                                  ]
 //[-------------------------------------------------------]
@@ -141,20 +142,36 @@ namespace user
 			glm::vec3 TerrainTexturingTool::getPositionUnderMouse();
 			qsf::MessageProxy		mSaveMapProxy;
 			void SaveMap(const qsf::MessageParameters& parameters);
+
+			qsf::MessageProxy		mCopyQSFTerrain;
+			void CopyQSFTerrain(const qsf::MessageParameters& parameters);
+
+
 			void SaveTheFuckingMap();
 			std::string GetCurrentTimeForFileName();
 			float ReadValue(glm::vec2);
 			inline virtual void mousePressEvent(QMouseEvent& qMouseEvent) override;
 			inline virtual void mouseMoveEvent(QMouseEvent& qMouseEvent) override;
 
-
+			struct LayerData
+			{
+				std::vector<glm::vec3> Data;
+				std::string LayerName;
+				uint16 AffectedPoints = 0;
+				int OriginLayer;
+				bool operator<(const LayerData& a) const
+				{
+					return (AffectedPoints > a.AffectedPoints);
+				}
+			};
 		private:
 			glm::vec3 oldmouspoint;
 			glm::vec3 yo_mousepoint;
 			bool mouseisvalid;
 			boost::container::flat_set <uint64> CreatedUnits;
 			bool WasPressed;
-			
+			qsf::CompoundDebugDrawRequest DebugRequsts;
+			uint32 mDetailViewSingleTrack;
 			float Radius;
 			
 
@@ -170,8 +187,7 @@ namespace user
 			qsf::WeakPtr<kc_terrain::TerrainComponent> TerrainMaster;
 
 			void WriteTerrainTextureList();
-			uint64 GetSelectedLayerColor();
-			uint64 mSelectedLayerColor;
+			std::string GetSelectedLayerColor();
 			int GetBlendMapWithTextureName(int xTerrain,int yTerrain);
 			uint8 TMG_getMaxLayers(const Ogre::Terrain* ogreTerrain) const;
 			void LoadOldMap();

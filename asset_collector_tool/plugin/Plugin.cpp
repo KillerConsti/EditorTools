@@ -32,6 +32,7 @@
 #include <qsf/plugin/QsfAssetTypes.h>
 #include <qsf/renderer/terrain/TerrainComponent.h>
 #include <asset_collector_tool\view\indicator\OldTerrainTexturingTool.h>
+#include <asset_collector_tool\view\OrderInfoPictureCreator.h>
 
 #include <fstream>
 //[-------------------------------------------------------]
@@ -97,6 +98,16 @@ namespace user
 				);
 
 				addCampClass(
+					camp::Class::declare<OrderInfoPictureCreator>()
+					.tag("Name", QT_TR_NOOP("[KC] OrderInfoPictureCreator"))			// Text: "[KC] Asset Collector Tool"
+					.tag("Description", QT_TR_NOOP("KC_USEREDITOR_VIEW_AssetCollectorTool_DESCRIPTION"))	// Text: "Indicator browser"
+					.tag("Shortcut", "")															// Internal, no translation required
+					.base<qsf::editor::View>()
+					.constructor2<qsf::editor::ViewManager*, QWidget*>()
+					.getClass()
+				);
+
+				addCampClass(
 					camp::Class::declare<UnitPlacerView>()
 					.tag("Name", QT_TR_NOOP("[KC] UnitPlacerView"))			// Text: "[KC] Asset Collector Tool"
 					.tag("Description", QT_TR_NOOP("KC_UnitPlacerView_DESCRIPTION"))	// Text: "Indicator browser"
@@ -142,6 +153,10 @@ namespace user
 					.getClass()
 				);
 
+
+
+#define FinalBuild
+#ifdef FinalBuild
 				addCampClass(
 					camp::Class::declare<TerrainEditToolbox>()
 					.tag("Name", QT_TR_NOOP("[KC] Terrain Modelling Tool"))			// Text: "Fire entity"
@@ -150,10 +165,6 @@ namespace user
 					.constructor1<qsf::editor::ToolManager*>()
 					.getClass()
 				);
-
-#define FinalBuild
-#ifdef FinalBuild
-
 
 				addCampClass(
 					camp::Class::declare<TerrainTexturingToolbox>()

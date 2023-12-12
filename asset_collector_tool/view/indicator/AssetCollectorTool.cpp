@@ -441,7 +441,7 @@ namespace user
 
 		void AssetCollectorTool::onPushHelpButton(const bool pressed)
 		{
-			QSF_PLATFORM.openUrlExternal("http://www.emergency-forum.de/index.php?thread/66525-asset-collector-tool-for-content-creators/");
+			QSF_PLATFORM.openUrlExternal("https://em-hub.de//forum//thread//115-asset-collector-tool-download//");
 		}
 
 		int AssetCollectorTool::DoSthCool(int a, int b)
