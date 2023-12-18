@@ -372,7 +372,7 @@ namespace kc_terrain
 
 		
 		void ReloadSubTerrainMaterials(long x, long y);
-
+		void RefreshMaterial(Ogre::Terrain* Ot);
 		void SaveTerrain();
 	//[-------------------------------------------------------]
 	//[ Protected virtual qsf::Component methods              ]
