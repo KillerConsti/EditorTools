@@ -323,6 +323,11 @@ namespace kc_terrain
 		mTerrainContext->GetMaterialGenerator()->UpdateColorMap(mOgreTerrainGroup->getTerrain(x, y));
 	}
 
+	void TerrainComponent::RefreshMaterial(Ogre::Terrain * Ot)
+	{
+		mTerrainContext->GetMaterialGenerator()->RefreshMaterial(Ot);
+	}
+
 	void TerrainComponent::SaveTerrain()
 	{
 	}
