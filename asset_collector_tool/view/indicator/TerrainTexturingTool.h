@@ -188,9 +188,12 @@ namespace user
 			qsf::WeakPtr<kc_terrain::TerrainComponent> TerrainMaster;
 
 			void WriteTerrainTextureList();
+<<<<<<< HEAD
 
 			int onAddNewTerrain(std::string BlendMapName,int x,int y);
 			bool TerrainTextureAllreadyExists(std::string CheckMe, std::vector<std::string> ToCheck);
+=======
+>>>>>>> f80e101ae937d574a4e4d9d40eda0b5f1504a9b7
 			//x and y represent terrain index
 			//z is set by updateterrain method when we applay some texture - so programm knows it needs to go higher
 			glm::vec3 m_NeedUpdatingTerrainList;
