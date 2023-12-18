@@ -717,7 +717,8 @@ namespace user
 				//TerrainEditGUI->
 
 			}
-			TerrainEditGUI->SetCurrentTerrainData(TerrainNames, xTerrain, yTerrain);
+			//kc we might need to repair it but we dont use it anyway
+			//TerrainEditGUI->SetCurrentTerrainData(TerrainNames, xTerrain, yTerrain);
 		}
 
 		uint64 OldTerrainTexturingTool::GetSelectedLayerColor()

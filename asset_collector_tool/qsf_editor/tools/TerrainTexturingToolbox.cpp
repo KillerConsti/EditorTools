@@ -99,8 +99,12 @@
 #include <../../plugin_api/external/qt/include/QtWidgets/qfiledialog.h>
 #include <../../plugin_api/external/qt/include/QtWidgets/qcolordialog.h>
 #include <qsf/plugin/PluginSystem.h>
-
+#include "qsf/plugin/QsfAssetTypes.h"
+#include "qsf/asset/Asset.h"
+#include "qsf/asset/AssetSystem.h"
+#include < qsf/asset/type/AssetTypeManager.h>
 #include <em5/plugin/Plugin.h>
+#include <../../plugin_api/external/qt/include/QtWidgets/qtablewidget.h>
 //[-------------------------------------------------------]
 //[ Namespace                                             ]
 //[-------------------------------------------------------]
@@ -183,6 +187,32 @@ namespace user
 
 			connect(mUITerrainTexturingToolbox->comboBox, SIGNAL(currentIndexChanged(int)), SLOT(onChangeBrushType(int)));
 			InitSavePath();
+			UpdateTerrainList();
+
+			auto TableWidget = mUITerrainTexturingToolbox->tableWidget;
+			TableWidget->setRowCount(6);
+			TableWidget->setColumnCount(3);
+			TableWidget->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
+			TableWidget->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Stretch);
+			TableWidget->horizontalHeader()->setSectionResizeMode(2, QHeaderView::ResizeToContents);
+			TableWidget->verticalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
+			TableWidget->verticalHeader()->setSectionResizeMode(1, QHeaderView::Stretch);
+			TableWidget->verticalHeader()->setSectionResizeMode(2, QHeaderView::Stretch);
+			TableWidget->verticalHeader()->setSectionResizeMode(3, QHeaderView::Stretch);
+			TableWidget->verticalHeader()->setSectionResizeMode(4, QHeaderView::Stretch);
+			TableWidget->verticalHeader()->setSectionResizeMode(5, QHeaderView::Stretch);
+			QTableWidgetItem *newItem = new QTableWidgetItem("0");
+			TableWidget->setItem(0, 0, newItem);
+			QTableWidgetItem *newItem2 = new QTableWidgetItem("1");
+			TableWidget->setItem(1, 0, newItem2);
+			QTableWidgetItem *newItem3 = new QTableWidgetItem("2");
+			TableWidget->setItem(2, 0, newItem3);
+			QTableWidgetItem *newItem4 = new QTableWidgetItem("3");
+			TableWidget->setItem(3, 0, newItem4);
+			QTableWidgetItem *newItem5 = new QTableWidgetItem("4");
+			TableWidget->setItem(4, 0, newItem5);
+			QTableWidgetItem *newItem6 = new QTableWidgetItem("5");
+			TableWidget->setItem(5, 0, newItem6);
 			return true;
 		}
 
@@ -315,15 +345,99 @@ namespace user
 			return mColor;
 		}
 
-		void TerrainTexturingToolbox::SetCurrentTerrainData(std::vector<std::string> Data, int xTerrain, int yTerrain)
+		void TerrainTexturingToolbox::SetCurrentTerrainData(std::vector<std::pair<std::string, int>> Data, int xTerrain, int yTerrain)
 		{
-			auto ListWidget = mUITerrainTexturingToolbox->listWidget;
+		//Old
+			/*auto ListWidget = mUITerrainTexturingToolbox->listWidget;
 			if (OldTerrain.x != xTerrain && OldTerrain.y != yTerrain)
 			{
 				ListWidget->clear();
 				for (auto d : Data)
 					ListWidget->addItem(d.c_str());
 				OldTerrain = glm::vec2(xTerrain, yTerrain);
+			}*/
+			//NEW
+			auto TableWidget = mUITerrainTexturingToolbox->tableWidget;
+			int row = 0;
+			for(size_t t = 0; t< 6; t++)
+			{
+				if (Data.size() <= t)
+				{
+					//set items empty
+					QTableWidgetItem *newItem = TableWidget->item(row, 1);
+					if (newItem == nullptr)
+					{
+						newItem = new QTableWidgetItem("");
+						TableWidget->setItem(row, 1, newItem);
+					}
+					else
+					{
+						newItem->setText("");
+					}
+					QTableWidgetItem *countItem = TableWidget->item(row, 2);
+					if (countItem == nullptr)
+					{
+						countItem = new QTableWidgetItem("");
+						TableWidget->setItem(row, 2, countItem);
+					}
+					else
+					{
+						countItem->setText("");
+					}
+				}
+				else
+				{
+					auto a = Data.at(t);
+					QTableWidgetItem *newItem = TableWidget->item(row, 1);
+					if (newItem == nullptr)
+					{
+						newItem = new QTableWidgetItem(qsf::AssetProxy(a.first).getAsset()->getName().c_str());
+						TableWidget->setItem(row, 1, newItem);
+					}
+					else
+					{
+						newItem->setText(qsf::AssetProxy(a.first).getAsset()->getName().c_str());
+					}
+
+					// update count
+					QTableWidgetItem *countItem = TableWidget->item(row, 2);
+					if (countItem == nullptr)
+					{
+						countItem = new QTableWidgetItem(boost::lexical_cast<std::string>(a.second).c_str());
+						TableWidget->setItem(row, 2, countItem);
+					}
+					else
+					{
+						countItem->setText(boost::lexical_cast<std::string>(a.second).c_str());
+					}
+				}
+
+			row++;
+			}
+		}
+
+		void TerrainTexturingToolbox::UpdateTerrainList()
+		{
+			m_AssetList.clear();
+			uint64 TypeId = 0;
+			for (auto a : QSF_ASSET.getAssetTypeManager().getAssetTypeMap()) //find asset type
+			{
+				if ("material" == a.second->getTypeName())
+				{
+					TypeId = a.second->getTypeId();
+					break;
+				}
+			}
+			qsf::Assets AssetList;
+			QSF_ASSET.getAssetsOfType(TypeId, AssetList,&std::string("terrain_layer"));
+
+			auto ListWidget = mUITerrainTexturingToolbox->listWidget;
+			ListWidget->clear();
+			for (auto a : AssetList)
+			{
+				ListWidget->addItem(a->getName().c_str());
+				ListWidget->sortItems();
+				m_AssetList.push_back(std::pair<std::string,std::string>(a->getName(),qsf::AssetProxy(a->getGlobalAssetId()).getLocalAssetName()));
 			}
 		}
 
@@ -331,8 +445,19 @@ namespace user
 		{
 			if(mUITerrainTexturingToolbox->listWidget->currentItem() == nullptr)
 				return "";
-			return mUITerrainTexturingToolbox->listWidget->currentItem()->text().toStdString();
+			return GetLocalAssetNameFromBaseName(mUITerrainTexturingToolbox->listWidget->currentItem()->text().toStdString());
 		}
+
+		std::string TerrainTexturingToolbox::GetLocalAssetNameFromBaseName(std::string BaseAssetName)
+		{
+			for (auto a : m_AssetList)
+			{
+				if(a.first == BaseAssetName)
+				return a.second;
+			}
+			return std::string();
+		}
+
 
 		void TerrainTexturingToolbox::onChangeBrushType(const int Type)
 		{

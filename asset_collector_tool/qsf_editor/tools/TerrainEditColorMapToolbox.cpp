@@ -171,7 +171,7 @@ namespace user
 
 		glm::vec3 TerrainEditColorMapToolbox::GetSelectedColor()
 		{
-			QColor originColor = mUITerrainEditColorMapToolbox->label_6->palette().color(QPalette::ColorRole::Background);
+			QColor originColor = mUITerrainEditColorMapToolbox->col1->palette().color(QPalette::ColorRole::Background);
 			int r, g, b;
 			originColor.getRgb(&r, &g, &b);
 			return glm::vec3(r,g,b);
@@ -201,10 +201,10 @@ namespace user
 			InitSavePath();
 
 
-			QPalette pal = mUITerrainEditColorMapToolbox->label_6->palette();
-			mUITerrainEditColorMapToolbox->label_6->setAutoFillBackground(true);
-			pal.setColor(mUITerrainEditColorMapToolbox->label_6->backgroundRole(), Qt::green);
-			mUITerrainEditColorMapToolbox->label_6->setPalette(pal);
+			QPalette pal = mUITerrainEditColorMapToolbox->col1->palette();
+			mUITerrainEditColorMapToolbox->col1->setAutoFillBackground(true);
+			pal.setColor(mUITerrainEditColorMapToolbox->col1->backgroundRole(), Qt::green);
+			mUITerrainEditColorMapToolbox->col1->setPalette(pal);
 			return true;
 		}
 
@@ -274,17 +274,17 @@ namespace user
 			mUITerrainEditColorMapToolbox->pick_a_color_button->setChecked(false);
 			if(mtoolboxView == nullptr)
 			return;
-			QColor originColor  = mUITerrainEditColorMapToolbox->label_6->palette().color(QPalette::ColorRole::Background);
+			QColor originColor  = mUITerrainEditColorMapToolbox->col1->palette().color(QPalette::ColorRole::Background);
 			QColor color = QColorDialog::getColor(originColor, mtoolboxView->widget());
-			QPalette pal = mUITerrainEditColorMapToolbox->label_6->palette();
-			mUITerrainEditColorMapToolbox->label_6->setAutoFillBackground(true);
-			pal.setColor(mUITerrainEditColorMapToolbox->label_6->backgroundRole(), color);
+			QPalette pal = mUITerrainEditColorMapToolbox->col1->palette();
+			mUITerrainEditColorMapToolbox->col1->setAutoFillBackground(true);
+			pal.setColor(mUITerrainEditColorMapToolbox->col1->backgroundRole(), color);
 			int r,g,b;
 			color.getRgb(&r,&g,&b);
 			std::string ColorsAsString = boost::lexical_cast<std::string>(r) + ","+ boost::lexical_cast<std::string>(g) +","+ boost::lexical_cast<std::string>(b);
 			ColorsAsString = "background-color: rgb("+ColorsAsString+")";
-			mUITerrainEditColorMapToolbox->label_6->setStyleSheet(ColorsAsString.c_str());
-			mUITerrainEditColorMapToolbox->label_6->setPalette(pal);
+			mUITerrainEditColorMapToolbox->col1->setStyleSheet(ColorsAsString.c_str());
+			mUITerrainEditColorMapToolbox->col1->setPalette(pal);
 		}
 
 

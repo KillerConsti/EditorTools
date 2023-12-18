@@ -134,8 +134,13 @@ namespace user
 			QColor getColor();
 			QColor mColor;
 			glm::vec2 OldTerrain;
-			void SetCurrentTerrainData(std::vector<std::string> Data,int xTerrain,int yTerrain);
+			void SetCurrentTerrainData(std::vector<std::pair<std::string,int>> Data,int xTerrain,int yTerrain);
+			void UpdateTerrainList();
 			std::string GetLayerColor();
+
+			std::string GetLocalAssetNameFromBaseName(std::string BaseAssetName);
+			//BaseName, LocalAssetName
+			std::vector<std::pair<std::string,std::string>> m_AssetList;
 		protected:
 			virtual bool onStartup(qsf::editor::ToolboxView& toolboxView) override;
 			virtual void retranslateUi(qsf::editor::ToolboxView& toolboxView) override;

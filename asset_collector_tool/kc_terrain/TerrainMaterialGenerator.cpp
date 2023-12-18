@@ -519,25 +519,9 @@ namespace kc_terrain
 		terrainMaterial->setPropertyById("NumberOfLayers", qsf::MaterialPropertyValue::fromInteger(numberOfLayers));
 		terrainMaterial->setPropertyById("NumberOfBlendMaps", qsf::MaterialPropertyValue::fromInteger(numberOfBlendMaps));
 
-		// Blend maps
-		//numberOfBlendMaps =6;
-		/*std::vector<std::string> Textures;
-		Textures.push_back("em5/material/terrain_layer/terrain_nature_grass01");
-		Textures.push_back("em5/material/terrain_layer/terrain_urban_medieval_cobbles");
-		Textures.push_back("em5/material/terrain_layer/terrain_nature_dirt01_fine");
-		Textures.push_back("em5/material/terrain_layer/terrain_nature_sand01");
-		Textures.push_back("em5/material/terrain_layer/terrain_urban_herringbone01");
-		Textures.push_back("em5/material/terrain_layer/terrain_urban_herringbone01");
-		Textures.push_back("em5/material/terrain_layer/terrain_urban_herringbone01");
-		Textures.push_back("em5/material/terrain_layer/terrain_urban_herringbone01");
-		Textures.push_back("em5/material/terrain_layer/terrain_urban_herringbone01");
-		Textures.push_back("em5/material/terrain_layer/terrain_urban_herringbone01");*/
-		//QSF_LOG_PRINTS(INFO,"number of layers " << numberOfLayers << "number of blendmaps" << numberOfBlendMaps<< " BlendTextureCount "<< ogreTerrain->getBlendTextureCount())
 		for (uint32 i = 0; i < numberOfBlendMaps; ++i)
 		{
 				terrainMaterial->setPropertyById(qsf::StringHash("BlendMap" + std::to_string(i)), qsf::MaterialPropertyValue::fromResourceName(ogreTerrain->getBlendTextureName(i)));
-				//terrainMaterial->setPropertyById(qsf::StringHash("BlendMap" + std::to_string(i)), qsf::MaterialPropertyValue::fromResourceName(Textures.at(i)));
-				//QSF_LOG_PRINTS(INFO,"Blend Map names "<< i <<" "<< ogreTerrain->getBlendTextureName(i))
 		}
 		// Texture layers
 		for (uint32 layerIndex = 0; layerIndex < numberOfLayers; ++layerIndex)

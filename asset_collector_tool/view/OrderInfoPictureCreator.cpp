@@ -109,6 +109,19 @@
 #include <qsf/window/WindowSystem.h>
 #include <qsf/renderer/component/CameraComponent.h>
 #include <qsf/renderer/window/RenderWindow.h>
+#include <em5\component\vehicle\RoadVehicleComponent.h>
+#include <qsf/math/EulerAngles.h>
+#include <qsf/component/base/TransformComponent.h>
+#include <qsf/map/query/ComponentMapQuery.h>
+#include <OGRE/OgreRay.h>
+#include <qsf/math/Convert.h>
+#include <qsf/map/query/RayMapQuery.h>
+#include <qsf_editor/renderer/RenderView.h>
+#include <em5/map/EntityHelper.h>
+#include <qsf_editor/base/GuiHelper.h>
+#include <QtGui\qdesktopservices.h>
+#include "qsf/renderer/material/MaterialSystem.h"
+#include <qsf/renderer/material/material/MaterialVariationManager.h>
 using namespace std;
 
 using namespace Magick;
@@ -122,7 +135,7 @@ namespace user
 {
 	namespace editor
 	{
-	
+
 		using boost::lexical_cast;
 		using boost::bad_lexical_cast;
 		//[-------------------------------------------------------]
@@ -138,7 +151,9 @@ namespace user
 			qsf::editor::View(viewManager, qWidgetParent),
 			//View(viewManager, qWidgetParent),
 			mUiOrderInfoPictureCreator(nullptr),
-			mSavepath("")
+			mSavepath(""),
+			cam(0),
+			EntName("none")
 		{
 			// Add the created Qt dock widget to the given Qt main window and tabify it for better usability
 			addViewAndTabify(reinterpret_cast<QMainWindow&>(*qWidgetParent), Qt::RightDockWidgetArea);
@@ -185,6 +200,13 @@ namespace user
 				connect(mUiOrderInfoPictureCreator->searchbutton, SIGNAL(clicked(bool)), this, SLOT(OnPushLoadMaterial_or_texture(bool)));
 				connect(mUiOrderInfoPictureCreator->decompilebutton, SIGNAL(clicked(bool)), this, SLOT(onPushDecompileButton(bool)));
 				connect(mUiOrderInfoPictureCreator->SetSaveLocationButton, SIGNAL(clicked(bool)), this, SLOT(onSetSaveDirectory(bool)));
+				connect(mUiOrderInfoPictureCreator->SetSelectionGreenscreen, SIGNAL(clicked(bool)), this, SLOT(onSetSelectionGreenscreen(bool)));
+
+				connect(mUiOrderInfoPictureCreator->cam1, SIGNAL(clicked(bool)), this, SLOT(onCam1(bool)));
+				connect(mUiOrderInfoPictureCreator->cam2, SIGNAL(clicked(bool)), this, SLOT(onCam2(bool)));
+				connect(mUiOrderInfoPictureCreator->origcam, SIGNAL(clicked(bool)), this, SLOT(onOrigCam(bool)));
+				connect(mUiOrderInfoPictureCreator->removeEntity, SIGNAL(clicked(bool)), this, SLOT(onremoveEntity(bool)));
+				connect(mUiOrderInfoPictureCreator->OpenSaveLocation, SIGNAL(clicked(bool)), this, SLOT(onOpenSaveLocation(bool)));
 				InitSavePath();
 			}
 			else if (!visible && nullptr == mUiOrderInfoPictureCreator)
@@ -218,34 +240,18 @@ namespace user
 
 		void OrderInfoPictureCreator::onPushDecompileButton(const bool pressed)
 		{
-			//qsf::compositing::Plugin::instance()->getCompositorSystem().getScreenshotManager().startupScreenshotCapturing(*Ptr,false,false);
-			//auto str = qsf::compositing::Plugin::getInstanceSafe().getCompositorSystem().getScreenshotManager().instantScreenshotCapturingWithDefaultSettings(*QSF_EDITOR_APPLICATION.getCameraManager().getCameraComponent());
-			//.instantScreenshotCapturing(*Ptr,true,true, *EM5_APPLICATION.getRenderWindow()->getCameraComponent(),nullptr);
-			//if (Ptr == nullptr)
-			Ogre::TexturePtr texture = Ogre::TextureManager::getSingleton().createManual(
-				"DynamicTexture", // name
-				Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME,
-				Ogre::TEX_TYPE_2D,      // type
-				3840, 2160,         // width & height
-				0,                // number of mipmaps
-				Ogre::PF_BYTE_BGRA,     // pixel format
-				Ogre::TU_DEFAULT);      // usage; should be TU_DYNAMIC_WRITE_ONLY_DISCARDABLE for
-								  // textures updated very often (e.g. each frame)
+			if (!mUiOrderInfoPictureCreator->Raytracing->isChecked())
+			{
+				DoWithOutRaytracing();
+				return;
+			}
+			CheckForRaysHitting();
 
-								  // Get the pixel buffer
-			auto pixelBuffer = texture->getBuffer();
-
-			// Lock the pixel buffer and get a pixel box
-			pixelBuffer->lock(Ogre::v1::HardwareBuffer::HBL_NORMAL); // for best performance use HBL_DISCARD!
-			const Ogre::PixelBox& pixelBox = pixelBuffer->getCurrentLock();
-			pixelBuffer->unlock();
-			
-			uint8* pDest = static_cast<uint8*>(pixelBox.data);
 			auto win = QSF_EDITOR_APPLICATION.getCameraManager().getCameraComponent()->getRenderWindows();
 			for (auto a : win)
 			{
-				if(a == nullptr)
-				return;
+				if (a == nullptr)
+					return;
 				auto RenderWindow = a->getOgreRenderWindow();
 				if (RenderWindow == nullptr)
 					return;
@@ -260,298 +266,520 @@ namespace user
 				auto* data = OGRE_ALLOC_T(std::uint8_t, byteCount, memory_category);
 
 				Ogre::PixelBox pixelBox(width, height, 1, pixel_format, data);
-				RenderWindow->copyContentsToMemory(pixelBox,Ogre::RenderTarget::FB_AUTO);
-					Ogre::Image ColorMap;
-				ColorMap.loadDynamicImage(static_cast<unsigned char*>(pixelBox.data), width, height, RenderWindow->suggestPixelFormat());
-				ColorMap.save("yeahcolol.tif");
+				RenderWindow->copyContentsToMemory(pixelBox, Ogre::RenderTarget::FB_AUTO);
+				Ogre::Image ColorMap;
+				
+				ColorMap.loadDynamicImage(static_cast<unsigned char*>(pixelBox.data), width, height, Ogre::PixelFormat::PF_BYTE_RGB);
+				std::string Path = GetSavePath() + EntName + boost::lexical_cast<std::string>(cam) + ".png";
+				std::string Path_Mini = GetSavePath() + EntName + boost::lexical_cast<std::string>(cam) + "_mini.png";
+				std::string widthandheight = boost::lexical_cast<std::string>(width) + "x" + boost::lexical_cast<std::string>(height);
+				Image IOL;
+				IOL.size(widthandheight);
+				IOL.magick("PNG");
+				IOL.type(Magick::ImageType::TrueColorAlphaType);
+
+				MagickCore::Quantum *pixels = IOL.getPixels(0, 0, width, height);
+				if (IOL.channels() == 4) //rgb
+				{
+					for (size_t x = 0; x < width; x++)
+					{
+						for (size_t y = 0; y < height; y++)
+						{
+							auto OldColor = ColorMap.getColourAt(x, y, 0);
+							uint64 offset = (width* y + x) * 4; //4 is because we use 4 channels
+							*(pixels + offset) = 65535.f*OldColor.r;
+							*(pixels + offset + 1) = 65535.f*OldColor.g;
+							*(pixels + offset + 2) = 65535.f*OldColor.b;
+						}
+					}
+				}
+				//make them transparent
+				if (IOL.channels() == 4) //rgb
+				{
+
+					for (auto a : HitByRay)
+					{
+						if (a.z == 0)
+						{
+							uint64 offset = (width* a.y + a.x) * 4; //4 is because we use 4 channels
+							(*(pixels + offset + 3) = 0);
+						}
+					}
+
+				}
+				//crop image
+				int CropTop = 0;
+				bool Done = false;
+				for (size_t y = 0; y < height; y++)
+				{
+				for (size_t x = 0; x < width; x++)
+				{
+
+						uint64 offset = (width* y + x) * 4; //4 is because we use 4 channels
+						if (*(pixels + offset + 3) != 0)
+						{
+							Done = true;
+							break;
+						}
+					}
+					if (!Done)
+					{
+						CropTop++;
+					}
+					else
+						break;
+
+				}
+
+				int CropBottom = 0;
+				Done = false;
+				for (size_t y = height - 1; y > 0; y--)
+				{
+				for (size_t x = 0; x < width; x++)
+				{
+
+						uint64 offset = (width* y + x) * 4; //4 is because we use 4 channels
+						if (*(pixels + offset + 3) != 0)
+						{
+							Done = true;
+							break;
+						}
+					}
+					if (!Done)
+					{
+						CropBottom++;
+					}
+					else
+						break;
+
+				}
+
+				int CropLeft = 0;
+				Done = false;
+
+
+						for (size_t x = 0; x < width; x++)
+						{
+							for (size_t y = 0; y < height; y++)
+							{
+						uint64 offset = (width* y + x) * 4; //4 is because we use 4 channels
+						if (*(pixels + offset + 3) != 0)
+						{
+							Done = true;
+							break;
+						}
+					}
+					if (!Done)
+					{
+						CropLeft++;
+					}
+					else
+						break;
+
+				}
+
+					int CropRight = 0;
+					Done = false;
+
+					for (size_t x = width-1; 0 < x; x--)
+					{
+						for (size_t y = 0; y < height; y++)
+						{
+							uint64 offset = (width* y + x) * 4; //4 is because we use 4 channels
+							if (*(pixels + offset + 3) != 0)
+							{
+								Done = true;
+								break;
+							}
+						}
+						if (!Done)
+						{
+							CropRight++;
+						}
+						else
+							break;
+
+					}
+
+					// Crop the image to specified size (width, height, xOffset, yOffset)
+					//image.crop(Geometry(100, 100, 100, 100));
+				IOL.syncPixels();
+				QSF_LOG_PRINTS(INFO,"crop left "<< CropLeft << " crop right "<< CropRight << " crop top "<< CropTop << " crop bottom "<< CropBottom)
+				IOL.crop(Geometry(width- CropLeft -CropRight,height-CropTop-CropBottom,CropLeft,CropTop));
+				
+				IOL.write(Path.c_str());
+				auto newwidth = width - CropLeft - CropRight;
+				auto newheight = height - CropTop - CropBottom;
+				//our target is width of 103 or hight of 60
+				newheight = newheight *(float)( 103.f/(float)newwidth);
+				IOL.scale(Geometry(newwidth,newheight,0,0));
+				IOL.write(Path_Mini);
+				//ColorMap.save(Path.c_str());
+				auto pm = QPixmap(Path.c_str());
+				mUiOrderInfoPictureCreator->Materialinfos->setPixmap(pm);
+				//mUiOrderInfoPictureCreator->Materialinfos->setScaledContents(true);
+				//we are in a for loop
+				return;
 			}
+		}
+		void OrderInfoPictureCreator::DoWithOutRaytracing()
+		{
+			auto QSF_renderWindow = &QSF_EDITOR_APPLICATION.getMainWindow()->getRenderView().getRenderWindow();
+			if (QSF_renderWindow == nullptr)
+			{
+				QSF_LOG_PRINTS(INFO, "no render window")
+					return;
+			}
+				auto RenderWindow = QSF_renderWindow->getOgreRenderWindow();
+				if (RenderWindow == nullptr)
+					return;
+				RenderWindow->suggestPixelFormat();
+				const auto memory_category = Ogre::MemoryCategory::MEMCATEGORY_RENDERSYS;
+				auto const pixel_format = RenderWindow->suggestPixelFormat();
+
+				auto const width = RenderWindow->getWidth();
+				auto const height = RenderWindow->getHeight();
+				auto const bytesPerPixel = Ogre::PixelUtil::getNumElemBytes(pixel_format);
+				auto const byteCount = width * height * bytesPerPixel;
+				auto* data = OGRE_ALLOC_T(std::uint8_t, byteCount, memory_category);
+				auto GS = GetGreenscreen();
+				if (GS == nullptr)
+					return;
+				for (auto childs : GS->getComponent<qsf::LinkComponent>()->getChildLinks())
+				{
+					//if (childs->getEntity().getComponent<qsf::MetadataComponent>()->getName().find("greenscreen") != std::string::npos)
+						//QSF_MATERIAL.getMaterialVariationManager().setEntityMaterialPropertyValue(childs->getEntity(), "DiffuseColor", qsf::MaterialPropertyValue::fromFloat4(0.f, 0.f, 0.f, 0.f), 106948281);
+
+
+				}
+				QSF_RENDERER.renderFrame(*QSF_renderWindow, *RenderWindow, false);
+				Ogre::PixelBox pixelBox(width, height, 1, pixel_format, data);
+				RenderWindow->copyContentsToMemory(pixelBox, Ogre::RenderTarget::FB_AUTO);
+				Ogre::Image ColorMap;
+
+				ColorMap.loadDynamicImage(static_cast<unsigned char*>(pixelBox.data), width, height, Ogre::PixelFormat::PF_BYTE_RGB);
+				std::string Path = GetSavePath() + EntName + boost::lexical_cast<std::string>(cam) + ".png";
+
+				QSF_RENDERER.renderFrame(*QSF_renderWindow, *RenderWindow, false);
+				for(auto childs : GS->getComponent<qsf::LinkComponent>()->getChildLinks())
+				{
+					if(childs->getEntity().getComponent<qsf::MetadataComponent>()->getName().find("greenscreen") != std::string::npos)
+					//QSF_MATERIAL.getMaterialVariationManager().setEntityMaterialPropertyValue(childs->getEntity(), "DiffuseColor", qsf::MaterialPropertyValue::fromFloat4(0.f, 255.f, 0.f,0.f), 106948281);
+					QSF_MATERIAL.getMaterialVariationManager().setEntityMaterialPropertyValue(childs->getEntity(), "UseEmissiveMap", qsf::MaterialPropertyValue::fromBoolean(true), 106948281);
+				}
+				QSF_RENDERER.renderFrame(*QSF_renderWindow, *RenderWindow, false);
+				auto* data_green = OGRE_ALLOC_T(std::uint8_t, byteCount, memory_category);
+				Ogre::PixelBox pixelBox_green(width, height, 1, pixel_format, data_green);
+				RenderWindow->copyContentsToMemory(pixelBox_green, Ogre::RenderTarget::FB_AUTO);
+				Ogre::Image ColorMap_green;
+				ColorMap_green.loadDynamicImage(static_cast<unsigned char*>(pixelBox_green.data), width, height, Ogre::PixelFormat::PF_BYTE_RGB);
+				QSF_RENDERER.renderFrame(*QSF_renderWindow, *RenderWindow, false);
+				//ColorMap.save(Path);
+				//ColorMap_green.save(Path2);
+				for (auto childs : GS->getComponent<qsf::LinkComponent>()->getChildLinks())
+				{
+					if (childs->getEntity().getComponent<qsf::MetadataComponent>()->getName().find("greenscreen") != std::string::npos)
+					QSF_MATERIAL.getMaterialVariationManager().resetEntityMaterialPropertyValues(childs->getEntity(),true);
+					//QSF_MATERIAL.getMaterialVariationManager().setEntityMaterialPropertyValue(getLightMaterialHolder(), "UseEmissiveMap", qsf::MaterialPropertyValue::fromBoolean(false), 106948281);
+
+				}
+				std::string Path_Mini = GetSavePath() + EntName + boost::lexical_cast<std::string>(cam) + "_mini.png";
+				std::string widthandheight = boost::lexical_cast<std::string>(width) + "x" + boost::lexical_cast<std::string>(height);
+				Image IOL;
+				IOL.size(widthandheight);
+				IOL.magick("PNG");
+				IOL.type(Magick::ImageType::TrueColorAlphaType);
+
+				MagickCore::Quantum *pixels = IOL.getPixels(0, 0, width, height);
+				if (IOL.channels() == 4) //rgb
+				{
+					for (size_t x = 0; x < width; x++)
+					{
+						for (size_t y = 0; y < height; y++)
+						{
+							uint64 offset = (width* y + x) * 4; //4 is because we use 4 channels
+							auto OldColor = ColorMap.getColourAt(x, y, 0);
+							auto OldColorGreen = ColorMap_green.getColourAt(x, y, 0);
+							if (glm::abs(OldColor.g - OldColorGreen.g) > 0.25) //Alpha
+							{
+								*(pixels + offset + 3) = 0;
+							}
+							else
+							{
+								*(pixels + offset) = 65535.f*OldColor.r;
+								*(pixels + offset + 1) = 65535.f*OldColor.g;
+								*(pixels + offset + 2) = 65535.f*OldColor.b;
+							}
+
+						}
+					}
+				}
+				//crop image
+				int CropTop = 0;
+				bool Done = false;
+				for (size_t y = 0; y < height; y++)
+				{
+					for (size_t x = 0; x < width; x++)
+					{
+
+						uint64 offset = (width* y + x) * 4; //4 is because we use 4 channels
+						if (*(pixels + offset + 3) != 0)
+						{
+							Done = true;
+							break;
+						}
+					}
+					if (!Done)
+					{
+						CropTop++;
+					}
+					else
+						break;
+
+				}
+
+				int CropBottom = 0;
+				Done = false;
+				for (size_t y = height - 1; y > 0; y--)
+				{
+					for (size_t x = 0; x < width; x++)
+					{
+
+						uint64 offset = (width* y + x) * 4; //4 is because we use 4 channels
+						if (*(pixels + offset + 3) != 0)
+						{
+							Done = true;
+							break;
+						}
+					}
+					if (!Done)
+					{
+						CropBottom++;
+					}
+					else
+						break;
+
+				}
+
+				int CropLeft = 0;
+				Done = false;
+
+
+				for (size_t x = 0; x < width; x++)
+				{
+					for (size_t y = 0; y < height; y++)
+					{
+						uint64 offset = (width* y + x) * 4; //4 is because we use 4 channels
+						if (*(pixels + offset + 3) != 0)
+						{
+							Done = true;
+							break;
+						}
+					}
+					if (!Done)
+					{
+						CropLeft++;
+					}
+					else
+						break;
+
+				}
+
+				int CropRight = 0;
+				Done = false;
+
+				for (size_t x = width - 1; 0 < x; x--)
+				{
+					for (size_t y = 0; y < height; y++)
+					{
+						uint64 offset = (width* y + x) * 4; //4 is because we use 4 channels
+						if (*(pixels + offset + 3) != 0)
+						{
+							Done = true;
+							break;
+						}
+					}
+					if (!Done)
+					{
+						CropRight++;
+					}
+					else
+						break;
+
+				}
+
+				// Crop the image to specified size (width, height, xOffset, yOffset)
+				//image.crop(Geometry(100, 100, 100, 100));
+				IOL.syncPixels();
+				QSF_LOG_PRINTS(INFO, "crop left " << CropLeft << " crop right " << CropRight << " crop top " << CropTop << " crop bottom " << CropBottom)
+					IOL.crop(Geometry(width - CropLeft - CropRight, height - CropTop - CropBottom, CropLeft, CropTop));
+
+				IOL.write(Path.c_str());
+				auto newwidth = width - CropLeft - CropRight;
+				auto newheight = height - CropTop - CropBottom;
+				//our target is width of 103 or hight of 60
+				newheight = newheight *(float)(103.f / (float)newwidth);
+				IOL.scale(Geometry(newwidth, newheight, 0, 0));
+				IOL.write(Path_Mini);
+				//mUiOrderInfoPictureCreator->Materialinfos->setScaledContents(true);
+				//we are in a for loop
+				auto pm = QPixmap(Path.c_str());
+				mUiOrderInfoPictureCreator->Materialinfos->setPixmap(pm);
+				return;
+		}
+
+		void OrderInfoPictureCreator::onSetSelectionGreenscreen(const bool pressed)
+		{
+			qsf::editor::EntitySelectionManager& entitySelectionManager = QSF_EDITOR_SELECTION_SYSTEM.getSafe<qsf::editor::EntitySelectionManager>();
+			if (entitySelectionManager.getSelectionSize() != 1)
+				return;
+			std::string Greenscreen = boost::lexical_cast<std::string>(entitySelectionManager.getSelectedId());
+			mUiOrderInfoPictureCreator->label->setText(Greenscreen.c_str());
+
+		}
+
+		void OrderInfoPictureCreator::onCam1(const bool pressed)
+		{
+
+			qsf::Entity* GS = GetGreenscreen();
+			if (GS == nullptr)
+			{
+				QSF_LOG_PRINTS(INFO, "Pls set a greenscreen first")
+			}
+			qsf::Entity* cam2 = nullptr;
+			for (auto a : GS->getOrCreateComponent<qsf::LinkComponent>()->getChildLinks())
+			{
+				auto MC = a->getEntity().getComponent<qsf::MetadataComponent>();
+				if (MC == nullptr || MC->getName().find("cam1") == std::string::npos)
+					continue;
+				cam2 = &a->getEntity();
+				break;
+			}
+			if (cam2 == nullptr)
+			{
+				QSF_LOG_PRINTS(INFO, "Greenscrenn has no entity called \"cam1\" attached to it")
+					return;
+			}
+			auto CC = cam2->getComponent<qsf::CameraComponent>();
+			if (CC == nullptr)
+			{
+				QSF_LOG_PRINTS(INFO, "Greenscrenn->\"cam1\" has no camera component")
+					return;
+			}
+			QSF_EDITOR_APPLICATION.getCameraManager().setCameraComponent(CC);
+			cam = 1;
+		}
+
+		void OrderInfoPictureCreator::onCam2(const bool pressed)
+		{
+			
+			qsf::Entity* GS = GetGreenscreen();
+			if (GS == nullptr)
+			{
+				QSF_LOG_PRINTS(INFO, "Pls set a greenscreen first")
+			}
+			qsf::Entity* cam2 = nullptr;
+			for (auto a : GS->getOrCreateComponent<qsf::LinkComponent>()->getChildLinks())
+			{
+				auto MC = a->getEntity().getComponent<qsf::MetadataComponent>();
+				if (MC == nullptr || MC->getName().find("cam2") == std::string::npos)
+					continue;
+				cam2 = &a->getEntity();
+				break;
+			}
+			if (cam2 == nullptr)
+			{
+				QSF_LOG_PRINTS(INFO, "Greenscrenn has no entity called \"cam2\" attached to it")
+					return;
+			}
+			auto CC = cam2->getComponent<qsf::CameraComponent>();
+			if (CC == nullptr)
+			{
+				QSF_LOG_PRINTS(INFO, "Greenscrenn->\"cam2\" has no camera component")
+					return;
+			}
+			QSF_EDITOR_APPLICATION.getCameraManager().setCameraComponent(CC);
+			cam = 2;
+		}
+
+		void OrderInfoPictureCreator::onOrigCam(const bool pressed)
+		{
+			QSF_EDITOR_APPLICATION.getCameraManager().setDefaultCamera();
+			cam = 0;
 		}
 
 		void OrderInfoPictureCreator::OnPushLoadMaterial_or_texture(const bool pressed)
 		{
+			qsf::editor::EntitySelectionManager& entitySelectionManager = QSF_EDITOR_SELECTION_SYSTEM.getSafe<qsf::editor::EntitySelectionManager>();
+			if (entitySelectionManager.getSelectionSize() != 1)
+				return;
+			//disable Shadows
+			std::vector<qsf::Entity*> entList;
+			qsf::Entity* Entity = QSF_MAINMAP.getEntityById(entitySelectionManager.getSelectedId());
+			if (Entity == nullptr)
+				return;
+			auto LC = Entity->getOrCreateComponent<qsf::LinkComponent>();
+			//QSF_LOG_PRINTS(INFO,"Scanned Child size "<<LC->getChildLinks().size())
+			for (auto a : LC->getChildLinks())
+			{
+				if (a != nullptr && &a->getEntity() != nullptr)
+					entList.push_back(&a->getEntity());
+			}
+			std::vector<qsf::Entity*> ChildList;
+
+			ChildList.insert(ChildList.begin(), entList.begin(), entList.end());
+			entList.clear();
+			while (!ChildList.empty()) //iterate through all children
+			{
+				entList.push_back(ChildList.at(0)); //push it to other list
+				qsf::Entity* ent = ChildList.at(0);
+				if (ent == nullptr)
+				{
+					ChildList.erase(ChildList.begin());
+					continue;
+				}
+				auto LC = ent->getOrCreateComponent<qsf::LinkComponent>();
+				auto NewChildren = LC->getChildLinks();
+				for (auto a : NewChildren)
+				{
+					ChildList.push_back(&a->getEntity());
+				}
+				ChildList.erase(ChildList.begin());
+			}
+			entList.push_back(Entity);
+			for (auto a : entList)
+			{
+				if (a->getComponent<qsf::MeshComponent>() != nullptr)
+				{
+					a->getComponent<qsf::MeshComponent>()->setCastShadows(false);
+				}
+			}
+			//disable shadows end
+			//disable bluelight
+			if (Entity->getComponent<em5::RoadVehicleComponent>())
+			{
+				Entity->getComponent<em5::RoadVehicleComponent>()->setBlueLightState(false);
+			}
+			//position object
+			qsf::Entity* GS = GetGreenscreen();
+			if (GS == nullptr)
+			{
+				QSF_LOG_PRINTS(INFO, "Pls set a greenscreen first")
+				return;
+			}
+			if (Entity->getId() == GS->getId())
+			{
+				QSF_LOG_PRINTS(INFO, "no entity but the greenscreen was selected")
+					return;
+			}
+			Entity->getOrCreateComponent<qsf::LinkComponent>()->setParentId(GS->getId());
+			Entity->getOrCreateComponent<qsf::LinkComponent>()->setLocalPosition(glm::vec3(-24.411270141601563, 2.5086259841918945, -15.40203857421875));
+			Entity->getOrCreateComponent<qsf::LinkComponent>()->setLocalRotation(qsf::EulerAngles::eulerToQuaternion(glm::vec3(glm::pi<float>(), 0.f, 0.f)));
+			EntName = Entity->getOrCreateComponent<qsf::MetadataComponent>()->getName();
+
 		}
 
 
-
-		bool OrderInfoPictureCreator::DecompileImage(std::string TextureName,std::string MaterialName)
-		{
-			QSF_LOG_PRINTS(INFO, "DecompileImage " << TextureName)
-				//a what kind is it?
-				int textureType = 0;
-			if (TextureName.find("crgb_aa") != std::string::npos)
-				textureType = 1;
-			if (TextureName.find("nag_sr_gb") != std::string::npos)
-				textureType = 2;
-			if (TextureName.find("tr_og_hb") != std::string::npos)
-				textureType = 3;
-			if (TextureName.find("_ergb") != std::string::npos)
-				textureType = 4;
-			if (textureType == 0)
-			{
-				QSF_LOG_PRINTS(INFO, "unsupported texture, pls only insert compiled textures")
-					return false;
-			}
-			//b is size 2^n?
-			
-				auto Filepath = qsf::AssetProxy(TextureName).getAbsoluteCachedAssetDataFilename();
-				if (textureType == 1)
-				{
-					//image_magic
-					Magick::Image image(Filepath);
-					int w = (int)image.columns();
-					int h = (int)image.rows();
-					if (w <= 0 || h <= 0)
-					{
-						QSF_LOG_PRINTS(INFO, "broken image (size detection failed)" << Filepath)
-					}
-					if (image.channels() != 4 && image.channels() != 3)
-					{
-						QSF_LOG_PRINTS(INFO, "cant detect alpha channel of " << Filepath)
-							return false;
-					}
-					MagickCore::Quantum *pixels = image.getPixels(0, 0, w, h);
-					//now create a normal map img
-					uint8* bufferColor = new uint8[w * h * 8];
-					Ogre::Image ColorMap;
-					ColorMap.loadDynamicImage(bufferColor, w, h, Ogre::PixelFormat::PF_FLOAT16_RGB);
-					auto channels = image.channels();
-					uint8* bufferAlpha = new uint8[w * h * 8]; //red
-					Ogre::Image AlphaMap;
-					AlphaMap.loadDynamicImage(bufferAlpha, w, h, Ogre::PixelFormat::PF_FLOAT32_GR);
-
-					//scan our dds
-					//oben nach unten
-					for (size_t row = 0; row < h; row++)
-					{
-						//links nach rechts
-						for (size_t column = 0; column < w; column++)
-						{
-							uint64 offset = (row* w + column) * channels; //4 is because we use 4 channels
-							float Red = (float)(*(pixels + offset) / 65535);
-							float Green = (float)(*(pixels + offset + 1) / 65535);
-							float Blue = (float)(*(pixels + offset + 2) / 65535);
-							if(channels == 4)
-							{
-								float Alpha = (float)(*(pixels + offset + 3) / 65535);
-								auto OgreValSpec = Ogre::ColourValue(Alpha, Alpha, Alpha);
-								AlphaMap.setColourAt(OgreValSpec, column, row, 0);
-							}
-							//z is not transfered so use
-							auto OgreValNormal = Ogre::ColourValue(Red, Green,Blue);
-							ColorMap.setColourAt(OgreValNormal, column, row, 0);
-
-
-						}
-					}
-					//r
-					ColorMap.save(GetSavePath() + MaterialName + "_c.tif");
-					if(channels == 4)
-					AlphaMap.save(GetSavePath()  + MaterialName + "_a.tif");
-					QSF_LOG_PRINTS(INFO, "saved color and alpha map map")
-						delete[] bufferColor;
-					delete[] bufferAlpha;
-				}
-			else if(textureType == 2)
-				{
-			//image_magic
-				Magick::Image image(Filepath);
-				int w = (int)image.columns();
-				int h = (int)image.rows();
-				if (w <= 0 || h <= 0)
-				{
-					QSF_LOG_PRINTS(INFO, "broken image (size detection failed)"<< Filepath)
-				}
-				if (image.channels() != 4)
-				{
-					QSF_LOG_PRINTS(INFO,"cant detect alpha channel of "<< Filepath)
-					return false;
-				}
-				MagickCore::Quantum *pixels = image.getPixels(0, 0, w, h);
-				//now create a normal map img
-				uint8* buffer = new uint8[w * h * 8];
-				Ogre::Image NormalMap;
-				NormalMap.loadDynamicImage(buffer, w, h, Ogre::PixelFormat::PF_FLOAT16_RGB);
-
-				uint8* bufferSpec = new uint8[w * h * 8]; //red
-				Ogre::Image SpecMap;
-				SpecMap.loadDynamicImage(bufferSpec, w, h, Ogre::PixelFormat::PF_FLOAT32_GR);
-
-				uint8* bufferGloss = new uint8[w * h * 8]; //blue
-				Ogre::Image GlossMapp;
-				GlossMapp.loadDynamicImage(bufferGloss, w, h, Ogre::PixelFormat::PF_FLOAT32_GR);
-
-				//scan our dds
-				//oben nach unten
-				for (size_t row = 0; row < h; row++)
-				{
-					//links nach rechts
-					for (size_t column = 0; column < w; column++)
-					{
-						uint64 offset = (row* w + column)*4; //4 is because we use 4 channels
-						float Red = (float)(*(pixels + offset) / 65535);
-						float Green = (float)(*(pixels + offset+1) / 65535);
-						float Blue = (float)(*(pixels + offset + 2) / 65535);
-						float Alpha = (float)(*(pixels + offset + 3) / 65535);
-						//z is not transfered so use
-						auto OgreValNormal = Ogre::ColourValue(Alpha,Green);
-						NormalMap.setColourAt(OgreValNormal,column,row,0);
-
-						auto OgreValSpec = Ogre::ColourValue(Red, Red,Red, 1.f);
-						SpecMap.setColourAt(OgreValSpec, column, row, 0);
-
-						auto OgreValGloss = Ogre::ColourValue(Blue, Blue, Blue, 1.f);
-						GlossMapp.setColourAt(OgreValGloss, column, row, 0);
-					}
-				}
-				//r
-				NormalMap.save(GetSavePath()  + MaterialName + "_n.tif");
-				GlossMapp.save(GetSavePath()  + MaterialName + "_g.tif");
-				SpecMap.save(GetSavePath()  + MaterialName+"_s.tif");
-				QSF_LOG_PRINTS(INFO,"saved normal, gloss and spec map")
-					delete[] buffer;
-				delete[] bufferSpec;
-				delete[] bufferGloss;
-			} 
-			else if(textureType == 3)
-			{
-				Magick::Image image(Filepath);
-				int w = (int)image.columns();
-				int h = (int)image.rows();
-				if (w <= 0 || h <= 0)
-				{
-					QSF_LOG_PRINTS(INFO, "broken image (size detection failed)" << Filepath)
-				}
-				/*if (image.channels() != 4)
-				{
-					QSF_LOG_PRINTS(INFO, "cant detect alpha channel of " << Filepath)
-						return;
-				}*/
-				size_t ChannelSize = image.channels();
-				MagickCore::Quantum *pixels = image.getPixels(0, 0, w, h);
-				//now create a normal map img
-				uint8* Tintbuffer = new uint8[w * h * 8];
-				Ogre::Image Tint;
-				Tint.loadDynamicImage(Tintbuffer, w, h, Ogre::PixelFormat::PF_FLOAT32_GR);
-
-				uint8* Smutbuffer = new uint8[w * h * 8]; //red
-				Ogre::Image Smut;
-				Smut.loadDynamicImage(Smutbuffer, w, h, Ogre::PixelFormat::PF_FLOAT32_GR);
-
-				uint8* HeightBuffer = new uint8[w * h * 8]; //blue
-				Ogre::Image HeightMap;
-				HeightMap.loadDynamicImage(HeightBuffer, w, h, Ogre::PixelFormat::PF_FLOAT32_GR);
-
-				//scan our dds
-				//oben nach unten
-				if(ChannelSize == 4)
-				{
-				for (size_t row = 0; row < h; row++)
-				{
-					//links nach rechts
-					for (size_t column = 0; column < w; column++)
-					{
-						uint64 offset = (row* w + column) * 4; //4 is because we use 4 channels
-						float Red = (float)(*(pixels + offset) / 65535);
-						float Green = (float)(*(pixels + offset + 1) / 65535);
-						float Blue = (float)(*(pixels + offset + 2) / 65535);
-						float Alpha = (float)(*(pixels + offset + 3) / 65535);
-						//z is not transfered so use
-						auto OgreValNormal = Ogre::ColourValue(Red, Red,Red);
-						Tint.setColourAt(OgreValNormal, column, row, 0);
-
-						auto OgreValSpec = Ogre::ColourValue(Green, Green, Green, 1.f);
-						Smut.setColourAt(OgreValSpec, column, row, 0);
-
-						auto OgreValGloss = Ogre::ColourValue(Blue, Blue, Blue, 1.f);
-						HeightMap.setColourAt(OgreValGloss, column, row, 0);
-					}
-				}
-				}
-				else if(ChannelSize ==3)
-				{
-					for (size_t row = 0; row < h; row++)
-					{
-						//links nach rechts
-						for (size_t column = 0; column < w; column++)
-						{
-							uint64 offset = (row* w + column) * 3; //4 is because we use 4 channels
-							float Red = (float)(*(pixels + offset) / 65535);
-							float Green = (float)(*(pixels + offset + 1) / 65535);
-							float Blue = (float)(*(pixels + offset + 2) / 65535);
-							//z is not transfered so use
-							auto OgreValNormal = Ogre::ColourValue(Red, Red, Red);
-							Tint.setColourAt(OgreValNormal, column, row, 0);
-
-							auto OgreValSpec = Ogre::ColourValue(Green, Green, Green, 1.f);
-							Smut.setColourAt(OgreValSpec, column, row, 0);
-
-							auto OgreValGloss = Ogre::ColourValue(Blue, Blue, Blue, 1.f);
-							HeightMap.setColourAt(OgreValGloss, column, row, 0);
-						}
-					}
-				}
-				else
-				{
-					QSF_LOG_PRINTS(INFO, "channel size of the image is not supported")
-				}
-
-				//r
-				Tint.save(GetSavePath()  + MaterialName + "_t.tif");
-				Smut.save(GetSavePath() + MaterialName + "_smut.tif");
-				HeightMap.save(GetSavePath()  + MaterialName + "_h.tif");
-				QSF_LOG_PRINTS(INFO, "saved tint,gloss and smut map")
-					delete[] Tintbuffer;
-				delete[] Smutbuffer;
-				delete[] HeightBuffer;
-			}
-			else if (textureType == 4)
-			{
-				Magick::Image image(Filepath);
-				int w = (int)image.columns();
-				int h = (int)image.rows();
-				if (w <= 0 || h <= 0)
-				{
-					QSF_LOG_PRINTS(INFO, "broken image (size detection failed)" << Filepath)
-				}
-				if (image.channels() != 4 && image.channels() != 3)
-				{
-					QSF_LOG_PRINTS(INFO, "cant detect alpha channel of " << Filepath)
-						return false;
-				}
-				MagickCore::Quantum *pixels = image.getPixels(0, 0, w, h);
-				//now create a normal map img
-				uint8* EmissiveBufer = new uint8[w * h * 8];
-				Ogre::Image EmissiveMap;
-				EmissiveMap.loadDynamicImage(EmissiveBufer, w, h, Ogre::PixelFormat::PF_FLOAT16_RGB);
-				size_t Channels = image.channels();
-
-				//scan our dds
-				//oben nach unten
-				for (size_t row = 0; row < h; row++)
-				{
-					//links nach rechts
-					for (size_t column = 0; column < w; column++)
-					{
-						uint64 offset = (row* w + column) * Channels; //4 is because we use 4 channels
-						float Red = (float)(*(pixels + offset) / 65535);
-						float Green = (float)(*(pixels + offset + 1) / 65535);
-						float Blue = (float)(*(pixels + offset + 2) / 65535);
-						//z is not transfered so use
-						auto OgreValNormal = Ogre::ColourValue(Red, Green, Blue);
-						EmissiveMap.setColourAt(OgreValNormal, column, row, 0);
-					}
-				}
-				//r
-				EmissiveMap.save(GetSavePath() + MaterialName + "_e.tif");
-				QSF_LOG_PRINTS(INFO, "saved emissive Map")
-					delete[] EmissiveBufer;
-			}
-			return true;
-
-			
-		
-		
-		}
 
 		void OrderInfoPictureCreator::onSetSaveDirectory(const bool pressed)
 		{
@@ -559,9 +787,9 @@ namespace user
 			QWidget* qtw = new QWidget();
 			auto fileName = QFileDialog::getExistingDirectory(qtw,
 				tr("Set Save Directory"), Path);
-				if(fileName == "")
+			if (fileName == "")
 				return;
-			QSF_LOG_PRINTS(INFO, fileName.toStdString()+"/")
+			QSF_LOG_PRINTS(INFO, fileName.toStdString() + "/")
 				mSavepath = fileName.toStdString() + "//";
 
 			std::ofstream ofs(path + "image_decompiler.txt", std::ofstream::trunc);
@@ -571,6 +799,58 @@ namespace user
 			ofs.close();
 
 		}
+
+		void OrderInfoPictureCreator::onremoveEntity(const bool pressed)
+		{
+			qsf::Entity* GS = GetGreenscreen();
+			if (GS == nullptr)
+			{
+				QSF_LOG_PRINTS(INFO, "Pls set a greenscreen first")
+			}
+
+			qsf::Entity* remover = nullptr;
+			for (auto a : GS->getOrCreateComponent<qsf::LinkComponent>()->getChildLinks())
+			{
+				auto MC = a->getEntity().getComponent<qsf::MetadataComponent>();
+				if (MC == nullptr || MC->getName() != EntName)
+					continue;
+				remover = &a->getEntity();
+				break;
+			}
+			if (remover == nullptr)
+			{
+				QSF_LOG_PRINTS(INFO, "found no ent to remove")
+					EntName = "";
+				return;
+			}
+			remover->getComponent<qsf::LinkComponent>()->unlinkFromParent();
+			auto TC = remover->getComponent<qsf::TransformComponent>();
+			TC->setPosition(TC->getPosition() + glm::vec3(100.f, 0.f, 0.f));
+			EntName = "";
+		}
+
+		void OrderInfoPictureCreator::onOpenSaveLocation(const bool pressed)
+		{
+			//qsf::editor::GuiHelper::openExplorer(GetSavePath().c_str());
+			QDesktopServices::openUrl(QUrl::fromLocalFile(GetSavePath().c_str()));
+		}
+
+		qsf::Entity * OrderInfoPictureCreator::GetGreenscreen()
+		{
+			uint64 GreenScreenId = qsf::getUninitialized<uint64>();
+			try
+			{
+				GreenScreenId = boost::lexical_cast<uint64>(mUiOrderInfoPictureCreator->label->text().toStdString());
+			}
+			catch (const std::exception& e)
+			{
+				QSF_LOG_PRINTS(INFO, "Pls set a greenscreen first " << e.what())
+					return nullptr;
+			}
+			return QSF_MAINMAP.getEntityById(GreenScreenId);
+		}
+
+
 
 
 		std::string OrderInfoPictureCreator::GetSavePath()
@@ -614,8 +894,95 @@ namespace user
 			}
 			return std::string();
 		}
-//[-------------------------------------------------------]
-//[ Namespace                                             ]
-//[-------------------------------------------------------]
+		void OrderInfoPictureCreator::CheckForRaysHitting()
+		{
+			if (QSF_EDITOR_APPLICATION.getMainWindow() == nullptr)
+			{
+				QSF_LOG_PRINTS(INFO, "no main window")
+					return;
+			}
+			if (&QSF_EDITOR_APPLICATION.getMainWindow()->getRenderView() == nullptr)
+			{
+				QSF_LOG_PRINTS(INFO, "no render view")
+					return;
+			}
+			auto renderWindow = &QSF_EDITOR_APPLICATION.getMainWindow()->getRenderView().getRenderWindow();
+			if (renderWindow == nullptr)
+			{
+				QSF_LOG_PRINTS(INFO, "no render window")
+					return;
+			}
+			auto Height = renderWindow->getHeight();
+			auto Width = renderWindow->getWidth();
+
+			//now entity stuff
+			uint64 GreenScreenId = qsf::getUninitialized<uint64>();
+			try
+			{
+				GreenScreenId = boost::lexical_cast<uint64>(mUiOrderInfoPictureCreator->label->text().toStdString());
+			}
+			catch (const std::exception& e)
+			{
+				QSF_LOG_PRINTS(INFO, "Pls set a greenscreen first " << e.what())
+					return;
+			}
+			qsf::Entity* GS = QSF_MAINMAP.getEntityById(GreenScreenId);
+			if (GS == nullptr)
+			{
+				QSF_LOG_PRINTS(INFO, "Pls set a greenscreen first")
+			}
+			qsf::Entity* TakePicEnt = nullptr;
+			for (auto a : GS->getOrCreateComponent<qsf::LinkComponent>()->getChildLinks())
+			{
+				auto MC = a->getEntity().getComponent<qsf::MetadataComponent>();
+				if (MC == nullptr || MC->getName() != EntName)
+					continue;
+				TakePicEnt = &a->getEntity();
+				break;
+			}
+			if (TakePicEnt == nullptr)
+			{
+				QSF_LOG_PRINTS(INFO, "No entity attached to take a photo")
+					return;
+			}
+			//unlink so its easier to find if it is caught
+			if(mUiOrderInfoPictureCreator->Raytracing->isChecked())
+			{
+			TakePicEnt->getComponent<qsf::LinkComponent>()->unlinkFromParent();
+			HitByRay.clear();
+			auto cameraComponent = renderWindow->getCameraComponent();
+			if (nullptr != cameraComponent)
+			{
+				for (size_t x = 0; x < Width; x++)
+				{
+					for (size_t y = 0; y < Height; y++)
+					{
+						// Get the normalized mouse position
+						bool hit = RayDidHit(glm::vec2(x, y), renderWindow, TakePicEnt);
+						if (!hit)
+							HitByRay.push_back(glm::vec3((int)x, (int)y, 0));
+					}
+				}
+			}
+
+			//relink
+			TakePicEnt->getComponent<qsf::LinkComponent>()->setParentId(GS->getId());
+			}
+		}
+		bool OrderInfoPictureCreator::RayDidHit(glm::vec2 Pos, qsf::RenderWindow* RW, qsf::Entity* Target)
+		{
+
+			const glm::vec2 normalizedPosition = RW->getNormalizedWindowSpaceCoords(Pos.x, Pos.y);
+			qsf::RayMapQueryResponse rayMapQueryResponse(qsf::RayMapQueryResponse::POSITION_RESPONSE);
+			qsf::RayMapQuery(QSF_MAINMAP).getFirstHitByRenderWindowNormalizedPosition(*RW, normalizedPosition.x, normalizedPosition.y, rayMapQueryResponse);
+			if (rayMapQueryResponse.component == nullptr)
+				return false;
+			uint64 Id = rayMapQueryResponse.component->getEntityId();
+			auto ent = &QSF_MAINMAP.getEntityById(Id)->getOrCreateComponent<qsf::LinkComponent>()->getTopmostAncestorLink(qsf::LinkComponent::SELECT_PARENT).getEntity();
+			return (ent->getId() == Target->getId());
+		}
+		//[-------------------------------------------------------]
+		//[ Namespace                                             ]
+		//[-------------------------------------------------------]
 	} // editor
 } // user

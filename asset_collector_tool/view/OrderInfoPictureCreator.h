@@ -22,6 +22,8 @@
 #include <QtWidgets\qtreewidgetitemiterator.h>
 #include <asset_collector_tool\view\KC_AbstractView.h>
 #include <ogre\Ogre.h>
+#include <qsf/renderer/window/RenderWindow.h>
+#include <qsf\map\Entity.h>
 
 //[-------------------------------------------------------]
 //[ Forward declarations                                  ]
@@ -129,19 +131,30 @@ namespace user
 		//[-------------------------------------------------------]
 		private Q_SLOTS:
 			void onPushDecompileButton(const bool pressed);
-
+			void onSetSelectionGreenscreen(const bool pressed);
+			void onCam1(const bool pressed);
+			void onCam2(const bool pressed);
+			void onOrigCam(const bool pressed);
 			void OnPushLoadMaterial_or_texture(const bool pressed);
 			void onSetSaveDirectory(const bool pressed);
-
-
-		private:
-			bool DecompileImage(std::string TextureName,std::string MaterialName);
+			void onremoveEntity(const bool pressed);
+			void onOpenSaveLocation(const bool pressed);
 			
+		private:
+			qsf::Entity* GetGreenscreen();
+			void DoWithOutRaytracing();
 			Ui::OrderInfoPictureCreator*	mUiOrderInfoPictureCreator;	///< UI view instance, can be a null pointer, we have to destroy the instance in case we no longer need it
 			std::string GetSavePath();
 			std::string InitSavePath();
 			std::string mSavepath;
 			std::string path;
+			int cam;
+			std::string EntName;
+
+			std::vector<glm::vec3> HitByRay;
+
+			void CheckForRaysHitting();
+			bool RayDidHit(glm::vec2 Pos,qsf::RenderWindow* RW,qsf::Entity* Target);
 		//[-------------------------------------------------------]
 		//[ CAMP reflection system                                ]
 		//[-------------------------------------------------------]

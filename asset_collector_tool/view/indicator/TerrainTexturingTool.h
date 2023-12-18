@@ -173,8 +173,9 @@ namespace user
 			qsf::CompoundDebugDrawRequest DebugRequsts;
 			uint32 mDetailViewSingleTrack;
 			float Radius;
-			
+			unsigned int		mChunkDrawRequestId;	///< Debug draw request IDs for chunk visualisation
 
+			void UpdateChunkDebugDrawg(glm::vec3 worldpos,int x ,int y);
 			//terrains shape
 			float partsize;
 			float mHeight;
@@ -187,6 +188,9 @@ namespace user
 			qsf::WeakPtr<kc_terrain::TerrainComponent> TerrainMaster;
 
 			void WriteTerrainTextureList();
+			//x and y represent terrain index
+			//z is set by updateterrain method when we applay some texture - so programm knows it needs to go higher
+			glm::vec3 m_NeedUpdatingTerrainList;
 			std::string GetSelectedLayerColor();
 			int GetBlendMapWithTextureName(int xTerrain,int yTerrain);
 			uint8 TMG_getMaxLayers(const Ogre::Terrain* ogreTerrain) const;
