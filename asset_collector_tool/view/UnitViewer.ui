@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>445</width>
+    <width>256</width>
     <height>433</height>
    </rect>
   </property>
@@ -44,253 +44,52 @@
       <number>6</number>
      </property>
      <item>
-      <widget class="QTabWidget" name="tabWidget">
-       <property name="maximumSize">
-        <size>
-         <width>16777215</width>
-         <height>400</height>
-        </size>
+      <widget class="QPushButton" name="bluelight">
+       <property name="text">
+        <string>bluelight</string>
        </property>
-       <property name="currentIndex">
-        <number>0</number>
+       <property name="checkable">
+        <bool>true</bool>
        </property>
-       <widget class="QWidget" name="RoadVehicles">
-        <attribute name="title">
-         <string>Vehicles</string>
-        </attribute>
-        <widget class="QWidget" name="horizontalLayoutWidget">
-         <property name="geometry">
-          <rect>
-           <x>10</x>
-           <y>200</y>
-           <width>221</width>
-           <height>80</height>
-          </rect>
-         </property>
-         <layout class="QHBoxLayout" name="horizontalLayout_3">
-          <item>
-           <widget class="QPushButton" name="open_door">
-            <property name="text">
-             <string>Open Doors</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="close_door">
-            <property name="text">
-             <string>Close Doors</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-        <widget class="QWidget" name="verticalLayoutWidget_2">
-         <property name="geometry">
-          <rect>
-           <x>30</x>
-           <y>120</y>
-           <width>201</width>
-           <height>80</height>
-          </rect>
-         </property>
-         <layout class="QVBoxLayout" name="verticalLayout_3">
-          <item>
-           <widget class="QSlider" name="horizontalSlider">
-            <property name="minimum">
-             <number>-30</number>
-            </property>
-            <property name="maximum">
-             <number>30</number>
-            </property>
-            <property name="singleStep">
-             <number>5</number>
-            </property>
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="rotatetires">
-            <property name="text">
-             <string>Rotate Tires</string>
-            </property>
-            <property name="checkable">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-        <widget class="QWidget" name="gridLayoutWidget">
-         <property name="geometry">
-          <rect>
-           <x>30</x>
-           <y>20</y>
-           <width>239</width>
-           <height>83</height>
-          </rect>
-         </property>
-         <layout class="QGridLayout" name="gridLayout">
-          <item row="0" column="2">
-           <widget class="QPushButton" name="headlight">
-            <property name="text">
-             <string>headlight</string>
-            </property>
-            <property name="checkable">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="0">
-           <widget class="QPushButton" name="bluelight">
-            <property name="text">
-             <string>bluelight</string>
-            </property>
-            <property name="checkable">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
-           <widget class="QPushButton" name="trafficwarnerbutton">
-            <property name="toolTip">
-             <string>LIGHT_POSITION UNDEFINDED + DESCRIPTION = &quot;traffic&quot;</string>
-            </property>
-            <property name="text">
-             <string>trafficwarner</string>
-            </property>
-            <property name="checkable">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QPushButton" name="blinker">
-            <property name="text">
-             <string>blinker</string>
-            </property>
-            <property name="checkable">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QPushButton" name="brakeButton">
-            <property name="text">
-             <string>brake</string>
-            </property>
-            <property name="checkable">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="2">
-           <widget class="QPushButton" name="reverseButton">
-            <property name="toolTip">
-             <string>LIGHT_POSITION UNDEFINDED + DESCRIPTION = &quot;reverse&quot;</string>
-            </property>
-            <property name="text">
-             <string>reverse</string>
-            </property>
-            <property name="checkable">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="0">
-           <widget class="QPushButton" name="interiorbutton">
-            <property name="toolTip">
-             <string>LIGHT_POSITION UNDEFINDED + DESCRIPTION = &quot;interior&quot;</string>
-            </property>
-            <property name="text">
-             <string>interior</string>
-            </property>
-            <property name="checkable">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="1">
-           <widget class="QPushButton" name="enviromentbutton">
-            <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;LIGHT_POSITION UNDEFINDED + DESCRIPTION = &amp;quot;umfeld&amp;quot;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-            </property>
-            <property name="text">
-             <string>enviroment</string>
-            </property>
-            <property name="checkable">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </widget>
-       <widget class="QWidget" name="StreetCrossings">
-        <property name="accessibleName">
-         <string>Street Tool</string>
-        </property>
-        <attribute name="title">
-         <string>Street Crossings</string>
-        </attribute>
-        <widget class="QWidget" name="verticalLayoutWidget">
-         <property name="geometry">
-          <rect>
-           <x>19</x>
-           <y>11</y>
-           <width>221</width>
-           <height>211</height>
-          </rect>
-         </property>
-         <layout class="QVBoxLayout" name="verticalLayout_2">
-          <item>
-           <widget class="QLabel" name="label_2">
-            <property name="maximumSize">
-             <size>
-              <width>16777215</width>
-              <height>10</height>
-             </size>
-            </property>
-            <property name="text">
-             <string>Select a Crossing and use a button</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="PushAddDebugCircles">
-            <property name="text">
-             <string>Add Debug Circles (Gates)</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="pushAddAllNodes">
-            <property name="text">
-             <string>Add Debug Circles (All Nodes)</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="PushUpdateNodes">
-            <property name="text">
-             <string>Update Nodes</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="PushRemoveDebugCirecles">
-            <property name="text">
-             <string>Remove All Node Boxes</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </widget>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="blinker">
+       <property name="text">
+        <string>blinker</string>
+       </property>
+       <property name="checkable">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="headlight">
+       <property name="text">
+        <string>headlight</string>
+       </property>
+       <property name="checkable">
+        <bool>true</bool>
+       </property>
       </widget>
      </item>
     </layout>
+   </item>
+   <item>
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeType">
+      <enum>QSizePolicy::Fixed</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>10</height>
+      </size>
+     </property>
+    </spacer>
    </item>
    <item>
     <widget class="QLabel" name="label">
@@ -312,6 +111,64 @@
     <widget class="QPushButton" name="select_entity">
      <property name="text">
       <string>Select</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="myllab">
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QSlider" name="horizontalSlider">
+     <property name="minimum">
+      <number>-30</number>
+     </property>
+     <property name="maximum">
+      <number>30</number>
+     </property>
+     <property name="singleStep">
+      <number>5</number>
+     </property>
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QPushButton" name="rotatetires">
+     <property name="text">
+      <string>Rotate Tires</string>
+     </property>
+     <property name="checkable">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QPushButton" name="open_door">
+       <property name="text">
+        <string>Open Doors</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="close_door">
+       <property name="text">
+        <string>Close Doors</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QLineEdit" name="line_edit_searchprototype">
+     <property name="acceptDrops">
+      <bool>false</bool>
      </property>
     </widget>
    </item>

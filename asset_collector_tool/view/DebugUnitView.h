@@ -20,7 +20,6 @@
 #include <qsf/prototype/PrototypeHelper.h>
 #include <qsf_editor_base/operation/CompoundOperation.h>
 #include <QtWidgets\qtreewidgetitemiterator.h>
-#include <asset_collector_tool\view\KC_AbstractView.h>
 //[-------------------------------------------------------]
 //[ Forward declarations                                  ]
 //[-------------------------------------------------------]
@@ -57,7 +56,7 @@ namespace user
 		*  @note
 		*    - The UI is created via source code
 		*/
-		class DebugUnitView : public KC_AbstractView
+		class DebugUnitView : public qsf::editor::View
 		{
 
 

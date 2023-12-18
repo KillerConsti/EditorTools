@@ -15,7 +15,7 @@
 #include <camp/userobject.hpp>
 #include <qsf/job/JobProxy.h>
 #include <qsf/debug/DebugDrawProxy.h>
-
+#include <qsf_editor/tool/Tool.h>
 
 #include <qsf/prototype/PrototypeSystem.h>
 #include <qsf/prototype/PrototypeManager.h>
@@ -24,14 +24,13 @@
 #include "qsf_editor/editmode/EditMode.h"
 #include "qsf_editor/editmode/EditModeManager.h"
 #include <qsf/renderer/terrain/TerrainComponent.h>
-#include <asset_collector_tool\qsf_editor\tools\TerrainEditColorMapToolbox.h>
-#include <qsf/message/MessageProxy.h>
+#include <ui_TerrainpaintingToolbox.h>
 //[-------------------------------------------------------]
 //[ Forward declarations                                  ]
 //[-------------------------------------------------------]
 namespace Ui
 {
-	class TerrainEditColorMap;
+	class TerrainpaintingToolbox;
 }
 namespace qsf
 {
@@ -64,7 +63,7 @@ namespace user
 		*  @note
 		*    - The UI is created via source code
 		*/
-		class TerrainEditmodeColorMap : public qsf::editor::EditMode
+		class TerrainpaintingToolbox : public QObject, public qsf::editor::Tool
 		{
 
 
@@ -79,7 +78,7 @@ namespace user
 						//[ Public definitions                                    ]
 						//[-------------------------------------------------------]
 		public:
-			static const uint32 PLUGINABLE_ID;	///< "user::editor::TerrainEditmodeColorMap" unique pluginable view ID
+			static const uint32 PLUGINABLE_ID;	///< "user::editor::TerrainpaintingToolbox" unique pluginable view ID
 
 
 												//[-------------------------------------------------------]
@@ -95,90 +94,82 @@ namespace user
 			*  @param[in] qWidgetParent
 			*    Pointer to parent Qt widget, can be a null pointer (in this case you're responsible for destroying this view instance)
 			*/
-			TerrainEditmodeColorMap(qsf::editor::EditModeManager* editModeManager);
+			explicit TerrainpaintingToolbox(qsf::editor::ToolManager* toolManager);
 
 			/**
 			*  @brief
 			*    Destructor
 			*/
-			virtual ~TerrainEditmodeColorMap();
+			virtual ~TerrainpaintingToolbox();
+			Ui::TerrainpaintingToolbox*					mUITerrainpaintingToolbox;			///< UI EM5 fire simulation tool instance, always valid, we have to destroy the instance in case we no longer need it
+			//[-------------------------------------------------------]
+			//[ Protected virtual qsf::editor::Tool methods           ]
+			//[-------------------------------------------------------]
 
-			//[-------------------------------------------------------]
-			//[ Protected virtual qsf::editor::View methods           ]
-			//[-------------------------------------------------------]
+			public: //brush settings
+
+			float GetBrushRadius();
+			enum BrushShape
+			{
+					Dome,
+					Cone,
+					Circle,
+					Quad
+			};
+
+			BrushShape GetBrushShape();
+
+			int GetBrushIntensity();
+			enum TerrainEditMode2
+			{
+				Set,
+				Raise,
+				Smooth
+			};
+			TerrainEditMode2 GetEditMode();
+			TerrainEditMode2 mMode;
+			std::string path;
+			std::string GetSavePath();			
+			std::string InitSavePath();
+			void OverwriteSavePath();
+			std::string mSavepath;
+			QColor getColor();
+			QColor mColor;
+			glm::vec2 OldTerrain;
+			void SetCurrentTerrainData(std::vector<std::string> Data,int xTerrain,int yTerrain);
+			std::string GetLayerColor();
 		protected:
-			//virtual void retranslateUi() override;
-			//virtual void changeVisibility(bool visible) override;
-			virtual bool evaluateBrushPosition(const QPoint& mousePosition, glm::vec3& position);
-			qsf::TerrainComponent*				   mTerrainComponent;
+			virtual bool onStartup(qsf::editor::ToolboxView& toolboxView) override;
+			virtual void retranslateUi(qsf::editor::ToolboxView& toolboxView) override;
+			virtual void onShutdown(qsf::editor::ToolboxView& toolboxView) override;
 			//[-------------------------------------------------------]
-			//[ Protected virtual QWidget methods                     ]
+			//[ Private Qt slots (MOC)                                ]
 			//[-------------------------------------------------------]
-		protected:
-			//virtual void showEvent(QShowEvent* qShowEvent) override;
-			//virtual void hideEvent(QHideEvent* qHideEvent) override;
+			private Q_SLOTS:
+			void onPushSelectButton(const bool pressed);
+			// qsf::editor::OperationManager
+			void onUndoOperationExecuted(const qsf::editor::base::Operation& operation);
+			void onRedoOperationExecuted(const qsf::editor::base::Operation& operation);
 
-			void PaintJob(const qsf::JobArguments& jobArguments);
-			qsf::JobProxy PaintJobProxy;
-			void SetHeight(glm::vec2 MapPoint);
-			glm::vec3 ApplySmooth(glm::vec2 Point, float Intensity);
-			float GetCustomIntensity(float distancetoMidpoint, TerrainEditColorMapToolbox::TerrainEditMode2 Mode);
-			void RaiseTerrain(glm::vec2 Mappoint);
-			void RaisePoint(glm::vec2 Mappoint, float Intensity);
-			int timer;
-			void IncreaseHeight(glm::vec2 Point, float NewHeight);
+			void OnBrushIntensitySliderChanged(const int value);
+			void onRadiusSliderChanged(const  int value);
 
-			//void 
+			void onSetSaveDirectory(const bool pressed);
+
+			
+			
+			void onChangeBrushType(const int Type);
+			//void onEditPrefab(QT::QString String);
+			void onPushSaveMap(const bool pressed);
+
+
 			//[-------------------------------------------------------]
-			//[ Private methods                                       ]
+			//[ Private data                                          ]
 			//[-------------------------------------------------------]
 		private:
-			bool IsActive;
-			qsf::DebugDrawProxy			mDebugDrawProxy; ///< Debug draw proxy for text output
-
-
-			float MoveDelta;
-			glm::vec3 OldPos;
-			glm::vec3 TerrainEditmodeColorMap::getPositionUnderMouse();
-			qsf::MessageProxy		mSaveMapProxy;
-			void SaveMap(const qsf::MessageParameters& parameters);
-			void SaveTheFuckingMap();
-			std::string GetCurrentTimeForFileName();
-			float ReadValue(glm::vec2);
-			inline virtual void mousePressEvent(QMouseEvent& qMouseEvent) override;
-			inline virtual void mouseMoveEvent(QMouseEvent& qMouseEvent) override;
-
-
-		private:
-			glm::vec3 oldmouspoint;
-			glm::vec3 yo_mousepoint;
-			bool mouseisvalid;
 			boost::container::flat_set <uint64> CreatedUnits;
 			bool WasPressed;
 
-			float Radius;
-
-
-			//terrains shape
-			float partsize;
-			float mHeight;
-			bool mIsInsideVisible;
-			float percentage;
-			float Offset;
-			float Heighmapsize;
-			float Scale;
-			int mParts;
-			qsf::WeakPtr<qsf::TerrainComponent> TerrainMaster;
-			// return a relative point from a world point (notice that z axis is mirrored)
-			glm::vec2 ConvertWorldPointToRelativePoint(glm::vec2 WorldPoint);
-			// return a worldpoint point from a mappoint (heighmap which is like 1024² or 2048²)
-			glm::vec2 ConvertMappointToWorldPoint(glm::vec2 WorldPoint);
-			void UpdateTerrains();
-			TerrainEditColorMapToolbox* TerrainEditGUI;
-			void generateMaterial();
-			virtual bool onStartup(EditMode* previousEditMode) override;
-			virtual void onShutdown(EditMode* nextEditMode) override;
-			bool projectToScreen(const glm::vec3& worldSpacePosition, const glm::vec2& screenSpaceSize, glm::vec2& outClipSpacePosition, glm::vec2& outClipSpaceSize) const;
 			//[-------------------------------------------------------]
 			//[ CAMP reflection system                                ]
 			//[-------------------------------------------------------]
@@ -198,4 +189,4 @@ namespace user
   //[-------------------------------------------------------]
   //[ CAMP reflection system                                ]
   //[-------------------------------------------------------]
-QSF_CAMP_TYPE_NONCOPYABLE(user::editor::TerrainEditmodeColorMap)
+QSF_CAMP_TYPE_NONCOPYABLE(user::editor::TerrainpaintingToolbox)

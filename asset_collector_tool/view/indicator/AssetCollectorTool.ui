@@ -104,16 +104,6 @@
     <widget class="QTextBrowser" name="textBrowser"/>
    </item>
    <item>
-    <widget class="QCheckBox" name="checkBox">
-     <property name="text">
-      <string>Deep Scan (includes Skinnable Mesh and Flare Textures)</string>
-     </property>
-     <property name="checked">
-      <bool>true</bool>
-     </property>
-    </widget>
-   </item>
-   <item>
     <widget class="QPushButton" name="pushButton">
      <property name="text">
       <string>Copy Unit</string>

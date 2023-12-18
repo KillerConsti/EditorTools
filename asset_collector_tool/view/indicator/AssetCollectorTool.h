@@ -14,8 +14,7 @@
 
 #include <camp/userobject.hpp>
 #include <qsf\asset\Asset.h>
-#include <qsf/prototype/Prototype.h>
-#include <qsf_editor_base/operation/CompoundOperation.h>
+
 //[-------------------------------------------------------]
 //[ Forward declarations                                  ]
 //[-------------------------------------------------------]
@@ -128,15 +127,6 @@ namespace user
 			this is the helper which let us duplicate files
 			look at the em5 examples where i have copied it from
 			*/
-
-			//DeepScan creates a protounit and reads throught everything
-			//out GlobalAssetListToAdd
-			static std::vector<uint64> DeepScan(uint64 PrefabGlobalAssetId,std::vector<uint64>& AllreadyScannedMaterials);
-			//avoid Nestling For-loops
-			static bool MaterialAllreadyScanned(std::vector<uint64> AllreadyScannedMaterials,uint64 TestMaterial);
-			static uint64 BuildEntity(uint64 GlobalAssetId);
-			static void buildInstantiateTemporaryPrototypesOperation(qsf::editor::base::CompoundOperation & compoundOperation, const std::vector<qsf::Prototype*>& temporaryPrototypes);
-			
 			std::shared_ptr<qsf::editor::AssetEditHelper>	mAssetEditHelper;
 		//[-------------------------------------------------------]
 		//[ Private Qt slots (MOC)                                ]
@@ -157,17 +147,10 @@ namespace user
 
 			//redirects to the web page
 			void onPushHelpButton(const bool pressed);
-		private:
-			static int DoSthCool(int a , int b);
-			static std::vector<uint64> GiveMeCategoryStuff(std::string Category,bool DeepScan,std::string IgnoreList);
-			void WorkForCategory(std::string);
-			static std::vector<uint64> ReadAssetDependeciesAndFilter(qsf::Assets AssetsIn);
-			static qsf::Assets ReadCategory(std::string);
-			
 
-			static std::string m_Cat;
-			static bool m_DeepScan;
-			static std::string m_IgnoreList;
+			void WorkForCategory(std::string);
+			std::vector<uint64> ReadAssetDependeciesAndFilter(qsf::Assets AssetsIn);
+			qsf::Assets ReadCategory(std::string);
 		//[-------------------------------------------------------]
 		//[ Private data                                          ]
 		//[-------------------------------------------------------]

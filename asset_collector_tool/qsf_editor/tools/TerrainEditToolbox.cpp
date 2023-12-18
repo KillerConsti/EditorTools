@@ -190,7 +190,6 @@ namespace user
 		connect(mUITerrainEditToolbox->toolButton, SIGNAL(clicked(bool)), this, SLOT(onPushSetHeight(bool)));
 		connect(mUITerrainEditToolbox->toolButton_2, SIGNAL(clicked(bool)), this, SLOT(onPushRaiseLower(bool)));
 		connect(mUITerrainEditToolbox->toolButton_3, SIGNAL(clicked(bool)), this, SLOT(onPushSmooth(bool)));
-		connect(mUITerrainEditToolbox->CopyQSFMAP, SIGNAL(clicked(bool)), this, SLOT(onCopyQSFMAP(bool)));
 		connect(mUITerrainEditToolbox->LoadButton, SIGNAL(clicked(bool)), this, SLOT(onPushLoadMap(bool)));
 		connect(mUITerrainEditToolbox->comboBox,SIGNAL(currentIndexChanged(int)),SLOT(onChangeBrushType(int)));
 		onPushSetHeight(true);
@@ -367,7 +366,6 @@ namespace user
 				QSF_EDITOR_EDITMODE_MANAGER.get<TerrainEditTool>()->LoadMap(Dia,path);
 		}
 
-
 		void TerrainEditToolbox::onChangeBrushType(const int Type)
 		{
 
@@ -377,11 +375,6 @@ namespace user
 		{
 				
 			QSF_MESSAGE.emitMessage(qsf::MessageConfiguration("kc::save_heightmap"));
-		}
-
-		void TerrainEditToolbox::onCopyQSFMAP(const bool pressed)
-		{
-			QSF_MESSAGE.emitMessage(qsf::MessageConfiguration("kc::copy_heightmap"));
 		}
 
 		TerrainEditToolbox::TerrainEditMode2 TerrainEditToolbox::GetEditMode()

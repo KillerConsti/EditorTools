@@ -5,9 +5,10 @@
 //[ Includes                                              ]
 //[-------------------------------------------------------]
 #include "asset_collector_tool/PrecompiledHeader.h"
-#include "asset_collector_tool/qsf_editor/tools/TerrainEditColorMapToolbox.h"
-#include <asset_collector_tool\view\indicator\TerrainEditmodeColorMap.h>
-#include <ui_TerrainEditColorMapToolbox.h>
+#include "asset_collector_tool/qsf_editor/tools/TerrainpaintingToolbox.h"
+#include <asset_collector_tool\view\indicator\TerrainPaintTool.h>
+#include "ui_TerrainpaintingToolbox.h" // Automatically created by Qt's uic (output directory is "tmp\qt\uic\qsf_editor" within the hand configured Visual Studio files, another directory when using CMake)
+
 #include <qsf_editor/operation/utility/RebuildGuiOperation.h>
 #include <qsf_editor/application/manager/CameraManager.h>
 #include <qsf_editor/EditorHelper.h>
@@ -110,7 +111,7 @@ namespace user
 		//[-------------------------------------------------------]
 		//[ Public definitions                                    ]
 		//[-------------------------------------------------------]
-		const uint32 TerrainEditColorMapToolbox::PLUGINABLE_ID = qsf::StringHash("qsf::editor::TerrainEditColorMapToolbox");
+		const uint32 TerrainpaintingToolbox::PLUGINABLE_ID = qsf::StringHash("qsf::editor::TerrainpaintingToolbox");
 
 
 		//[-------------------------------------------------------]
@@ -118,40 +119,31 @@ namespace user
 		//[-------------------------------------------------------]
 
 
-		TerrainEditColorMapToolbox::TerrainEditColorMapToolbox(qsf::editor::ToolManager * toolManager) :
+		TerrainpaintingToolbox::TerrainpaintingToolbox(qsf::editor::ToolManager * toolManager) :
 			qsf::editor::Tool(toolManager),
-			mUITerrainEditColorMapToolbox(new Ui::TerrainEditColorMapToolbox()),
+			mUITerrainpaintingToolbox(new Ui::TerrainpaintingToolbox()),
 			mMode(Set),
 			mSavepath(""),
-			mtoolboxView(nullptr)
+			mColor(Qt::cyan),
+			OldTerrain(glm::vec2(-1, -1))
+		{
+
+		}
+
+		TerrainpaintingToolbox::~TerrainpaintingToolbox()
 		{
 		}
 
-		TerrainEditColorMapToolbox::~TerrainEditColorMapToolbox()
+		float TerrainpaintingToolbox::GetBrushRadius()
 		{
+			return ((float)mUITerrainpaintingToolbox->horizontalSlider_2->value() / 10.f);
 		}
 
-		float TerrainEditColorMapToolbox::GetBrushRadius()
-		{
-			return ((float)mUITerrainEditColorMapToolbox->horizontalSlider_2->value() / 10.f);
-		}
 
-		float TerrainEditColorMapToolbox::GetHeight()
-		{
-			try
-			{
-				return boost::lexical_cast<float>(mUITerrainEditColorMapToolbox->lineEdit_2->text().toStdString());
-			}
-			catch (const std::exception&)
-			{
-				QSF_LOG_PRINTS(ERROR, "Cant read height")
-			}
-			return 0.1f;
-		}
 
-		TerrainEditColorMapToolbox::BrushShape TerrainEditColorMapToolbox::GetBrushShape()
+		TerrainpaintingToolbox::BrushShape TerrainpaintingToolbox::GetBrushShape()
 		{
-			switch (mUITerrainEditColorMapToolbox->comboBox->currentIndex())
+			switch (mUITerrainpaintingToolbox->comboBox->currentIndex())
 			{
 			case 0:
 				return Dome;
@@ -164,60 +156,45 @@ namespace user
 			}
 		}
 
-		int TerrainEditColorMapToolbox::GetBrushIntensity()
+		int TerrainpaintingToolbox::GetBrushIntensity()
 		{
-			return (mUITerrainEditColorMapToolbox->horizontalSlider->value());
+			return (mUITerrainpaintingToolbox->horizontalSlider->value());
 		}
 
-		glm::vec3 TerrainEditColorMapToolbox::GetSelectedColor()
+		bool TerrainpaintingToolbox::onStartup(qsf::editor::ToolboxView & toolboxView)
 		{
-			QColor originColor = mUITerrainEditColorMapToolbox->label_6->palette().color(QPalette::ColorRole::Background);
-			int r, g, b;
-			originColor.getRgb(&r, &g, &b);
-			return glm::vec3(r,g,b);
-		}
+			if (mUITerrainpaintingToolbox != nullptr)
 
-		bool TerrainEditColorMapToolbox::onStartup(qsf::editor::ToolboxView & toolboxView)
-		{
-			if (mUITerrainEditColorMapToolbox != nullptr)
+				mUITerrainpaintingToolbox->setupUi(toolboxView.widget());
+			if (mUITerrainpaintingToolbox == nullptr) //shouldnt happen
+				return false;
+			connect(mUITerrainpaintingToolbox->pushButton, SIGNAL(clicked(bool)), this, SLOT(onPushSaveMap(bool)));
+			connect(mUITerrainpaintingToolbox->pushButton_2, SIGNAL(clicked(bool)), this, SLOT(onSetSaveDirectory(bool)));
+			connect(mUITerrainpaintingToolbox->pushButtonSelect, SIGNAL(clicked(bool)), this, SLOT(onPushSelectButton(bool)));
+			//connect(mUITerrainpaintingToolbox->horizontalSlider, SIGNAL(valueChanged(int)), this, SLOT(onMinimumSliderChanged(int)));
+			connect(mUITerrainpaintingToolbox->horizontalSlider_2, SIGNAL(valueChanged(int)), this, SLOT(onRadiusSliderChanged(int)));
 
-				mUITerrainEditColorMapToolbox->setupUi(toolboxView.widget());
-			mtoolboxView = &toolboxView;
-			if(mUITerrainEditColorMapToolbox == nullptr) //shouldnt happen
-			return false;
-			connect(mUITerrainEditColorMapToolbox->pushButton, SIGNAL(clicked(bool)), this, SLOT(onPushSaveMap(bool)));
-			connect(mUITerrainEditColorMapToolbox->pushButton_2, SIGNAL(clicked(bool)), this, SLOT(onSetSaveDirectory(bool)));
-			connect(mUITerrainEditColorMapToolbox->pushButtonSelect, SIGNAL(clicked(bool)), this, SLOT(onPushSelectButton(bool)));
-			//connect(mUITerrainEditColorMapToolbox->horizontalSlider, SIGNAL(valueChanged(int)), this, SLOT(onMinimumSliderChanged(int)));
-			connect(mUITerrainEditColorMapToolbox->horizontalSlider_2, SIGNAL(valueChanged(int)), this, SLOT(onRadiusSliderChanged(int)));
-
-			//connect(mUITerrainEditColorMapToolbox->lineEdit, SIGNAL(textChanged(QString)), this, SLOT(onEditPrefab(QString)));
-			connect(mUITerrainEditColorMapToolbox->horizontalSlider, SIGNAL(valueChanged(int)), this, SLOT(OnBrushIntensitySliderChanged(int)));
+			//connect(mUITerrainpaintingToolbox->lineEdit, SIGNAL(textChanged(QString)), this, SLOT(onEditPrefab(QString)));
+			connect(mUITerrainpaintingToolbox->horizontalSlider, SIGNAL(valueChanged(int)), this, SLOT(OnBrushIntensitySliderChanged(int)));
 
 			//Editmodes
-			connect(mUITerrainEditColorMapToolbox->pick_a_color_button, SIGNAL(clicked(bool)), this, SLOT(onPushPickColor(bool)));
 
-			connect(mUITerrainEditColorMapToolbox->comboBox, SIGNAL(currentIndexChanged(int)), SLOT(onChangeBrushType(int)));
+
+			connect(mUITerrainpaintingToolbox->comboBox, SIGNAL(currentIndexChanged(int)), SLOT(onChangeBrushType(int)));
 			InitSavePath();
-
-
-			QPalette pal = mUITerrainEditColorMapToolbox->label_6->palette();
-			mUITerrainEditColorMapToolbox->label_6->setAutoFillBackground(true);
-			pal.setColor(mUITerrainEditColorMapToolbox->label_6->backgroundRole(), Qt::green);
-			mUITerrainEditColorMapToolbox->label_6->setPalette(pal);
 			return true;
 		}
 
-		void TerrainEditColorMapToolbox::retranslateUi(qsf::editor::ToolboxView & toolboxView)
+		void TerrainpaintingToolbox::retranslateUi(qsf::editor::ToolboxView & toolboxView)
 		{
-			mUITerrainEditColorMapToolbox->retranslateUi(toolboxView.widget());
+			mUITerrainpaintingToolbox->retranslateUi(toolboxView.widget());
 		}
 
-		void TerrainEditColorMapToolbox::onShutdown(qsf::editor::ToolboxView & toolboxView)
+		void TerrainpaintingToolbox::onShutdown(qsf::editor::ToolboxView & toolboxView)
 		{
 			QSF_LOG_PRINTS(INFO, "TET is shutdowned")
 				qsf::editor::EditModeManager& editModeManager = QSF_EDITOR_EDITMODE_MANAGER;
-			if (editModeManager.getSelectedEditMode() == editModeManager.get<TerrainEditmodeColorMap>())
+			if (editModeManager.getSelectedEditMode() == editModeManager.get<TerrainPaintTool>())
 			{
 				editModeManager.selectEditModeByPointer(editModeManager.getPreviousEditMode(), editModeManager.getToolWhichSelectedEditMode());
 			}
@@ -229,68 +206,52 @@ namespace user
 		//[-------------------------------------------------------]
 		//[ Private Qt slots (MOC)                                ]
 		//[-------------------------------------------------------]
-		void TerrainEditColorMapToolbox::onPushSelectButton(const bool pressed)
+		void TerrainpaintingToolbox::onPushSelectButton(const bool pressed)
 		{
 
 			qsf::editor::EditModeManager& editModeManager = QSF_EDITOR_EDITMODE_MANAGER;
-			if (editModeManager.getSelectedEditMode() == editModeManager.get<TerrainEditmodeColorMap>())
+			if (editModeManager.getSelectedEditMode() == editModeManager.get<TerrainPaintTool>())
 			{
 				QSF_LOG_PRINTS(INFO, "Allready in editmode");
 			}
 
-			QSF_EDITOR_EDITMODE_MANAGER.selectEditMode<TerrainEditmodeColorMap>(this);
+			QSF_EDITOR_EDITMODE_MANAGER.selectEditMode<TerrainPaintTool>(this);
 		}
 
 
-		void TerrainEditColorMapToolbox::onUndoOperationExecuted(const qsf::editor::base::Operation& operation)
+		void TerrainpaintingToolbox::onUndoOperationExecuted(const qsf::editor::base::Operation& operation)
 		{
 
 		}
 
-		void TerrainEditColorMapToolbox::onRedoOperationExecuted(const qsf::editor::base::Operation& operation)
+		void TerrainpaintingToolbox::onRedoOperationExecuted(const qsf::editor::base::Operation& operation)
 		{
+
+
 
 		}
 
 
 
-		void TerrainEditColorMapToolbox::OnBrushIntensitySliderChanged(const int value)
-		{
-			std::stringstream ss;
-			ss << mUITerrainEditColorMapToolbox->horizontalSlider->value();
-			mUITerrainEditColorMapToolbox->lineEdit->setText(ss.str().c_str());
-		}
-
-		void TerrainEditColorMapToolbox::onRadiusSliderChanged(const int value)
+		void TerrainpaintingToolbox::OnBrushIntensitySliderChanged(const int value)
 		{
 			std::stringstream ss;
-			ss << 1.0*mUITerrainEditColorMapToolbox->horizontalSlider_2->value() / 10.0;
-			mUITerrainEditColorMapToolbox->lineEdit_5->setText(ss.str().c_str());
+			ss << mUITerrainpaintingToolbox->horizontalSlider->value();
+			mUITerrainpaintingToolbox->lineEdit->setText(ss.str().c_str());
+		}
+
+		void TerrainpaintingToolbox::onRadiusSliderChanged(const int value)
+		{
+			std::stringstream ss;
+			ss << 1.0*mUITerrainpaintingToolbox->horizontalSlider_2->value() / 10.0;
+			mUITerrainpaintingToolbox->lineEdit_5->setText(ss.str().c_str());
 		}
 
 
-		void TerrainEditColorMapToolbox::onPushPickColor(const bool pressed)
-		{
-			mUITerrainEditColorMapToolbox->pick_a_color_button->setChecked(false);
-			if(mtoolboxView == nullptr)
-			return;
-			QColor originColor  = mUITerrainEditColorMapToolbox->label_6->palette().color(QPalette::ColorRole::Background);
-			QColor color = QColorDialog::getColor(originColor, mtoolboxView->widget());
-			QPalette pal = mUITerrainEditColorMapToolbox->label_6->palette();
-			mUITerrainEditColorMapToolbox->label_6->setAutoFillBackground(true);
-			pal.setColor(mUITerrainEditColorMapToolbox->label_6->backgroundRole(), color);
-			int r,g,b;
-			color.getRgb(&r,&g,&b);
-			std::string ColorsAsString = boost::lexical_cast<std::string>(r) + ","+ boost::lexical_cast<std::string>(g) +","+ boost::lexical_cast<std::string>(b);
-			ColorsAsString = "background-color: rgb("+ColorsAsString+")";
-			mUITerrainEditColorMapToolbox->label_6->setStyleSheet(ColorsAsString.c_str());
-			mUITerrainEditColorMapToolbox->label_6->setPalette(pal);
-		}
 
 
-		void TerrainEditColorMapToolbox::onSetSaveDirectory(const bool pressed)
+		void TerrainpaintingToolbox::onSetSaveDirectory(const bool pressed)
 		{
-		
 			QWidget* qtw = new QWidget();
 			auto fileName = QFileDialog::getExistingDirectory(qtw,
 				tr("Set Save Directory"), "");
@@ -306,12 +267,12 @@ namespace user
 		}
 
 
-		std::string TerrainEditColorMapToolbox::GetSavePath()
+		std::string TerrainpaintingToolbox::GetSavePath()
 		{
 			return mSavepath;
 		}
 
-		std::string TerrainEditColorMapToolbox::InitSavePath()
+		std::string TerrainpaintingToolbox::InitSavePath()
 		{
 			for (auto a : QSF_PLUGIN.getPlugins())
 			{
@@ -348,28 +309,46 @@ namespace user
 			return std::string();
 		}
 
-		void TerrainEditColorMapToolbox::onChangeBrushType(const int Type)
+		QColor TerrainpaintingToolbox::getColor()
+		{
+			return mColor;
+		}
+
+		void TerrainpaintingToolbox::SetCurrentTerrainData(std::vector<std::string> Data, int xTerrain, int yTerrain)
+		{
+			auto ListWidget = mUITerrainpaintingToolbox->listWidget;
+			if (OldTerrain.x != xTerrain && OldTerrain.y != yTerrain)
+			{
+				ListWidget->clear();
+				for (auto d : Data)
+					ListWidget->addItem(d.c_str());
+				OldTerrain = glm::vec2(xTerrain, yTerrain);
+			}
+		}
+
+		std::string TerrainpaintingToolbox::GetLayerColor()
+		{
+			if(mUITerrainpaintingToolbox->listWidget->currentItem() == nullptr)
+				return "";
+			return mUITerrainpaintingToolbox->listWidget->currentItem()->text().toStdString();
+		}
+
+		void TerrainpaintingToolbox::onChangeBrushType(const int Type)
 		{
 
 		}
 
-		void TerrainEditColorMapToolbox::onPushSaveMap(const bool pressed)
+		void TerrainpaintingToolbox::onPushSaveMap(const bool pressed)
 		{
 
 			QSF_MESSAGE.emitMessage(qsf::MessageConfiguration("kc::save_heightmap"));
 		}
 
-		TerrainEditColorMapToolbox::TerrainEditMode2 TerrainEditColorMapToolbox::GetEditMode()
+		TerrainpaintingToolbox::TerrainEditMode2 TerrainpaintingToolbox::GetEditMode()
 		{
 			return mMode;
 		}
 
-		void TerrainEditColorMapToolbox::SetHeight(float NewHeight)
-		{
-			std::string Heightset = boost::lexical_cast<std::string>(NewHeight);
-			std::string rounded = Heightset.substr(0, Heightset.find(".") + 3);
-			mUITerrainEditColorMapToolbox->lineEdit_2->setText(rounded.c_str());
-		}
 
 
 
