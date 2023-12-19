@@ -24,6 +24,7 @@
 #include "qsf_editor/editmode/EditMode.h"
 #include "qsf_editor/editmode/EditModeManager.h"
 #include <ui_TerrainTexturingToolbox.h>
+#include <QtWidgets\qmenu.h>
 //[-------------------------------------------------------]
 //[ Forward declarations                                  ]
 //[-------------------------------------------------------]
@@ -131,8 +132,6 @@ namespace user
 			std::string GetSavePath();			
 			std::string InitSavePath();
 			std::string mSavepath;
-			QColor getColor();
-			QColor mColor;
 			glm::vec2 OldTerrain;
 			void SetCurrentTerrainData(std::vector<std::pair<std::string,int>> Data,int xTerrain,int yTerrain);
 			void UpdateTerrainList();
@@ -145,7 +144,7 @@ namespace user
 			virtual bool onStartup(qsf::editor::ToolboxView& toolboxView) override;
 			virtual void retranslateUi(qsf::editor::ToolboxView& toolboxView) override;
 			virtual void onShutdown(qsf::editor::ToolboxView& toolboxView) override;
-			//[-------------------------------------------------------]
+						//[-------------------------------------------------------]
 			//[ Private Qt slots (MOC)                                ]
 			//[-------------------------------------------------------]
 			private Q_SLOTS:
@@ -159,6 +158,8 @@ namespace user
 
 			void onSetSaveDirectory(const bool pressed);
 
+			//void onitemChanged(QTableWidgetItem *item);
+			
 			
 			
 			void onChangeBrushType(const int Type);
@@ -166,6 +167,7 @@ namespace user
 			void onPushSaveMap(const bool pressed);
 			void onCopyFromQSFTerrain(const bool pressed);
 
+			void ShowContextMenu(const QPoint &pos);
 			//[-------------------------------------------------------]
 			//[ Private data                                          ]
 			//[-------------------------------------------------------]

@@ -27,6 +27,7 @@
 #include <asset_collector_tool\qsf_editor\tools\TerrainTexturingToolbox.h>
 #include <qsf/message/MessageProxy.h>
 #include <qsf/debug/request/CompoundDebugDrawRequest.h>
+#include <qsf\debug\request\RectangleDebugDrawRequest.h>
 //[-------------------------------------------------------]
 //[ Forward declarations                                  ]
 //[-------------------------------------------------------]
@@ -103,7 +104,7 @@ namespace user
 			*    Destructor
 			*/
 			virtual ~TerrainTexturingTool();
-
+			void ReplaceLayer(int LayerId, std::string NewMaterial);
 		//[-------------------------------------------------------]
 		//[ Protected virtual qsf::editor::View methods           ]
 		//[-------------------------------------------------------]
@@ -128,6 +129,7 @@ namespace user
 			void RaiseTerrain(glm::vec2 Mappoint);
 			void RaisePoint(glm::vec2 Mappoint, float Intensity);
 			int timer;
+			
 			//void 
 		//[-------------------------------------------------------]
 		//[ Private methods                                       ]
@@ -145,6 +147,12 @@ namespace user
 
 			qsf::MessageProxy		mCopyQSFTerrain;
 			void CopyQSFTerrain(const qsf::MessageParameters& parameters);
+
+			qsf::MessageProxy		mClearLayer;
+			void ClearLayer(const qsf::MessageParameters& parameters);
+
+			qsf::MessageProxy		mReplaceGroundLayer;
+			void ReplaceGroundLayer(const qsf::MessageParameters& parameters);
 
 
 			void SaveTheFuckingMap();
@@ -173,6 +181,7 @@ namespace user
 			qsf::CompoundDebugDrawRequest DebugRequsts;
 			uint32 mDetailViewSingleTrack;
 			float Radius;
+			qsf::RectangleDebugDrawRequest* mRectAngleRequest;
 			unsigned int		mChunkDrawRequestId;	///< Debug draw request IDs for chunk visualisation
 
 			void UpdateChunkDebugDrawg(glm::vec3 worldpos,int x ,int y);
@@ -190,7 +199,8 @@ namespace user
 			void WriteTerrainTextureList();
 
 			int onAddNewTerrain(std::string BlendMapName,int x,int y);
-			bool TerrainTextureAllreadyExists(std::string CheckMe, std::vector<std::string> ToCheck);
+			bool TerrainTextureAllreadyExists(std::string CheckMe, std::vector<std::string>& ToCheck);
+			bool TerrainLayerIsEmpty(Ogre::Terrain* Terrain,int layer);
 			//x and y represent terrain index
 			//z is set by updateterrain method when we applay some texture - so programm knows it needs to go higher
 			glm::vec3 m_NeedUpdatingTerrainList;

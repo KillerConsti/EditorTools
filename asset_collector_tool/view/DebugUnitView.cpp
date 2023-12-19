@@ -91,14 +91,15 @@ namespace user
 		//[-------------------------------------------------------]
 		//[ Public definitions                                    ]
 		//[-------------------------------------------------------]
-		const uint32 DebugUnitView::PLUGINABLE_ID = qsf::StringHash("qsf::editor::DebugUnitView");
+		const uint32 DebugUnitView::PLUGINABLE_ID = qsf::StringHash("user::editor::DebugUnitView");
 
 
 		//[-------------------------------------------------------]
 		//[ Public methods                                        ]
 		//[-------------------------------------------------------]
 		DebugUnitView::DebugUnitView(qsf::editor::ViewManager* viewManager, QWidget* qWidgetParent) :
-			View(viewManager, qWidgetParent),
+		KC_AbstractView(viewManager,qWidgetParent),
+			//View(viewManager, qWidgetParent),
 			mUiDebugUnitView(nullptr)
 		{
 			// Add the created Qt dock widget to the given Qt main window and tabify it for better usability

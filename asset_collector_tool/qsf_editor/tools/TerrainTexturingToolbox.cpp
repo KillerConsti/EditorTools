@@ -7,104 +7,27 @@
 #include "asset_collector_tool/PrecompiledHeader.h"
 #include "asset_collector_tool/qsf_editor/tools/TerrainTexturingToolbox.h"
 #include <asset_collector_tool\view\indicator\TerrainTexturingTool.h>
-#include <asset_collector_tool\view\indicator\OldTerrainTexturingTool.h>
 #include "ui_TerrainTexturingToolbox.h" // Automatically created by Qt's uic (output directory is "tmp\qt\uic\qsf_editor" within the hand configured Visual Studio files, another directory when using CMake)
 
-#include <qsf_editor/operation/utility/RebuildGuiOperation.h>
-#include <qsf_editor/application/manager/CameraManager.h>
 #include <qsf_editor/EditorHelper.h>
-
-#include <qsf_editor_base/operation/entity/CreateEntityOperation.h>
-#include <qsf_editor_base/operation/entity/DestroyEntityOperation.h>
-#include <qsf_editor_base/operation/component/CreateComponentOperation.h>
-#include <qsf_editor_base/operation/component/DestroyComponentOperation.h>
-#include <qsf_editor_base/operation/component/SetComponentPropertyOperation.h>
 
 #include <qsf/map/Map.h>
 #include <qsf/map/Entity.h>
-#include <qsf/selection/EntitySelectionManager.h>
 #include <qsf/QsfHelper.h>
-#include <qsf\component\base\MetadataComponent.h>
 #include <em5\plugin\Jobs.h>
-#include <qsf/debug/request/CircleDebugDrawRequest.h>
-#include <qsf/math/CoordinateSystem.h>
-#include <qsf/debug/DebugDrawLifetimeData.h>
-#include <qsf/input/InputSystem.h>
-#include <qsf/input/device/MouseDevice.h>
-#include <qsf/map/query/RayMapQuery.h>
-#include <qsf/map/query/GroundMapQuery.h>
-#include <em5/application/Application.h>
-#include "em5/game/groundmap/GroundMaps.h"
-#include "qsf/application/WindowApplication.h"
-#include "qsf/window/WindowSystem.h"
-#include <qsf/window/Window.h>
-#include <qsf/renderer/window/RenderWindow.h>
-#include <qsf/application/Application.h>
-#include <qsf_editor/application/Application.h>
-#include <qsf/renderer/RendererSystem.h>
-#include <qsf/map/query/ComponentMapQuery.h>
-#include <qsf/renderer/component/CameraComponent.h>
-#include <qsf/renderer/utility/CameraControlComponent.h>
-#include <qsf/renderer/helper/RendererHelper.h>
-#include <qsf/component/base/TransformComponent.h>
-#include <qsf/math/Random.h>
-#include <qsf/map/layer/LayerManager.h>
-#include <qsf/map/layer/Layer.h>
-#include <qsf/math/EulerAngles.h>
-#include <qsf_editor/map/MapHelper.h>
-#include <qsf/map/EntityHelper.h>
-#include <qsf/selection/SelectionManager.h>
-#include <qsf_editor/application/Application.h>
-#include <qsf_editor/selection/entity/EntitySelectionManager.h>
 
-
-#include <qsf_editor_base/user/User.h>
-#include <qsf_editor_base/operation/CompoundOperation.h>
-#include <qsf_editor_base/operation/entity/CreateEntityOperation.h>
-#include <qsf_editor_base/operation/entity/DestroyEntityOperation.h>
-#include <qsf_editor_base/operation/layer/CreateLayerOperation.h>
-#include <qsf_editor_base/operation/layer/SetLayerPropertyOperation.h>
-#include <qsf_editor_base/operation/data/BackupPrototypeOperationData.h>
-#include <qsf_editor_base/operation/data/BackupComponentOperationData.h>
-#include <qsf_editor_base/operation/component/CreateComponentOperation.h>
-#include <qsf_editor_base/operation/component/DestroyComponentOperation.h>
-#include <qsf_editor_base/operation/component/SetComponentPropertyOperation.h>
-#include <qsf_editor/operation/entity/EntityOperationHelper.h>
-
-#include <qsf/prototype/PrototypeSystem.h>
-#include <qsf/prototype/PrototypeManager.h>
-#include <qsf/prototype/PrototypeHelper.h>
-#include "qsf_editor/selection/layer/LayerSelectionManager.h"
-#include <qsf/asset/Asset.h>
-#include <qsf/prototype/helper/PrefabContent.h>
-#include <qsf/prototype/BasePrototypeManager.h>
-#include <qsf/input/device/KeyboardDevice.h>
-
-#include <qsf/renderer/mesh/MeshComponent.h>
-#include <qsf/renderer/debug/DebugBoxComponent.h>
-#include <qsf_editor/editmode/EditMode.h>
-#include <qsf_editor/renderer/RenderView.h>
-#include "qsf/renderer/window/RenderWindow.h"
-#include <qsf/math/Convert.h>
-#include <ogre\Ogre.h>
-#include <OGRE/OgreRay.h>
-#include <qsf/math/Plane.h>
-#include <qsf/math/Math.h>
-#include <qsf_editor/asset/terrain/TerrainEditManager.h>
 #include <qsf\log\LogSystem.h>
 
-#include <qsf_editor/view/utility/ToolboxView.h>
-#include <ogre\Terrain\OgreTerrainGroup.h>
 #include <qsf\message\MessageSystem.h>
-#include <../../plugin_api/external/qt/include/QtWidgets/qfiledialog.h>
-#include <../../plugin_api/external/qt/include/QtWidgets/qcolordialog.h>
+#include <QtWidgets/qfiledialog.h>
 #include <qsf/plugin/PluginSystem.h>
 #include "qsf/plugin/QsfAssetTypes.h"
 #include "qsf/asset/Asset.h"
 #include "qsf/asset/AssetSystem.h"
 #include < qsf/asset/type/AssetTypeManager.h>
 #include <em5/plugin/Plugin.h>
-#include <../../plugin_api/external/qt/include/QtWidgets/qtablewidget.h>
+#include <QtWidgets\qmenu.h>
+#include <qsf_editor/view/utility/ToolboxView.h>
 //[-------------------------------------------------------]
 //[ Namespace                                             ]
 //[-------------------------------------------------------]
@@ -129,7 +52,6 @@ namespace user
 			mUITerrainTexturingToolbox(new Ui::TerrainTexturingToolbox()),
 			mMode(Set),
 			mSavepath(""),
-			mColor(Qt::cyan),
 			OldTerrain(glm::vec2(-1, -1))
 		{
 
@@ -168,24 +90,24 @@ namespace user
 
 		bool TerrainTexturingToolbox::onStartup(qsf::editor::ToolboxView & toolboxView)
 		{
+
 			if (mUITerrainTexturingToolbox != nullptr)
 
 				mUITerrainTexturingToolbox->setupUi(toolboxView.widget());
 			if (mUITerrainTexturingToolbox == nullptr) //shouldnt happen
 				return false;
-			connect(mUITerrainTexturingToolbox->pushButton, SIGNAL(clicked(bool)), this, SLOT(onPushSaveMap(bool)));
-			connect(mUITerrainTexturingToolbox->pushButton_2, SIGNAL(clicked(bool)), this, SLOT(onSetSaveDirectory(bool)));
-			connect(mUITerrainTexturingToolbox->pushButtonSelect, SIGNAL(clicked(bool)), this, SLOT(onPushSelectButton(bool)));
+			QObject::connect(mUITerrainTexturingToolbox->pushButton, SIGNAL(clicked(bool)), this, SLOT(onPushSaveMap(bool)));
+			QObject::connect(mUITerrainTexturingToolbox->pushButton_2, SIGNAL(clicked(bool)), this, SLOT(onSetSaveDirectory(bool)));
+			QObject::connect(mUITerrainTexturingToolbox->pushButtonSelect, SIGNAL(clicked(bool)), this, SLOT(onPushSelectButton(bool)));
 			//connect(mUITerrainTexturingToolbox->horizontalSlider, SIGNAL(valueChanged(int)), this, SLOT(onMinimumSliderChanged(int)));
-			connect(mUITerrainTexturingToolbox->horizontalSlider_2, SIGNAL(valueChanged(int)), this, SLOT(onRadiusSliderChanged(int)));
+			QObject::connect(mUITerrainTexturingToolbox->horizontalSlider_2, SIGNAL(valueChanged(int)), this, SLOT(onRadiusSliderChanged(int)));
 
 			//connect(mUITerrainTexturingToolbox->lineEdit, SIGNAL(textChanged(QString)), this, SLOT(onEditPrefab(QString)));
-			connect(mUITerrainTexturingToolbox->horizontalSlider, SIGNAL(valueChanged(int)), this, SLOT(OnBrushIntensitySliderChanged(int)));
-			connect(mUITerrainTexturingToolbox->CopyFromQSFTerrain, SIGNAL(clicked(bool)), this, SLOT(onCopyFromQSFTerrain(bool)));
+			QObject::connect(mUITerrainTexturingToolbox->horizontalSlider, SIGNAL(valueChanged(int)), this, SLOT(OnBrushIntensitySliderChanged(int)));
+			QObject::connect(mUITerrainTexturingToolbox->CopyFromQSFTerrain, SIGNAL(clicked(bool)), this, SLOT(onCopyFromQSFTerrain(bool)));
 			//Editmodes
 
-
-			connect(mUITerrainTexturingToolbox->comboBox, SIGNAL(currentIndexChanged(int)), SLOT(onChangeBrushType(int)));
+			QObject::connect(mUITerrainTexturingToolbox->comboBox, SIGNAL(currentIndexChanged(int)), SLOT(onChangeBrushType(int)));
 			InitSavePath();
 			UpdateTerrainList();
 
@@ -213,7 +135,15 @@ namespace user
 			TableWidget->setItem(4, 0, newItem5);
 			QTableWidgetItem *newItem6 = new QTableWidgetItem("5");
 			TableWidget->setItem(5, 0, newItem6);
-			return true;
+
+			mUITerrainTexturingToolbox->listWidget->setContextMenuPolicy(Qt::CustomContextMenu);
+			if (!connect(mUITerrainTexturingToolbox->listWidget, SIGNAL(customContextMenuRequested(const QPoint &)), this, SLOT(ShowContextMenu(const QPoint &))))
+				QSF_LOG_PRINTS(INFO, "Slot connection treewidget custom context Menu failed")
+				/*if (!connect(mUITerrainTexturingToolbox->tableWidget, SIGNAL(itemChanged(QTableWidgetItem*)), this, SLOT(TerrainTexturingToolbox::onitemChanged(QTableWidgetItem*))))
+				{
+					QSF_LOG_PRINTS(INFO, "couldnt bind item changed")
+				}*/
+				return true;
 		}
 
 		void TerrainTexturingToolbox::retranslateUi(qsf::editor::ToolboxView & toolboxView)
@@ -229,7 +159,9 @@ namespace user
 			{
 				editModeManager.selectEditModeByPointer(editModeManager.getPreviousEditMode(), editModeManager.getToolWhichSelectedEditMode());
 			}
+			disconnect(mUITerrainTexturingToolbox->listWidget, SIGNAL(customContextMenuRequested(const QPoint &)), this, SLOT(ShowContextMenu(const QPoint &)));
 		}
+
 
 
 
@@ -298,6 +230,7 @@ namespace user
 		}
 
 
+
 		std::string TerrainTexturingToolbox::GetSavePath()
 		{
 			return mSavepath;
@@ -340,26 +273,22 @@ namespace user
 			return std::string();
 		}
 
-		QColor TerrainTexturingToolbox::getColor()
-		{
-			return mColor;
-		}
 
 		void TerrainTexturingToolbox::SetCurrentTerrainData(std::vector<std::pair<std::string, int>> Data, int xTerrain, int yTerrain)
 		{
-		//Old
-			/*auto ListWidget = mUITerrainTexturingToolbox->listWidget;
-			if (OldTerrain.x != xTerrain && OldTerrain.y != yTerrain)
-			{
-				ListWidget->clear();
-				for (auto d : Data)
-					ListWidget->addItem(d.c_str());
-				OldTerrain = glm::vec2(xTerrain, yTerrain);
-			}*/
-			//NEW
+			//Old
+				/*auto ListWidget = mUITerrainTexturingToolbox->listWidget;
+				if (OldTerrain.x != xTerrain && OldTerrain.y != yTerrain)
+				{
+					ListWidget->clear();
+					for (auto d : Data)
+						ListWidget->addItem(d.c_str());
+					OldTerrain = glm::vec2(xTerrain, yTerrain);
+				}*/
+				//NEW
 			auto TableWidget = mUITerrainTexturingToolbox->tableWidget;
 			int row = 0;
-			for(size_t t = 0; t< 6; t++)
+			for (size_t t = 0; t < 6; t++)
 			{
 				if (Data.size() <= t)
 				{
@@ -412,7 +341,7 @@ namespace user
 					}
 				}
 
-			row++;
+				row++;
 			}
 		}
 
@@ -429,7 +358,7 @@ namespace user
 				}
 			}
 			qsf::Assets AssetList;
-			QSF_ASSET.getAssetsOfType(TypeId, AssetList,&std::string("terrain_layer"));
+			QSF_ASSET.getAssetsOfType(TypeId, AssetList, &std::string("terrain_layer"));
 
 			auto ListWidget = mUITerrainTexturingToolbox->listWidget;
 			ListWidget->clear();
@@ -437,13 +366,13 @@ namespace user
 			{
 				ListWidget->addItem(a->getName().c_str());
 				ListWidget->sortItems();
-				m_AssetList.push_back(std::pair<std::string,std::string>(a->getName(),qsf::AssetProxy(a->getGlobalAssetId()).getLocalAssetName()));
+				m_AssetList.push_back(std::pair<std::string, std::string>(a->getName(), qsf::AssetProxy(a->getGlobalAssetId()).getLocalAssetName()));
 			}
 		}
 
 		std::string TerrainTexturingToolbox::GetLayerColor()
 		{
-			if(mUITerrainTexturingToolbox->listWidget->currentItem() == nullptr)
+			if (mUITerrainTexturingToolbox->listWidget->currentItem() == nullptr)
 				return "";
 			return GetLocalAssetNameFromBaseName(mUITerrainTexturingToolbox->listWidget->currentItem()->text().toStdString());
 		}
@@ -452,8 +381,8 @@ namespace user
 		{
 			for (auto a : m_AssetList)
 			{
-				if(a.first == BaseAssetName)
-				return a.second;
+				if (a.first == BaseAssetName)
+					return a.second;
 			}
 			return std::string();
 		}
@@ -474,6 +403,103 @@ namespace user
 		{
 			QSF_MESSAGE.emitMessage(qsf::MessageConfiguration("kc::CopyFromQSFTerrain"));
 		}
+
+		void TerrainTexturingToolbox::ShowContextMenu(const QPoint & pos)
+		{
+				auto CurrItem = mUITerrainTexturingToolbox->listWidget->currentItem();
+			if (CurrItem == nullptr)
+			{
+				QSF_LOG_PRINTS(INFO, "ret1")
+					return;
+			}
+			std::string Text = CurrItem->text().toStdString();
+			if (Text == "")
+			{
+				QSF_LOG_PRINTS(INFO, "ret2")
+					return;
+			}
+				auto Table = mUITerrainTexturingToolbox->tableWidget;
+			std::vector<std::string> LayerList;
+			for (size_t t = 0; t < 6; t++)
+			{
+				if (Table->item((int)t, 1) == nullptr)
+				{
+					LayerList.push_back("");
+					continue;
+				}
+				std::string TableContent = Table->item((int)t, 1)->text().toStdString();
+				if (TableContent != "")
+				{
+					LayerList.push_back("Layer " + boost::lexical_cast<std::string>(t) + ": " + TableContent);
+				}
+				else
+					LayerList.push_back("");
+			}
+				QMenu contextMenu("Copy Data", mUITerrainTexturingToolbox->listWidget);
+				
+				QAction* action_desc = new QAction("Replace Layer", mUITerrainTexturingToolbox->listWidget);
+				contextMenu.addAction(action_desc);
+				
+				contextMenu.addSeparator();
+				QAction* action1 = new QAction(LayerList.at(0).c_str(), mUITerrainTexturingToolbox->listWidget);
+			if (LayerList.at(0) != "")
+				contextMenu.addAction(action1);
+				QAction* action2 = new QAction(LayerList.at(1).c_str(), mUITerrainTexturingToolbox->listWidget);
+			if (LayerList.at(1) != "")
+				contextMenu.addAction(action2);
+				QAction* action3 = new QAction(LayerList.at(2).c_str(), mUITerrainTexturingToolbox->listWidget);
+			if (LayerList.at(2) != "")
+				contextMenu.addAction(action3);
+				QAction* action4 = new QAction(LayerList.at(3).c_str(), mUITerrainTexturingToolbox->listWidget);
+			if (LayerList.at(3) != "")
+				contextMenu.addAction(action4);
+				QAction* action5 = new QAction(LayerList.at(4).c_str(), mUITerrainTexturingToolbox->listWidget);
+			if (LayerList.at(4) != "")
+				contextMenu.addAction(action5);
+				QAction* action6 = new QAction(LayerList.at(5).c_str(), mUITerrainTexturingToolbox->listWidget);
+			if (LayerList.at(5) != "")
+				contextMenu.addAction(action6);
+				auto Action = contextMenu.exec(mUITerrainTexturingToolbox->listWidget->mapToGlobal(pos));
+				//Replace Layer actions
+				int id = -1;
+				if (Action == action1)
+				{
+				id = 0;
+				}
+			if (Action == action2)
+			{
+				id =1;
+			}
+			if (Action == action3)
+			{
+			id = 2;
+			}
+			if (Action == action4)
+			{
+			id = 3;
+			}
+			if (Action == action5)
+			{
+			id =4;
+			}
+			if (Action == action6)
+			{
+			id= 5;
+			}
+			if(id == -1)
+			return;
+			std::string NewLayer = LayerList.at(id);
+			NewLayer.erase(0,9);
+				QSF_LOG_PRINTS(INFO,GetLocalAssetNameFromBaseName(NewLayer))
+				qsf::editor::EditModeManager& editModeManager = QSF_EDITOR_EDITMODE_MANAGER;
+			if (editModeManager.getSelectedEditMode() == editModeManager.get<TerrainTexturingTool>())
+			{
+				//QSF_LOG_PRINTS(INFO,"got a nice mode")
+					static_cast<TerrainTexturingTool*>(editModeManager.get<TerrainTexturingTool>())->ReplaceLayer(id, GetLocalAssetNameFromBaseName(Text));
+			}
+		}
+
+
 
 		TerrainTexturingToolbox::TerrainEditMode2 TerrainTexturingToolbox::GetEditMode()
 		{

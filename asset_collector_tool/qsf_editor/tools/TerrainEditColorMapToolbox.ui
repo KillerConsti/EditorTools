@@ -76,7 +76,7 @@ text-decoration: underline;</string>
         <bool>true</bool>
        </property>
        <property name="text">
-        <string>Pick A Color</string>
+        <string>Pick A Color_2</string>
        </property>
        <property name="checkable">
         <bool>true</bool>

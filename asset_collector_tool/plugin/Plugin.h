@@ -79,8 +79,6 @@ namespace user
 			virtual bool onStartup() override;
 			virtual void onShutdown() override;
 			virtual void onUninstall() override;
-
-
 		};
 
 

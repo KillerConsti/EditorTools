@@ -128,7 +128,8 @@ namespace user
 		//[-------------------------------------------------------]
 		TerrainTexturingTool::TerrainTexturingTool(qsf::editor::EditModeManager* editModeManager) :
 			EditMode(editModeManager),
-			mChunkDrawRequestId(qsf::getUninitialized<uint32>())
+			mChunkDrawRequestId(qsf::getUninitialized<uint32>()),
+			mRectAngleRequest(nullptr)
 		{
 			timer = 0;
 		}
@@ -443,6 +444,88 @@ namespace user
 
 		}
 
+		void TerrainTexturingTool::ReplaceLayer(int LayerId, std::string NewMaterial)
+		{
+
+			glm::vec2 Mappoint = ConvertWorldPointToRelativePoint(glm::vec2(oldmouspoint.x, oldmouspoint.z));
+			Mappoint = Mappoint*BlendMapSize;
+			int xTerrain = 0;
+			int xRemaining = (int)Mappoint.x;
+			int yTerrain = 0;
+			int yRemaining = (int)Mappoint.y;
+			//QSF_LOG_PRINTS(INFO,point.x << " " << point.y);
+			//we have a pattern like 4x4 (so in total 16 Terrains ... now find the correct one)
+			//remaining is the point on the selected Terrain
+			while (true)
+			{
+				if ((xRemaining - partsize) >= 0)
+				{
+					xTerrain++;
+					xRemaining = xRemaining - partsize;
+				}
+				else
+					break;
+			}
+			while (true)
+			{
+				if ((yRemaining - partsize) >= 0)
+				{
+					yTerrain++;
+					yRemaining = yRemaining - partsize;
+				}
+				else
+					break;
+			}
+			qsf::Transform transform;
+			{
+				const qsf::TransformComponent* transformComponent = TerrainMaster->getEntity().getComponent<qsf::TransformComponent>();
+				if (nullptr != transformComponent)
+				{
+					transform = transformComponent->getTransform();
+				}
+			}
+			auto worldpos = oldmouspoint;
+			const float worldSize = TerrainMaster->getTerrainWorldSize();
+			const float worldSizeHalf = worldSize * 0.5f;
+			const float size = worldSize * 0.5f / TerrainMaster->getTerrainChunksPerEdge();
+			const glm::vec3 brushPosition = worldpos;
+
+			glm::vec3 position = transform.getPosition();
+			position.y = brushPosition.y;
+
+			const float snapSize = worldSize / static_cast<float>(TerrainMaster->getTerrainChunksPerEdge());
+			const float snapSizeHalf = snapSize * 0.5f;
+			position.x = glm::round((brushPosition.x - snapSizeHalf + worldSizeHalf) / snapSize) * snapSize - worldSizeHalf + snapSizeHalf;
+			position.z = glm::round((brushPosition.z - snapSizeHalf - worldSizeHalf) / snapSize) * snapSize + worldSizeHalf + snapSizeHalf;
+
+			transform.setPosition(position);
+			transform.setScale(glm::vec3(size, 1.0f, size));
+
+			{ // Tell the world about the selected chunk
+				const uint32 chunkX = glm::floor(((float)position.x + worldSizeHalf) / snapSize);
+				const uint32 chunkY = glm::floor((worldSizeHalf - (float)position.z) / snapSize);
+				if (xTerrain != chunkX || yTerrain != chunkY)
+				{
+					xTerrain = chunkX;
+					yTerrain = chunkY;
+					//Q_EMIT chunkChanged(chunkX, chunkY);
+				}
+			}
+			//QSF_LOG_PRINTS(INFO,"x "<< xTerrain << " y " << yTerrain)
+			auto Terrain_chunck = TerrainMaster->getOgreTerrainGroup()->getTerrain(xTerrain,yTerrain);
+			if(Terrain_chunck == nullptr)
+			return;
+			if(qsf::AssetProxy(NewMaterial).getAsset() == nullptr)
+			return;
+			if (LayerId >= Terrain_chunck->getLayerCount())
+			return;
+			//QSF_LOG_PRINTS(INFO, "LayerId " << LayerId << " NewMaterial " << NewMaterial)
+				Terrain_chunck->setLayerTextureName(LayerId,0, NewMaterial.c_str());
+			TerrainMaster->RefreshMaterial(Terrain_chunck);
+			WriteTerrainTextureList();
+
+		}
+
 
 
 
@@ -637,6 +720,14 @@ namespace user
 
 		}
 
+		void TerrainTexturingTool::ClearLayer(const qsf::MessageParameters & parameters)
+		{
+		}
+
+		void TerrainTexturingTool::ReplaceGroundLayer(const qsf::MessageParameters & parameters)
+		{
+		}
+
 		void TerrainTexturingTool::SaveTheFuckingMap()
 		{
 			if (TerrainEditGUI == nullptr)
@@ -817,7 +908,8 @@ namespace user
 			if (qsf::isUninitialized(mChunkDrawRequestId))
 			{
 				// Chunk visualisation
-				mChunkDrawRequestId = QSF_DEBUGDRAW.requestDraw(qsf::RectangleDebugDrawRequest(glm::vec3(-1.0f, 0.0f, -1.0f), qsf::Math::GLM_VEC3_UNIT_XYZ, qsf::Color4::WHITE, 0.0f));
+				mRectAngleRequest = new qsf::RectangleDebugDrawRequest(glm::vec3(-1.0f, 0.0f, -1.0f), qsf::Math::GLM_VEC3_UNIT_XYZ, qsf::Color4::WHITE, 0.0f);
+				mChunkDrawRequestId = QSF_DEBUGDRAW.requestDraw(*mRectAngleRequest);
 			}
 			if (qsf::isInitialized(mChunkDrawRequestId))
 			{
@@ -899,14 +991,14 @@ namespace user
 			}
 			if(m_NeedUpdatingTerrainList.x == xTerrain && m_NeedUpdatingTerrainList.y == yTerrain && m_NeedUpdatingTerrainList.z == 0)
 			{
+				UpdateChunkDebugDrawg(oldmouspoint, xTerrain, yTerrain);
 				return;
 			}
 			else
 			{
-				if (m_NeedUpdatingTerrainList.x != xTerrain || m_NeedUpdatingTerrainList.y != yTerrain)
-				{
+
 					UpdateChunkDebugDrawg(oldmouspoint, xTerrain, yTerrain);
-				}
+
 				m_NeedUpdatingTerrainList.x = xTerrain;
 				m_NeedUpdatingTerrainList.y = yTerrain;
 				m_NeedUpdatingTerrainList.z = 0;
@@ -970,30 +1062,49 @@ namespace user
 			return -1;
 			//first check if there is a layer twice
 			std::vector<std::string> LayerNames;
+			
 			Ogre::Terrain* Terrain = TerrainMaster->getOgreTerrainGroup()->getTerrain(x,y);
 			bool doubleLayer = false;
 			int LayerToReplace = -1;
-			for (size_t t = 0; t < Terrain->getLayerCount(); t++)
+			for (size_t t = 0; t < Terrain->getLayerCount() && t < 6; t++)
 			{
 				if (TerrainTextureAllreadyExists(Terrain->getLayerTextureName((uint8)t, 0), LayerNames))
 				{
 					doubleLayer = true;
 					LayerToReplace = (int)t;
+					//QSF_LOG_PRINTS(INFO,"replaced double layer"  << t)
 					break;
 				}
 
 			}
 			if (LayerToReplace == -1) //check layer count
 			{
-				if (Terrain->getLayerCount() < 5)
+				if (Terrain->getLayerCount() < 6)
 				{
 					LayerToReplace = Terrain->getLayerCount();
+					//QSF_LOG_PRINTS(INFO, "add completly new layer")
 				}
+			}
+			if (LayerToReplace == -1)
+			{
+				for (size_t t = 1; t < Terrain->getLayerCount() && Terrain->getLayerCount()<6; t++)
+				{
+					if(TerrainLayerIsEmpty(Terrain,(uint8)t))
+					{
+						//QSF_LOG_PRINTS(INFO,"replace empty layer" <<t)
+						LayerToReplace = (int)t;
+						break;
+					}
+
+				}
+				//if(LayerToReplace != -1)
+					//QSF_LOG_PRINTS(INFO, "replace empty layer")
 			}
 			if (LayerToReplace == -1)
 			{
 				QSF_LOG_PRINTS(INFO,"Did not found a good layer")
 				//we may search for an empty layer
+				return false;
 			}
 
 			//place layer
@@ -1008,8 +1119,11 @@ namespace user
 			}
 			else
 			{
+				if(LayerToReplace < 5 && Terrain->getLayerCount() <=6)
+				{
 				Terrain->addLayer();
 				Terrain->setLayerTextureName(LayerToReplace, 0, BlendMapName);
+				}
 
 			}
 
@@ -1019,14 +1133,31 @@ namespace user
 
 		}
 
-		bool TerrainTexturingTool::TerrainTextureAllreadyExists(std::string CheckMe, std::vector<std::string> ToCheck)
+		bool TerrainTexturingTool::TerrainTextureAllreadyExists(std::string CheckMe, std::vector<std::string>& ToCheck)
 		{
 			for (auto a : ToCheck)
 			{
 				if(a == CheckMe)
 				return true;
 			}
+			ToCheck.push_back(CheckMe);
 			return false;
+		}
+
+		bool TerrainTexturingTool::TerrainLayerIsEmpty(Ogre::Terrain* Terrain, int layer)
+		{
+			auto BlendMap = Terrain->getLayerBlendMap(layer);
+			if(BlendMap == nullptr)
+			return false;
+			for (size_t x = 0; x < partsize; x++)
+			{
+				for (size_t y = 0; y < partsize; y++)
+				{
+					if(BlendMap->getBlendValue(x,y) > 0)
+					return false;
+				}
+			}
+			return true;
 		}
 
 		std::string TerrainTexturingTool::GetSelectedLayerColor()
@@ -1048,7 +1179,7 @@ namespace user
 					//QSF_LOG_PRINTS(INFO, "layer Index" << Terrain->getLayerTextureName(layerIndex, 0).c_str() << " vs " << GetSelectedLayerColor())
 					if (Terrain->getLayerTextureName(layerIndex, 0).c_str() == GetSelectedLayerColor())
 					{
-						QSF_LOG_PRINTS(INFO, "found layer Index " << GetSelectedLayerColor() << " " << layerIndex);
+						//QSF_LOG_PRINTS(INFO, "found layer Index " << GetSelectedLayerColor() << " " << layerIndex);
 						return layerIndex;
 					}
 				}
@@ -1139,7 +1270,6 @@ namespace user
 
 						for (uint32 layerIndex = 1; layerIndex < 6; ++layerIndex)
 						{
-							QSF_LOG_PRINTS(INFO, "wow update 6 "<< layerIndex << " " << Terrain->getBlendTextureCount())
 							bool MapChanged = false;
 							if(Terrain->getLayerCount() <= layerIndex)
 							continue;
@@ -1148,7 +1278,6 @@ namespace user
 							auto CurrentBlendMap = Terrain->getLayerBlendMap(layerIndex);
 							if (CurrentBlendMap == nullptr)
 								continue;
-							QSF_LOG_PRINTS(INFO, "wow update 6.1")
 							//if (Terrain->getLayerBlendMap(layerIndex) == nullptr)
 								//continue;
 
@@ -1186,7 +1315,6 @@ namespace user
 								}
 							}
 
-							QSF_LOG_PRINTS(INFO, "wow update 6.2")
 							if (Terrain->getLayerBlendMap(layerIndex) != nullptr)
 							{
 								//if(MapChanged)

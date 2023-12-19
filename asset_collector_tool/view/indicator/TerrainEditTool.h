@@ -15,7 +15,7 @@
 #include <camp/userobject.hpp>
 #include <qsf/job/JobProxy.h>
 #include <qsf/debug/DebugDrawProxy.h>
-
+#include <qsf/debug/request/CompoundDebugDrawRequest.h>
 
 #include <qsf/prototype/PrototypeSystem.h>
 #include <qsf/prototype/PrototypeManager.h>
@@ -26,7 +26,8 @@
 #include <qsf/renderer/terrain/TerrainComponent.h>
 #include <asset_collector_tool\qsf_editor\tools\TerrainEditToolbox.h>
 #include <qsf/message/MessageProxy.h>
-#include <qsf/debug/request/CompoundDebugDrawRequest.h>
+
+#include <asset_collector_tool\kc_terrain\TerrainComponent.h>
 //[-------------------------------------------------------]
 //[ Forward declarations                                  ]
 //[-------------------------------------------------------]
@@ -111,7 +112,8 @@ namespace user
 			//virtual void retranslateUi() override;
 			//virtual void changeVisibility(bool visible) override;
 			virtual bool evaluateBrushPosition(const QPoint& mousePosition, glm::vec3& position);
-			qsf::TerrainComponent*				   mTerrainComponent;
+			//qsf::TerrainComponent*				   mTerrainComponent;
+			kc_terrain::TerrainComponent*				mTerrainComponent;
 		//[-------------------------------------------------------]
 		//[ Protected virtual QWidget methods                     ]
 		//[-------------------------------------------------------]
@@ -128,7 +130,8 @@ namespace user
 			glm::vec3 ApplySmooth(glm::vec2 Point,float Intensity);
 			float GetCustomIntensity(float distancetoMidpoint, TerrainEditToolbox::TerrainEditMode2 Mode);
 			void RaiseTerrain(glm::vec2 Mappoint);
-			void RaisePoint(glm::vec2 Mappoint, float Intensity);
+			void DecreaseTerrain(glm::vec2 Mappoint);
+			void RaisePoint(glm::vec2 Mappoint, float Intensity, bool Decrease);
 			int timer;
 
 			qsf::CompoundDebugDrawRequest DebugRequsts;
@@ -147,7 +150,8 @@ namespace user
 			qsf::MessageProxy		mSaveMapProxy;
 			void SaveMap(const qsf::MessageParameters& parameters);
 			void SaveTheFuckingMap();
-			
+			void CopyFromQSFMap(const qsf::MessageParameters& parameters);
+			qsf::MessageProxy		mCopyFromQSFMap;
 			std::string GetCurrentTimeForFileName();
 			float ReadValue(glm::vec2);
 			inline virtual void mousePressEvent(QMouseEvent& qMouseEvent) override;
@@ -173,7 +177,7 @@ namespace user
 			float Heighmapsize;
 			float Scale;
 			int mParts;
-			qsf::WeakPtr<qsf::TerrainComponent> TerrainMaster;
+			qsf::WeakPtr<kc_terrain::TerrainComponent> TerrainMaster;
 			// return a relative point from a world point (notice that z axis is mirrored)
 			glm::vec2 ConvertWorldPointToRelativePoint(glm::vec2 WorldPoint);
 			// return a worldpoint point from a mappoint (heighmap which is like 1024² or 2048²)

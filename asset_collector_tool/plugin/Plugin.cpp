@@ -16,13 +16,25 @@
 #include <asset_collector_tool\view\indicator\ScenarioScriptTool.h>
 #include <asset_collector_tool/view/indicator/TerrainEditTool.h>
 #include <asset_collector_tool\qsf_editor\tools\TerrainEditToolbox.h>
-#include <asset_collector_tool\qsf_editor\tools\TerrainpaintingToolbox.h>
-#include <asset_collector_tool/view/indicator/TerrainPaintTool.h>
+#include <asset_collector_tool\qsf_editor\tools\TerrainTexturingToolbox.h>
+#include <asset_collector_tool/view/indicator/TerrainTexturingTool.h>
 #include <asset_collector_tool/qsf_editor/tools/TerrainEditColorMapToolbox.h>
 #include "asset_collector_tool/view/indicator/TerrainEditmodeColorMap.h"
 #include <asset_collector_tool\tools\TrainTrackTool.h>
 #include <asset_collector_tool\view\DebugUnitView.h>
 #include <asset_collector_tool\view\UnitViewer.h>
+#include <asset_collector_tool\\Manager\GuiManager.h>
+
+#include <qsf_editor/EditorHelper.h>
+#include <asset_collector_tool\component\EditorToolsHelperComponent.h>
+#include <asset_collector_tool\view\KC_AbstractView.h>
+#include <asset_collector_tool\kc_terrain\TerrainComponent.h>
+#include <qsf/plugin/QsfAssetTypes.h>
+#include <qsf/renderer/terrain/TerrainComponent.h>
+#include <asset_collector_tool\view\indicator\OldTerrainTexturingTool.h>
+#include <asset_collector_tool\view\OrderInfoPictureCreator.h>
+
+#include <fstream>
 //[-------------------------------------------------------]
 //[ Namespace                                             ]
 //[-------------------------------------------------------]
@@ -39,6 +51,7 @@ namespace user
 			qsf::Plugin(new em5::PluginVersion())
 		{
 			// Nothing to do in here
+			QSF_LOG_PRINTS(INFO,"even earlier")
 		}
 
 
@@ -51,10 +64,42 @@ namespace user
 			{
 				// Declare CAMP reflection system classes
 				// -> Use Qt's "QT_TR_NOOP()"-macro in order to enable Qt's "lupdate"-program to find the internationalization texts
-				
+				QSF_START_CAMP_CLASS_EXPORT(kc_terrain::TerrainComponent, "KC TerrainComponent" ,"Killers first terrain")
+					QSF_CAMP_IS_COMPONENT_DERIVED(qsf::TerrainComponent)
+					//QSF_ADD_CAMP_PROPERTY(New Global Glossiness, EditorToolsHelperComponent::GetGlobalGlossiness, EditorToolsHelperComponent::SetGlobalGlossiness, "set it directly with the tool", 0.75f)
+					QSF_ADD_CAMP_PROPERTY(New Color Map, kc_terrain::TerrainComponent::GetColorMap, kc_terrain::TerrainComponent::SetNewColorMap, "set it directly with the tool", qsf::getUninitialized<uint64>()).tag("AssetType", qsf::QsfAssetTypes::TEXTURE.getName())
+					QSF_ADD_CAMP_PROPERTY(Set Position Offset, kc_terrain::TerrainComponent::getPosition, kc_terrain::TerrainComponent::SetPosition, "set it directly with the tool", glm::vec3())
+					QSF_ADD_CAMP_PROPERTY(KC Terrain size, kc_terrain::TerrainComponent::getTerrainWorldSize, kc_terrain::TerrainComponent::setTerrainWorldSize, "set it directly with the tool", 1500)
+					QSF_ADD_CAMP_PROPERTY(Reload, kc_terrain::TerrainComponent::GetUpdate, kc_terrain::TerrainComponent::SetUpdate, "set it directly with the tool", false).tag("Serializable", false)
+					QSF_END_CAMP_CLASS_EXPORT
+
+					QSF_START_CAMP_CLASS_EXPORT(EditorToolsHelperComponent, "This sets global glossiness", "you may just attach it to core entity")
+					QSF_CAMP_IS_COMPONENT
+					QSF_ADD_CAMP_PROPERTY(New Global Glossiness, EditorToolsHelperComponent::GetGlobalGlossiness, EditorToolsHelperComponent::SetGlobalGlossiness, "set it directly with the tool", 0.75f)
+					QSF_END_CAMP_CLASS_EXPORT
+			}
+			catch (const std::exception& e)
+			{
+				QSF_LOG_PRINTS(INFO, e.what())
+					return false;
+			}
+			{
+			}
+			try
+			{
 				addCampClass(
 					camp::Class::declare<AssetCollectorTool>()
 					.tag("Name", QT_TR_NOOP("[KC] Asset Collector Tool"))			// Text: "[KC] Asset Collector Tool"
+					.tag("Description", QT_TR_NOOP("KC_USEREDITOR_VIEW_AssetCollectorTool_DESCRIPTION"))	// Text: "Indicator browser"
+					.tag("Shortcut", "")															// Internal, no translation required
+					.base<qsf::editor::View>()
+					.constructor2<qsf::editor::ViewManager*, QWidget*>()
+					.getClass()
+				);
+
+				addCampClass(
+					camp::Class::declare<OrderInfoPictureCreator>()
+					.tag("Name", QT_TR_NOOP("[KC] OrderInfoPictureCreator"))			// Text: "[KC] Asset Collector Tool"
 					.tag("Description", QT_TR_NOOP("KC_USEREDITOR_VIEW_AssetCollectorTool_DESCRIPTION"))	// Text: "Indicator browser"
 					.tag("Shortcut", "")															// Internal, no translation required
 					.base<qsf::editor::View>()
@@ -71,15 +116,6 @@ namespace user
 					.constructor2<qsf::editor::ViewManager*, QWidget*>()
 					.getClass()
 				);
-				addCampClass(
-					camp::Class::declare<ScenarioScriptTool>()
-					.tag("Name", QT_TR_NOOP("[KC] ScenarioScriptTool"))			// Text: "[KC] Asset Collector Tool"
-					.tag("Description", QT_TR_NOOP("ScenarioScriptTool_DESCRIPTION"))	// Text: "Indicator browser"
-					.tag("Shortcut", "")															// Internal, no translation required
-					.base<qsf::editor::View>()
-					.constructor2<qsf::editor::ViewManager*, QWidget*>()
-					.getClass()
-				);
 
 				addCampClass(
 					camp::Class::declare<TerrainEditTool>()
@@ -91,7 +127,16 @@ namespace user
 				);
 
 				addCampClass(
-					camp::Class::declare<TerrainPaintTool>()
+					camp::Class::declare<TerrainTexturingTool>()
+					.tag("Name", QT_TR_NOOP("ID_EM5EDITOR_EDITMODE_FIRECOMPONENT_NAME21"))			// Text: "Fire entity"
+					.tag("Description", QT_TR_NOOP("ID_EM5EDITOR_EDITMODE_FIRECOMPONENT_DESCRIPTION21"))	// Text: "Fire entity edit mode"
+					.base<qsf::editor::EditMode>()
+					.constructor1<qsf::editor::EditModeManager*>()
+					.getClass()
+				);
+
+				addCampClass(
+					camp::Class::declare<OldTerrainTexturingTool>()
 					.tag("Name", QT_TR_NOOP("ID_EM5EDITOR_EDITMODE_FIRECOMPONENT_NAME21"))			// Text: "Fire entity"
 					.tag("Description", QT_TR_NOOP("ID_EM5EDITOR_EDITMODE_FIRECOMPONENT_DESCRIPTION21"))	// Text: "Fire entity edit mode"
 					.base<qsf::editor::EditMode>()
@@ -108,6 +153,10 @@ namespace user
 					.getClass()
 				);
 
+
+
+#define FinalBuild
+#ifdef FinalBuild
 				addCampClass(
 					camp::Class::declare<TerrainEditToolbox>()
 					.tag("Name", QT_TR_NOOP("[KC] Terrain Modelling Tool"))			// Text: "Fire entity"
@@ -116,11 +165,9 @@ namespace user
 					.constructor1<qsf::editor::ToolManager*>()
 					.getClass()
 				);
-#ifdef FinalBuild
-
 
 				addCampClass(
-					camp::Class::declare<TerrainpaintingToolbox>()
+					camp::Class::declare<TerrainTexturingToolbox>()
 					.tag("Name", QT_TR_NOOP("[KC] Terrain Texturing Tool"))			// Text: "Fire entity"
 					.tag("Description", QT_TR_NOOP("ID_EM5EDITOR_EDITMODE_FIRECOMPONENT_DESCRIPTION21"))	// Text: "Fire entity edit mode"
 					.base<qsf::editor::Tool>()
@@ -146,14 +193,23 @@ namespace user
 					.getClass()
 				);
 
-				addCampClass(
+				/*addCampClass(
 					camp::Class::declare<DebugUnitView>()
 					.tag("Name", QT_TR_NOOP("[KC] Debug Prefab"))			// Text: "Fire entity"
 					.tag("Description", QT_TR_NOOP("ID_EM5EDITOR_EDITMODE_FIRECOMPONENT_DESCRIPTION21"))	// Text: "Fire entity edit mode"
-					.base<qsf::editor::View>()
+					.base<KC_AbstractView>()
 					.constructor2<qsf::editor::ViewManager*, QWidget*>()
 					.getClass()
 				);
+				addCampClass(
+					camp::Class::declare<ScenarioScriptTool>()
+					.tag("Name", QT_TR_NOOP("[KC] ScenarioScriptTool"))			// Text: "[KC] Asset Collector Tool"
+					.tag("Description", QT_TR_NOOP("ScenarioScriptTool_DESCRIPTION"))	// Text: "Indicator browser"
+					.tag("Shortcut", "")															// Internal, no translation required
+					.base<KC_AbstractView>()
+					.constructor2<qsf::editor::ViewManager*, QWidget*>()
+					.getClass()
+				);*/
 
 				addCampClass(
 					camp::Class::declare<UnitViewer>()
@@ -164,6 +220,7 @@ namespace user
 					.getClass()
 				);
 
+
 				//we dont want a log message here because we see this window pretty easy in the editor (or not?)
 				// Done
 				return true;
@@ -171,21 +228,22 @@ namespace user
 			catch (const std::exception& e)
 			{
 				// Error!
-				QSF_ERROR("Failed to install the plugin '" << getName() << "'. Exception caught: " << e.what(), QSF_REACT_NONE);
-				return false;
+				QSF_ERROR("Failed to install the plugin  [KC] Editor Tools. Exception caught: " << e.what() << "This message also appears if you play instead of using editor", QSF_REACT_NONE);
+				return true;
 			}
 		}
 
 		bool Plugin::onStartup()
 		{
-			// Nothing to do in here
-
+			GUIManager::init();
 			// Done
 			return true;
 		}
 
 		void Plugin::onShutdown()
 		{
+			GUIManager::instance->~GUIManager();
+			QSF_SAFE_DELETE(GUIManager::instance);
 			// Nothing to do in here
 		}
 
@@ -196,7 +254,27 @@ namespace user
 			// Nothing to do in here
 		}
 
+	
 
+		/*playtime 1*/
+		/*QSF_LOG_PRINTS(INFO, "plugin startup");
+		if (QSF_EDITOR_APPLICATION.getMainWindow() == nullptr)
+		QSF_LOG_PRINTS(INFO, "plugin startup failed");
+		// Nothing to do in here
+		auto Bar2 = QSF_EDITOR_APPLICATION.getMainWindow()->findChildren<QMenuBar *>("");
+		for (size_t t = 0; t < Bar2.size(); t++)
+		{
+		QSF_LOG_PRINTS(INFO, Bar2.at((int)t)->windowTitle().toStdString());
+		auto actions = Bar2.at((int)t)->actions();
+		for (auto a : actions)
+		{
+		QSF_LOG_PRINTS(INFO,a->text().toStdString());
+		Bar2.at((int)t)->insertSeparator(a);
+		}
+		}
+		QSF_LOG_PRINTS(INFO, "found " << Bar2.size() << " Menu Bars")*/
+
+		/*playtime end*/
 //[-------------------------------------------------------]
 //[ Namespace                                             ]
 //[-------------------------------------------------------]

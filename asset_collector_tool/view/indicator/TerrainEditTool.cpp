@@ -147,7 +147,8 @@ namespace user
 				// Get a ray at the given viewport position
 				const qsf::Ray ray = cameraComponent->getRayAtViewportPosition(normalizedPosition.x, normalizedPosition.y);
 				Ogre::Ray ogreRay = qsf::Convert::getOgreRay(ray);
-				for (qsf::TerrainComponent* terrainComponent : qsf::ComponentMapQuery(QSF_MAINMAP).getAllInstances<qsf::TerrainComponent>())
+				for (kc_terrain::TerrainComponent* terrainComponent : qsf::ComponentMapQuery(QSF_MAINMAP).getAllInstances<kc_terrain::TerrainComponent>())
+				//for (qsf::TerrainComponent* terrainComponent : qsf::ComponentMapQuery(QSF_MAINMAP).getAllInstances<qsf::TerrainComponent>())
 				{
 					if (terrainComponent->getTerrainHitBoundingBoxByRay(ogreRay))
 					{
@@ -232,7 +233,13 @@ namespace user
 				return;
 
 			if (!QSF_INPUT.getMouse().Left.isPressed())
-				return;
+				{
+				if (TerrainEditGUI->GetEditMode() == 1 && QSF_INPUT.getMouse().Right.isPressed()) //decrease with right mouse button
+				{
+
+				}
+					return;
+				}
 			glm::vec2 Mappoint = ConvertWorldPointToRelativePoint(glm::vec2(oldmouspoint.x, oldmouspoint.z));
 			Mappoint = Mappoint*Heighmapsize;
 			switch (TerrainEditGUI->GetEditMode()) //Special Handlings
@@ -257,11 +264,6 @@ namespace user
 			}
 			}
 
-		}
-
-		float TerrainEditTool::GetCustomIntensity(float distancetoMidpoint, TerrainEditToolbox::TerrainEditMode2 Mode)
-		{
-			return 0.0f;
 		}
 
 		void TerrainEditTool::RaiseTerrain(glm::vec2 MapPoint)
@@ -291,13 +293,13 @@ namespace user
 						if (TotalRadius > glm::sqrt((t - MapPoint.x)* (t - MapPoint.x) + (j - MapPoint.y) * (j - MapPoint.y)))
 						{
 							if(TerrainEditGUI->GetBrushShape() == TerrainEditGUI->Circle)
-								RaisePoint(glm::vec2(t, j), BrushIntensity);
+								RaisePoint(glm::vec2(t, j), BrushIntensity,false);
 							else if (TerrainEditGUI->GetBrushShape() == TerrainEditGUI->Cone)
 							{
 								float Distance = glm::distance(glm::vec2(t,j),MapPoint);
 								//intensity formula here
 								float IntensityMod = 1.0f - (Distance/TotalRadius);
-								RaisePoint(glm::vec2(t, j), BrushIntensity*IntensityMod);
+								RaisePoint(glm::vec2(t, j), BrushIntensity*IntensityMod, false);
 							}
 							else if (TerrainEditGUI->GetBrushShape() == TerrainEditGUI->Dome)
 							{
@@ -305,7 +307,7 @@ namespace user
 								float Distance = glm::distance(glm::vec2(t, j), MapPoint);
 								//intensity formula here
 								float IntensityMod = glm::cos((Distance / TotalRadius) * glm::pi<float>()) * 0.5f + 0.5f;
-								RaisePoint(glm::vec2(t, j), BrushIntensity*IntensityMod);
+								RaisePoint(glm::vec2(t, j), BrushIntensity*IntensityMod, false);
 
 							}
 						}
@@ -321,14 +323,77 @@ namespace user
 				{
 					for (int j = MapPointMinY; j < MapPointMaxY; j++)
 					{
-						RaisePoint(glm::vec2(t, j), BrushIntensity);
+						RaisePoint(glm::vec2(t, j), BrushIntensity, false);
 					}
 				}
 			}
 			UpdateTerrains();
 		}
 
-		void TerrainEditTool::RaisePoint(glm::vec2 point, float Intensity)
+		void TerrainEditTool::DecreaseTerrain(glm::vec2 MapPoint)
+		{
+			if (TerrainEditGUI == nullptr)
+				return;
+			timer++;
+			if (timer >= 5)
+				timer = 0;
+			else
+				return;
+			float TotalRadius = Radius * Scale;
+			float BrushIntensity = TerrainEditGUI->GetBrushIntensity()*0.25f;
+			int MapPointMinX = glm::clamp((int)glm::ceil(MapPoint.x - TotalRadius), 0, (int)Heighmapsize);
+			int MapPointMaxX = glm::clamp((int)glm::floor(MapPoint.x + TotalRadius), 0, (int)Heighmapsize);
+			int MapPointMinY = glm::clamp((int)glm::ceil(MapPoint.y - TotalRadius), 0, (int)Heighmapsize);
+			int MapPointMaxY = glm::clamp((int)glm::floor(MapPoint.y + TotalRadius), 0, (int)Heighmapsize);
+			//Raise only one point
+			if (TerrainEditGUI->GetBrushShape() != TerrainEditGUI->Quad)
+			{
+				//circle
+				for (int t = MapPointMinX; t < MapPointMaxX; t++)
+				{
+					for (int j = MapPointMinY; j < MapPointMaxY; j++)
+					{
+						if (TotalRadius > glm::sqrt((t - MapPoint.x)* (t - MapPoint.x) + (j - MapPoint.y) * (j - MapPoint.y)))
+						{
+							if (TerrainEditGUI->GetBrushShape() == TerrainEditGUI->Circle)
+								RaisePoint(glm::vec2(t, j), BrushIntensity,true);
+							else if (TerrainEditGUI->GetBrushShape() == TerrainEditGUI->Cone)
+							{
+								float Distance = glm::distance(glm::vec2(t, j), MapPoint);
+								//intensity formula here
+								float IntensityMod = 1.0f - (Distance / TotalRadius);
+								RaisePoint(glm::vec2(t, j), BrushIntensity*IntensityMod, true);
+							}
+							else if (TerrainEditGUI->GetBrushShape() == TerrainEditGUI->Dome)
+							{
+								//intensity formula here
+								float Distance = glm::distance(glm::vec2(t, j), MapPoint);
+								//intensity formula here
+								float IntensityMod = glm::cos((Distance / TotalRadius) * glm::pi<float>()) * 0.5f + 0.5f;
+								RaisePoint(glm::vec2(t, j), BrushIntensity*IntensityMod, true);
+
+							}
+						}
+
+					}
+
+				}
+			}
+			else
+			{
+				//shape square
+				for (int t = MapPointMinX; t < MapPointMaxX; t++)
+				{
+					for (int j = MapPointMinY; j < MapPointMaxY; j++)
+					{
+						RaisePoint(glm::vec2(t, j), BrushIntensity, true);
+					}
+				}
+			}
+			UpdateTerrains();
+		}
+
+		void TerrainEditTool::RaisePoint(glm::vec2 point, float Intensity,bool Decrease)
 		{
 			int xTerrain = 0;
 			int xRemaining = (int)point.x;
@@ -365,6 +430,8 @@ namespace user
 					return;
 			}
 			float newIntensity = glm::clamp(Intensity* 0.5f, 0.2f, 5.f);
+			if (Decrease)
+				newIntensity = -1.f*newIntensity;
 			auto old = Terrain->getHeightAtPoint(xRemaining, yRemaining);
 			auto NewHeight = old+ newIntensity;
 			Terrain->setHeightAtPoint(xRemaining, yRemaining, NewHeight);
@@ -645,6 +712,66 @@ namespace user
 			QSF_LOG_PRINTS(INFO, "Map was saved succesfully")
 		}
 
+		void TerrainEditTool::CopyFromQSFMap(const qsf::MessageParameters & parameters)
+		{
+
+			QSF_LOG_PRINTS(INFO, "Copy QSF Terrain started")
+				//get old qsf terrain
+				qsf::TerrainComponent* CopyFromTerrain = nullptr;
+			for (qsf::TerrainComponent* terrainComponent : qsf::ComponentMapQuery(QSF_MAINMAP).getAllInstances<qsf::TerrainComponent>())
+			{
+				if (terrainComponent->getEntity().getComponent<kc_terrain::TerrainComponent>() == nullptr)
+				{
+					QSF_LOG_PRINTS(INFO, "found a old qsf terrain")
+						CopyFromTerrain = terrainComponent;
+					break;
+				}
+			}
+			if (CopyFromTerrain == nullptr)
+			{
+				QSF_LOG_PRINTS(INFO, "No QSF Terrain found")
+					return;
+			}
+			int CopyFromHeightMapSize = CopyFromTerrain->getHeightMapSize();
+			if (CopyFromHeightMapSize != TerrainMaster->getHeightMapSize())
+			{
+				QSF_LOG_PRINTS(INFO, "Cant do that partsize does not match. Source has " << CopyFromHeightMapSize << " and Target has " << TerrainMaster->getHeightMapSize())
+					return;
+			}
+			auto it = CopyFromTerrain->getOgreTerrainGroup()->getTerrainIterator();
+			int counter = 0; // because my ID start at 0
+			while (it.hasMoreElements()) // add the layer to all terrains in the terrainGroup
+			{
+				Ogre::TerrainGroup::TerrainSlot* a = it.getNext();
+				counter++;
+			}
+			int CopyFromParts = CopyFromTerrain->getOgreTerrainGroup()->getTerrainSize();
+			int OrigParts  = CopyFromTerrain->getOgreTerrainGroup()->getTerrainSize();
+			if (CopyFromParts != OrigParts)
+			{
+				QSF_LOG_PRINTS(INFO, "Cant do that number of parts not matching. Source has " << CopyFromParts << " and Target has " << OrigParts)
+					return;
+			}
+			auto it_source = CopyFromTerrain->getOgreTerrainGroup()->getTerrainIterator();
+			auto it_target = TerrainMaster->getOgreTerrainGroup()->getTerrainIterator();
+
+			while (it_source.hasMoreElements()) // add the layer to all terrains in the terrainGroup
+			{
+				Ogre::TerrainGroup::TerrainSlot* TS_source = it_source.getNext();
+				Ogre::TerrainGroup::TerrainSlot* TS_target = it_target.getNext();
+
+				for(size_t x =0; x< partsize;x++ )
+				{
+					for (size_t y = 0; y< partsize; y++)
+					{
+						TS_target->instance->setHeightAtPoint((long)x,(long)y,TS_source->instance->getHeightAtPoint((long)x,(long)y));
+					}
+				}
+				TS_target->instance->update();
+			}
+
+		}
+
 		void TerrainEditTool::LoadMap(std::string realfilename,std::string realfilepath)
 		{
 			auto filename = realfilename;
@@ -866,9 +993,9 @@ namespace user
 			
 			
 			//prevent crashs if terrain is not there yet
-			if (qsf::ComponentMapQuery(QSF_MAINMAP).getFirstInstance<qsf::TerrainComponent>() == nullptr)
+			if (qsf::ComponentMapQuery(QSF_MAINMAP).getFirstInstance<kc_terrain::TerrainComponent>() == nullptr)
 				return false;
-			TerrainMaster = qsf::ComponentMapQuery(QSF_MAINMAP).getFirstInstance<qsf::TerrainComponent>();
+			TerrainMaster = qsf::ComponentMapQuery(QSF_MAINMAP).getFirstInstance<kc_terrain::TerrainComponent>();
 			if (!TerrainMaster.valid())
 				return false;
 			if (TerrainMaster->getOgreTerrainGroup() == nullptr)
@@ -903,7 +1030,7 @@ namespace user
 			}
 			TerrainEditGUI = TET;
 			mSaveMapProxy.registerAt(qsf::MessageConfiguration(qsf::MessageConfiguration("kc::save_heightmap")), boost::bind(&TerrainEditTool::SaveMap, this, _1));
-
+			mCopyFromQSFMap.registerAt(qsf::MessageConfiguration(qsf::MessageConfiguration("kc::copy_heightmap")), boost::bind(&TerrainEditTool::CopyFromQSFMap, this, _1));
 			//LoadMap("heightmap__beaverfield__min__20__max__143.136826__date__2023-10-14_13-46-59.tif");
 			return true;
 		}

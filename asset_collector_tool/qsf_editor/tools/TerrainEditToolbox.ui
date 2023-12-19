@@ -82,10 +82,17 @@ text-decoration: underline;</string>
         <bool>true</bool>
        </property>
        <property name="text">
-        <string>Raise / Lower</string>
+        <string>Raise</string>
        </property>
        <property name="checkable">
         <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="tool_lower">
+       <property name="text">
+        <string>Lower</string>
        </property>
       </widget>
      </item>
@@ -307,6 +314,13 @@ text-decoration: underline;</string>
       </widget>
      </item>
     </layout>
+   </item>
+   <item>
+    <widget class="QPushButton" name="CopyQSFMAP">
+     <property name="text">
+      <string>Copy old QSF Map</string>
+     </property>
+    </widget>
    </item>
   </layout>
  </widget>
