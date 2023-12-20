@@ -175,12 +175,6 @@
     <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_TerrainTexturingToolbox.cpp">
       <Filter>GeneratedQtFiles\moc</Filter>
     </ClCompile>
-    <ClCompile Include="asset_collector_tool\view\indicator\OldTerrainTexturingTool.cpp">
-      <Filter>Source Files\terrain_assets\editmodes</Filter>
-    </ClCompile>
-    <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_OldTerrainTexturingTool.cpp">
-      <Filter>GeneratedQtFiles\moc</Filter>
-    </ClCompile>
     <ClCompile Include="asset_collector_tool\view\ImageDecompiler.cpp">
       <Filter>Source Files\view\AssetCollectorTool</Filter>
     </ClCompile>
@@ -318,9 +312,6 @@
       <Filter>Source Files\terrain_assets\tools\terrain</Filter>
     </QtMOC>
     <QtMOC Include="asset_collector_tool\view\indicator\TerrainTexturingTool.h">
-      <Filter>Source Files\terrain_assets\editmodes</Filter>
-    </QtMOC>
-    <QtMOC Include="asset_collector_tool\view\indicator\OldTerrainTexturingTool.h">
       <Filter>Source Files\terrain_assets\editmodes</Filter>
     </QtMOC>
     <QtMOC Include="asset_collector_tool\view\ImageDecompiler.h">

@@ -446,36 +446,6 @@ namespace user
 
 		void TerrainTexturingTool::ReplaceLayer(int LayerId, std::string NewMaterial)
 		{
-
-			glm::vec2 Mappoint = ConvertWorldPointToRelativePoint(glm::vec2(oldmouspoint.x, oldmouspoint.z));
-			Mappoint = Mappoint*BlendMapSize;
-			int xTerrain = 0;
-			int xRemaining = (int)Mappoint.x;
-			int yTerrain = 0;
-			int yRemaining = (int)Mappoint.y;
-			//QSF_LOG_PRINTS(INFO,point.x << " " << point.y);
-			//we have a pattern like 4x4 (so in total 16 Terrains ... now find the correct one)
-			//remaining is the point on the selected Terrain
-			while (true)
-			{
-				if ((xRemaining - partsize) >= 0)
-				{
-					xTerrain++;
-					xRemaining = xRemaining - partsize;
-				}
-				else
-					break;
-			}
-			while (true)
-			{
-				if ((yRemaining - partsize) >= 0)
-				{
-					yTerrain++;
-					yRemaining = yRemaining - partsize;
-				}
-				else
-					break;
-			}
 			qsf::Transform transform;
 			{
 				const qsf::TransformComponent* transformComponent = TerrainMaster->getEntity().getComponent<qsf::TransformComponent>();
@@ -501,18 +471,12 @@ namespace user
 			transform.setPosition(position);
 			transform.setScale(glm::vec3(size, 1.0f, size));
 
-			{ // Tell the world about the selected chunk
-				const uint32 chunkX = glm::floor(((float)position.x + worldSizeHalf) / snapSize);
-				const uint32 chunkY = glm::floor((worldSizeHalf - (float)position.z) / snapSize);
-				if (xTerrain != chunkX || yTerrain != chunkY)
-				{
-					xTerrain = chunkX;
-					yTerrain = chunkY;
-					//Q_EMIT chunkChanged(chunkX, chunkY);
-				}
-			}
+
+			const uint32 chunkX = glm::floor(((float)position.x + worldSizeHalf) / snapSize);
+			const uint32 chunkY = glm::floor((worldSizeHalf - (float)position.z) / snapSize);
+
 			//QSF_LOG_PRINTS(INFO,"x "<< xTerrain << " y " << yTerrain)
-			auto Terrain_chunck = TerrainMaster->getOgreTerrainGroup()->getTerrain(xTerrain,yTerrain);
+			auto Terrain_chunck = TerrainMaster->getOgreTerrainGroup()->getTerrain(chunkX, chunkY);
 			if(Terrain_chunck == nullptr)
 			return;
 			if(qsf::AssetProxy(NewMaterial).getAsset() == nullptr)
@@ -991,7 +955,6 @@ namespace user
 			}
 			if(m_NeedUpdatingTerrainList.x == xTerrain && m_NeedUpdatingTerrainList.y == yTerrain && m_NeedUpdatingTerrainList.z == 0)
 			{
-				UpdateChunkDebugDrawg(oldmouspoint, xTerrain, yTerrain);
 				return;
 			}
 			else
@@ -1209,7 +1172,10 @@ namespace user
 		glm::vec2 TerrainTexturingTool::ConvertWorldPointToRelativePoint(glm::vec2 WorldPoint)
 		{
 			glm::vec2 copy = WorldPoint;
-			copy = (WorldPoint + Offset) / TerrainMaster->getTerrainWorldSize();
+			qsf::TransformComponent* TC = TerrainMaster->getEntity().getComponent<qsf::TransformComponent>();
+			glm::vec3 OffsetPos = /*TC->getRotation()**/TC->getPosition();
+			copy = copy - glm::vec2(OffsetPos.x, OffsetPos.z);
+			copy = (copy + Offset) / TerrainMaster->getTerrainWorldSize();
 			copy.y = 1.f - copy.y; //we need to mirror Y
 			return copy;
 		}

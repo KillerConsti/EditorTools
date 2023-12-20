@@ -169,12 +169,17 @@ namespace user
 			return (mUITerrainEditColorMapToolbox->horizontalSlider->value());
 		}
 
-		glm::vec3 TerrainEditColorMapToolbox::GetSelectedColor()
+		QColor TerrainEditColorMapToolbox::GetSelectedColor()
 		{
 			QColor originColor = mUITerrainEditColorMapToolbox->label_6->palette().color(QPalette::ColorRole::Background);
-			int r, g, b;
-			originColor.getRgb(&r, &g, &b);
-			return glm::vec3(r,g,b);
+			//int r, g, b;
+			//originColor.getRgb(&r, &g, &b);
+			if(mUITerrainEditColorMapToolbox->label_6->text() != "Alpha")
+			return originColor;
+			else
+			{
+				return QColor(0,0,0,0);
+			}
 		}
 
 		bool TerrainEditColorMapToolbox::onStartup(qsf::editor::ToolboxView & toolboxView)
@@ -198,6 +203,8 @@ namespace user
 			connect(mUITerrainEditColorMapToolbox->pick_a_color_button, SIGNAL(clicked(bool)), this, SLOT(onPushPickColor(bool)));
 
 			connect(mUITerrainEditColorMapToolbox->comboBox, SIGNAL(currentIndexChanged(int)), SLOT(onChangeBrushType(int)));
+			connect(mUITerrainEditColorMapToolbox->use_alpha, SIGNAL(clicked(bool)), SLOT(onuse_alpha(bool)));
+
 			InitSavePath();
 
 
@@ -242,6 +249,16 @@ namespace user
 		}
 
 
+		void TerrainEditColorMapToolbox::onuse_alpha(const bool pressed)
+		{
+			QPalette pal = mUITerrainEditColorMapToolbox->label_6->palette();
+			mUITerrainEditColorMapToolbox->label_6->setText("Alpha");
+			pal.setColor(mUITerrainEditColorMapToolbox->label_6->backgroundRole(), QColor(0,0,0,0));
+			mUITerrainEditColorMapToolbox->label_6->setPalette(pal);
+			mUITerrainEditColorMapToolbox->label_6->setStyleSheet("background - color: rgba(0,0,0,0)");
+			mUITerrainEditColorMapToolbox->label_6->setAutoFillBackground(false);
+		}
+
 		void TerrainEditColorMapToolbox::onUndoOperationExecuted(const qsf::editor::base::Operation& operation)
 		{
 
@@ -275,7 +292,15 @@ namespace user
 			if(mtoolboxView == nullptr)
 			return;
 			QColor originColor  = mUITerrainEditColorMapToolbox->label_6->palette().color(QPalette::ColorRole::Background);
-			QColor color = QColorDialog::getColor(originColor, mtoolboxView->widget());
+
+			QColorDialog* dlg = new QColorDialog(nullptr);
+			dlg->setWindowTitle("Choose a Color");
+			//dlg.setOptions(options);
+			dlg->setCurrentColor(originColor);
+			dlg->exec();
+			if(dlg->result() != QDialog::Accepted)
+			return;
+			QColor color = dlg->selectedColor();
 			QPalette pal = mUITerrainEditColorMapToolbox->label_6->palette();
 			mUITerrainEditColorMapToolbox->label_6->setAutoFillBackground(true);
 			pal.setColor(mUITerrainEditColorMapToolbox->label_6->backgroundRole(), color);
@@ -285,6 +310,7 @@ namespace user
 			ColorsAsString = "background-color: rgb("+ColorsAsString+")";
 			mUITerrainEditColorMapToolbox->label_6->setStyleSheet(ColorsAsString.c_str());
 			mUITerrainEditColorMapToolbox->label_6->setPalette(pal);
+			mUITerrainEditColorMapToolbox->label_6->setText("");
 		}
 
 

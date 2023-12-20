@@ -137,7 +137,7 @@ namespace user
 			std::string InitSavePath();
 			void OverwriteSavePath();
 			std::string mSavepath;
-			glm::vec3 GetSelectedColor();
+			QColor GetSelectedColor();
 		protected:
 			virtual bool onStartup(qsf::editor::ToolboxView& toolboxView) override;
 			virtual void retranslateUi(qsf::editor::ToolboxView& toolboxView) override;
@@ -149,6 +149,7 @@ namespace user
 			//[-------------------------------------------------------]
 			private Q_SLOTS:
 			void onPushSelectButton(const bool pressed);
+			void onuse_alpha(const bool pressed);
 			// qsf::editor::OperationManager
 			void onUndoOperationExecuted(const qsf::editor::base::Operation& operation);
 			void onRedoOperationExecuted(const qsf::editor::base::Operation& operation);

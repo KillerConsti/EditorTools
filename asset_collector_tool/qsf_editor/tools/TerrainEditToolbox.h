@@ -125,7 +125,8 @@ namespace user
 			{
 				Set,
 				Raise,
-				Smooth
+				Smooth,
+				Lower
 			};
 			TerrainEditMode2 GetEditMode();
 			TerrainEditMode2 mMode;
@@ -153,9 +154,11 @@ namespace user
 
 			void onPushSetHeight(const bool pressed);
 			void onPushRaiseLower(const bool pressed);
+			void onPushLower(const bool pressed);
 			void onPushSmooth(const bool pressed);
 			void onSetSaveDirectory(const bool pressed);
 			void onPushLoadMap(const bool pressed);
+
 			
 			void onChangeBrushType(const int Type);
 			//void onEditPrefab(QT::QString String);

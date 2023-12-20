@@ -31,7 +31,6 @@
 #include <asset_collector_tool\kc_terrain\TerrainComponent.h>
 #include <qsf/plugin/QsfAssetTypes.h>
 #include <qsf/renderer/terrain/TerrainComponent.h>
-#include <asset_collector_tool\view\indicator\OldTerrainTexturingTool.h>
 #include <asset_collector_tool\view\OrderInfoPictureCreator.h>
 
 #include <fstream>
@@ -135,14 +134,7 @@ namespace user
 					.getClass()
 				);
 
-				addCampClass(
-					camp::Class::declare<OldTerrainTexturingTool>()
-					.tag("Name", QT_TR_NOOP("ID_EM5EDITOR_EDITMODE_FIRECOMPONENT_NAME21"))			// Text: "Fire entity"
-					.tag("Description", QT_TR_NOOP("ID_EM5EDITOR_EDITMODE_FIRECOMPONENT_DESCRIPTION21"))	// Text: "Fire entity edit mode"
-					.base<qsf::editor::EditMode>()
-					.constructor1<qsf::editor::EditModeManager*>()
-					.getClass()
-				);
+
 
 				addCampClass(
 					camp::Class::declare<TerrainEditmodeColorMap>()

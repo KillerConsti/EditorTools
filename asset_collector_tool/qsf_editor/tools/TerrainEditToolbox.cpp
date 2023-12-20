@@ -193,6 +193,7 @@ namespace user
 		connect(mUITerrainEditToolbox->CopyQSFMAP, SIGNAL(clicked(bool)), this, SLOT(onCopyQSFMAP(bool)));
 		connect(mUITerrainEditToolbox->LoadButton, SIGNAL(clicked(bool)), this, SLOT(onPushLoadMap(bool)));
 		connect(mUITerrainEditToolbox->comboBox,SIGNAL(currentIndexChanged(int)),SLOT(onChangeBrushType(int)));
+		connect(mUITerrainEditToolbox->tool_lower, SIGNAL(clicked(bool)), this, SLOT(onPushLower(bool)));
 		onPushSetHeight(true);
 		InitSavePath();
 			return true;
@@ -268,6 +269,7 @@ namespace user
 			mUITerrainEditToolbox->lineEdit_2->setEnabled(true);
 			mUITerrainEditToolbox->horizontalSlider->setEnabled(false);
 			mUITerrainEditToolbox->lineEdit->setEnabled(false);
+			mUITerrainEditToolbox->lineEdit->setEnabled(false);
 			mMode = Set;
 		}
 
@@ -279,8 +281,21 @@ namespace user
 			mUITerrainEditToolbox->lineEdit_2->setEnabled(false);
 			mUITerrainEditToolbox->horizontalSlider->setEnabled(true);
 			mUITerrainEditToolbox->lineEdit->setEnabled(true);
+			mUITerrainEditToolbox->lineEdit->setEnabled(true);
 
 			mMode = Raise;
+		}
+
+		void TerrainEditToolbox::onPushLower(const bool pressed)
+		{
+			mUITerrainEditToolbox->tool_lower->setChecked(true);
+			mUITerrainEditToolbox->toolButton->setChecked(false);
+			mUITerrainEditToolbox->toolButton_2->setChecked(false);
+			mUITerrainEditToolbox->toolButton_3->setChecked(false);
+			mUITerrainEditToolbox->lineEdit_2->setEnabled(false);
+			mUITerrainEditToolbox->horizontalSlider->setEnabled(true);
+			mUITerrainEditToolbox->lineEdit->setEnabled(true);
+			mMode = Lower;
 		}
 
 		void TerrainEditToolbox::onPushSmooth(const bool pressed)
@@ -291,6 +306,7 @@ namespace user
 			mUITerrainEditToolbox->lineEdit_2->setEnabled(false);
 			mUITerrainEditToolbox->horizontalSlider->setEnabled(true);
 			mUITerrainEditToolbox->lineEdit->setEnabled(true);
+			mUITerrainEditToolbox->lineEdit->setEnabled(false);
 			mMode = Smooth;
 		}
 

@@ -130,6 +130,7 @@ namespace user
 			glm::vec3 ApplySmooth(glm::vec2 Point,float Intensity);
 			float GetCustomIntensity(float distancetoMidpoint, TerrainEditToolbox::TerrainEditMode2 Mode);
 			void RaiseTerrain(glm::vec2 Mappoint);
+			void LowerTerrain(glm::vec2 Mappoint);
 			void DecreaseTerrain(glm::vec2 Mappoint);
 			void RaisePoint(glm::vec2 Mappoint, float Intensity, bool Decrease);
 			int timer;

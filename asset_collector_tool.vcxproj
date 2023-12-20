@@ -117,7 +117,6 @@
     <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_GuiManager.cpp" />
     <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_ImageDecompiler.cpp" />
     <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_KC_AbstractView.cpp" />
-    <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_OldTerrainTexturingTool.cpp" />
     <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_OrderInfoPictureCreator.cpp" />
     <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_ScenarioScriptTool.cpp" />
     <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_TerrainEditColorMapToolbox.cpp" />
@@ -153,7 +152,6 @@
     <ClCompile Include="asset_collector_tool\view\DebugUnitView.cpp" />
     <ClCompile Include="asset_collector_tool\view\ImageDecompiler.cpp" />
     <ClCompile Include="asset_collector_tool\view\indicator\AssetCollectorTool.cpp" />
-    <ClCompile Include="asset_collector_tool\view\indicator\OldTerrainTexturingTool.cpp" />
     <ClCompile Include="asset_collector_tool\view\indicator\ScenarioScriptTool.cpp" />
     <ClCompile Include="asset_collector_tool\view\indicator\TerrainEditmodeColorMap.cpp" />
     <ClCompile Include="asset_collector_tool\view\indicator\TerrainEditTool.cpp" />
@@ -196,7 +194,6 @@
     <ClInclude Include="asset_collector_tool\kc_terrain\TerrainContext.h" />
     <ClInclude Include="asset_collector_tool\kc_terrain\TerrainDefinition.h" />
     <ClInclude Include="asset_collector_tool\kc_terrain\TerrainMaterialGenerator.h" />
-    <QtMOC Include="asset_collector_tool\view\indicator\OldTerrainTexturingTool.h" />
     <QtMOC Include="asset_collector_tool\view\ImageDecompiler.h" />
     <ClInclude Include="asset_collector_tool\kc_terrain\TerrainMaterialGeneratorOgreMaterial.h" />
     <ClInclude Include="asset_collector_tool\view\indicator\ScenarioScriptTool.h" />

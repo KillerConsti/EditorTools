@@ -98,7 +98,7 @@
 #include <algorithm>
 #include <iomanip>
 #include <sstream>
-
+#include <qsf/input/device/KeyboardDevice.h>
 #include <qsf/debug/DebugDrawManager.h>
 //[-------------------------------------------------------]
 //[ Namespace                                             ]
@@ -231,17 +231,13 @@ namespace user
 				
 			if (!mouseisvalid)
 				return;
-
-			if (!QSF_INPUT.getMouse().Left.isPressed())
-				{
-				if (TerrainEditGUI->GetEditMode() == 1 && QSF_INPUT.getMouse().Right.isPressed()) //decrease with right mouse button
-				{
-
-				}
-					return;
-				}
+			if(!QSF_INPUT.getMouse().Left.isPressed())
+				return;
+			if(QSF_INPUT.getKeyboard().anyControlPressed())
+				return;
 			glm::vec2 Mappoint = ConvertWorldPointToRelativePoint(glm::vec2(oldmouspoint.x, oldmouspoint.z));
 			Mappoint = Mappoint*Heighmapsize;
+			QSF_LOG_PRINTS(INFO,"outpoint")
 			switch (TerrainEditGUI->GetEditMode()) //Special Handlings
 			{
 			case 0: //Set
@@ -260,6 +256,11 @@ namespace user
 			case 2: //Smooth
 			{
 				SmoothMap(Mappoint);
+				return;
+			}
+			case 3:
+			{
+				LowerTerrain(Mappoint);
 				return;
 			}
 			}
@@ -330,7 +331,7 @@ namespace user
 			UpdateTerrains();
 		}
 
-		void TerrainEditTool::DecreaseTerrain(glm::vec2 MapPoint)
+		void TerrainEditTool::LowerTerrain(glm::vec2 MapPoint)
 		{
 			if (TerrainEditGUI == nullptr)
 				return;
@@ -356,7 +357,7 @@ namespace user
 						if (TotalRadius > glm::sqrt((t - MapPoint.x)* (t - MapPoint.x) + (j - MapPoint.y) * (j - MapPoint.y)))
 						{
 							if (TerrainEditGUI->GetBrushShape() == TerrainEditGUI->Circle)
-								RaisePoint(glm::vec2(t, j), BrushIntensity,true);
+								RaisePoint(glm::vec2(t, j), BrushIntensity, true);
 							else if (TerrainEditGUI->GetBrushShape() == TerrainEditGUI->Cone)
 							{
 								float Distance = glm::distance(glm::vec2(t, j), MapPoint);
@@ -386,7 +387,7 @@ namespace user
 				{
 					for (int j = MapPointMinY; j < MapPointMaxY; j++)
 					{
-						RaisePoint(glm::vec2(t, j), BrushIntensity, true);
+						RaisePoint(glm::vec2(t, j), BrushIntensity,true);
 					}
 				}
 			}
@@ -891,8 +892,10 @@ namespace user
 
 		inline void TerrainEditTool::mousePressEvent(QMouseEvent & qMouseEvent)
 		{
-			if (Qt::RightButton == qMouseEvent.button() && TerrainEditGUI != nullptr && TerrainEditGUI->GetEditMode() == TerrainEditGUI->Set)
+			if (Qt::LeftButton == qMouseEvent.button() && TerrainEditGUI != nullptr && TerrainEditGUI->GetEditMode() == TerrainEditGUI->Set) //copy height with ctrl + left
 			{
+				if(QSF_INPUT.getKeyboard().anyControlPressed())
+				{
 				glm::vec3 mousepos2;
 				if (evaluateBrushPosition(qMouseEvent.pos(), mousepos2))
 				{
@@ -901,6 +904,8 @@ namespace user
 					float value = ReadValue(glm::vec2(glm::round(Mappoint.x), glm::round(Mappoint.y)));
 					TerrainEditGUI->SetHeight(value);
 					return;
+				}
+				return;
 				}
 			}
 			if (Qt::LeftButton != qMouseEvent.button()) //only left button
@@ -951,7 +956,10 @@ namespace user
 		glm::vec2 TerrainEditTool::ConvertWorldPointToRelativePoint(glm::vec2 WorldPoint)
 		{
 			glm::vec2 copy = WorldPoint;
-			copy = (WorldPoint + Offset) / TerrainMaster->getTerrainWorldSize();
+			qsf::TransformComponent* TC = TerrainMaster->getEntity().getComponent<qsf::TransformComponent>();
+			glm::vec3 OffsetPos = /*TC->getRotation()**/TC->getPosition();
+			copy = copy - glm::vec2(OffsetPos.x, OffsetPos.z);
+			copy = (copy + Offset) / TerrainMaster->getTerrainWorldSize();
 			copy.y = 1.f - copy.y; //we need to mirror Y
 			return copy;
 		}
