@@ -199,6 +199,12 @@ namespace user
 			void generateMaterial();
 			virtual bool onStartup(EditMode* previousEditMode) override;
 			virtual void onShutdown(EditMode* nextEditMode) override;
+
+
+			bool SplitMapInSmallMaps();
+			void ChangeMaterialToUseSmallMaps(int x , int y);
+			std::vector<Magick::Image*> m_SmallImages;
+			Magick::Image* GetSmallImageByTerrainId(int x, int y);
 			//[-------------------------------------------------------]
 			//[ CAMP reflection system                                ]
 			//[-------------------------------------------------------]

@@ -109,11 +109,22 @@
     </layout>
    </item>
    <item>
-    <widget class="QPushButton" name="SetSaveLocationButton">
-     <property name="text">
-      <string>Set Save Location</string>
-     </property>
-    </widget>
+    <layout class="QHBoxLayout" name="horizontalLayout_3">
+     <item>
+      <widget class="QPushButton" name="openloc">
+       <property name="text">
+        <string>Open Location</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="SetSaveLocationButton">
+       <property name="text">
+        <string>Set Save Location</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
   </layout>
  </widget>

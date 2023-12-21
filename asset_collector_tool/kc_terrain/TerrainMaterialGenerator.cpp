@@ -406,6 +406,16 @@ namespace kc_terrain
 		IPL.push_back(static_cast<const Ogre::Image*>(&ogreImage));
 		point->_loadImages(IPL);
 	}
+
+	void TerrainMaterialGenerator::ChangeColorMapToSmallerMap(Ogre::Terrain * Terrain, int x, int y, int parts_per_line)
+	{
+		qsf::MaterialManager& materialManager = QSF_MATERIAL.getMaterialManager();
+		auto matName = Terrain->getMaterialName();
+		qsf::Material* terrainMaterial = materialManager.findElement(qsf::StringHash(matName));
+
+		//terrainMaterial->setPropertyById("GlobalColorMap", qsf::MaterialPropertyValue::fromResourceName(Terrain->getGlobalColourMap()->getName()));
+		QSF_LOG_PRINTS(INFO, Terrain->getGlobalColourMap()->getName())
+	}
 	//[-------------------------------------------------------]
 	//[ Private methods                                       ]
 	//[-------------------------------------------------------]
@@ -468,7 +478,7 @@ namespace kc_terrain
 				globalAssetId = ColorMapAsset;
 			}*/
 			terrainMaterial->setPropertyById("UseGlobalColorMap", qsf::MaterialPropertyValue::fromBoolean(qsf::isInitialized(ColorMapAsset)),qsf::MaterialProperty::Usage::DYNAMIC);
-			terrainMaterial->setPropertyById("GlobalColorMap", qsf::MaterialPropertyValue::fromGlobalAssetId(qsf::getUninitialized<uint64>()), qsf::MaterialProperty::Usage::DYNAMIC);
+			//terrainMaterial->setPropertyById("GlobalColorMap", qsf::MaterialPropertyValue::fromGlobalAssetId(qsf::getUninitialized<uint64>()), qsf::MaterialProperty::Usage::DYNAMIC);
 			terrainMaterial->setPropertyById("GlobalColorMap", qsf::MaterialPropertyValue::fromGlobalAssetId(ColorMapAsset), qsf::MaterialProperty::Usage::DYNAMIC);
 		}
 

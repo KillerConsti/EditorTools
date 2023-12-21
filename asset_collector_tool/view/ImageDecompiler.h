@@ -132,7 +132,7 @@ namespace user
 
 			void OnPushLoadMaterial_or_texture(const bool pressed);
 			void onSetSaveDirectory(const bool pressed);
-
+			void onopenloc(const bool pressed);
 
 		private:
 			bool DecompileImage(std::string TextureName,std::string MaterialName);

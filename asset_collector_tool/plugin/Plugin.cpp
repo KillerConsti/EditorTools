@@ -32,8 +32,9 @@
 #include <qsf/plugin/QsfAssetTypes.h>
 #include <qsf/renderer/terrain/TerrainComponent.h>
 #include <asset_collector_tool\view\OrderInfoPictureCreator.h>
-
+#include <asset_collector_tool\extern\include\Magick++.h>
 #include <fstream>
+#include <filesystem>
 //[-------------------------------------------------------]
 //[ Namespace                                             ]
 //[-------------------------------------------------------]
@@ -227,6 +228,10 @@ namespace user
 
 		bool Plugin::onStartup()
 		{
+			auto path = std::experimental::filesystem::current_path();
+			std::string path_string{ path.u8string() };
+			Magick::InitializeMagick(path_string.c_str());
+			//Magick::InitializeMagick((char *)NULL);
 			GUIManager::init();
 			// Done
 			return true;

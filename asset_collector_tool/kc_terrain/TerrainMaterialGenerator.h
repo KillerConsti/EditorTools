@@ -74,12 +74,15 @@ namespace kc_terrain
 			void SetBlendMaps(std::vector<std::string> Blendtextures);
 
 			void CreateEditableColorMap(const Ogre::Terrain* ogreTerrain);
+			
 		//[-------------------------------------------------------]
 		//[ Private methods                                       ]
 		//[-------------------------------------------------------]
 		private:
 			void createMaterial(const Ogre::String& matName, const Ogre::Terrain* ogreTerrain);
 			void CreateOgreMaterial(const Ogre::Terrain* Terrain);
+
+			
 
 		//[-------------------------------------------------------]
 		//[ Private data                                          ]
@@ -111,6 +114,7 @@ namespace kc_terrain
 		*/
 		virtual ~TerrainMaterialGenerator();
 		void RefreshMaterial( const Ogre::Terrain* ogreTerrain);
+		void ChangeColorMapToSmallerMap(Ogre::Terrain* Terrain, int x, int y, int parts_per_line);
 		void UpdateColorMap(const Ogre::Terrain* ogreTerrain);
 	//[-------------------------------------------------------]
 	//[ Private methods                                       ]

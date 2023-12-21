@@ -98,6 +98,7 @@
 #include <list>
 #include <algorithm>
 #include <qsf/plugin/PluginSystem.h>
+#include <QtGui\qdesktopservices.h>
 
 using namespace std;
 
@@ -175,6 +176,7 @@ namespace user
 				connect(mUiImageDecompiler->searchbutton, SIGNAL(clicked(bool)), this, SLOT(OnPushLoadMaterial_or_texture(bool)));
 				connect(mUiImageDecompiler->decompilebutton, SIGNAL(clicked(bool)), this, SLOT(onPushDecompileButton(bool)));
 				connect(mUiImageDecompiler->SetSaveLocationButton, SIGNAL(clicked(bool)), this, SLOT(onSetSaveDirectory(bool)));
+				connect(mUiImageDecompiler->openloc, SIGNAL(clicked(bool)), this, SLOT(onopenloc(bool)));
 				InitSavePath();
 			}
 			else if (!visible && nullptr == mUiImageDecompiler)
@@ -321,6 +323,7 @@ namespace user
 
 		bool ImageDecompiler::DecompileImage(std::string TextureName,std::string MaterialName)
 		{
+			//Magick::InitializeMagick()
 			QSF_LOG_PRINTS(INFO, "DecompileImage " << TextureName)
 				//a what kind is it?
 				int textureType = 0;
@@ -338,17 +341,22 @@ namespace user
 					return false;
 			}
 			//b is size 2^n?
-			
+			//image_magic
+			try
+			{
 				auto Filepath = qsf::AssetProxy(TextureName).getAbsoluteCachedAssetDataFilename();
 				if (textureType == 1)
 				{
-					//image_magic
+
+					
 					Magick::Image image(Filepath);
 					int w = (int)image.columns();
 					int h = (int)image.rows();
 					if (w <= 0 || h <= 0)
 					{
 						QSF_LOG_PRINTS(INFO, "broken image (size detection failed)" << Filepath)
+						QSF_LOG_PRINTS(INFO,"width " << w << " height " << h << " channels "<< image.channels())
+						return false;
 					}
 					if (image.channels() != 4 && image.channels() != 3)
 					{
@@ -389,13 +397,14 @@ namespace user
 
 						}
 					}
-					//r
-					ColorMap.save(GetSavePath() + MaterialName + "_c.tif");
-					if(channels == 4)
-					AlphaMap.save(GetSavePath()  + MaterialName + "_a.tif");
-					QSF_LOG_PRINTS(INFO, "saved color and alpha map map")
-						delete[] bufferColor;
-					delete[] bufferAlpha;
+
+						ColorMap.save(GetSavePath() + MaterialName + "_c.tif");
+						if (channels == 4)
+							AlphaMap.save(GetSavePath() + MaterialName + "_a.tif");
+						QSF_LOG_PRINTS(INFO, "saved color and alpha map map")
+							delete[] bufferColor;
+						delete[] bufferAlpha;
+
 				}
 			else if(textureType == 2)
 				{
@@ -449,10 +458,11 @@ namespace user
 						GlossMapp.setColourAt(OgreValGloss, column, row, 0);
 					}
 				}
-				//r
-				NormalMap.save(GetSavePath()  + MaterialName + "_n.tif");
-				GlossMapp.save(GetSavePath()  + MaterialName + "_g.tif");
-				SpecMap.save(GetSavePath()  + MaterialName+"_s.tif");
+
+					NormalMap.save(GetSavePath()  + MaterialName + "_n.tif");
+					GlossMapp.save(GetSavePath()  + MaterialName + "_g.tif");
+					SpecMap.save(GetSavePath()  + MaterialName+"_s.tif");
+
 				QSF_LOG_PRINTS(INFO,"saved normal, gloss and spec map")
 					delete[] buffer;
 				delete[] bufferSpec;
@@ -542,9 +552,10 @@ namespace user
 				}
 
 				//r
-				Tint.save(GetSavePath()  + MaterialName + "_t.tif");
-				Smut.save(GetSavePath() + MaterialName + "_smut.tif");
-				HeightMap.save(GetSavePath()  + MaterialName + "_h.tif");
+					Tint.save(GetSavePath()  + MaterialName + "_t.tif");
+					Smut.save(GetSavePath() + MaterialName + "_smut.tif");
+					HeightMap.save(GetSavePath()  + MaterialName + "_h.tif");
+
 				QSF_LOG_PRINTS(INFO, "saved tint,gloss and smut map")
 					delete[] Tintbuffer;
 				delete[] Smutbuffer;
@@ -588,9 +599,16 @@ namespace user
 					}
 				}
 				//r
-				EmissiveMap.save(GetSavePath() + MaterialName + "_e.tif");
+
+					EmissiveMap.save(GetSavePath() + MaterialName + "_e.tif");
+				
 				QSF_LOG_PRINTS(INFO, "saved emissive Map")
 					delete[] EmissiveBufer;
+					}
+			}
+			catch (const std::exception& e)
+			{
+				QSF_LOG_PRINTS(INFO, e.what())
 			}
 			return true;
 
@@ -616,6 +634,11 @@ namespace user
 
 			ofs.close();
 
+		}
+
+		void ImageDecompiler::onopenloc(const bool pressed)
+		{
+			QDesktopServices::openUrl(QUrl::fromLocalFile(GetSavePath().c_str()));
 		}
 
 

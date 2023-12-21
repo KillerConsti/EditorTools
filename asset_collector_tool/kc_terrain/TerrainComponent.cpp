@@ -323,6 +323,20 @@ namespace kc_terrain
 		mTerrainContext->GetMaterialGenerator()->UpdateColorMap(mOgreTerrainGroup->getTerrain(x, y));
 	}
 
+	void TerrainComponent::UseMiniColorMaps(int partsperline)
+	{
+		Ogre::TerrainGroup::TerrainIterator ogreTerrainIterator = mOgreTerrainGroup->getTerrainIterator();
+		while (ogreTerrainIterator.hasMoreElements())
+		{
+			auto * ogreTerrainit = ogreTerrainIterator.getNext();
+			Ogre::Terrain* ogreTerrain = ogreTerrainit->instance;
+			if (nullptr != ogreTerrain)
+			{
+				mTerrainContext->GetMaterialGenerator()->ChangeColorMapToSmallerMap(ogreTerrain, ogreTerrainit->x, ogreTerrainit->y,partsperline);
+			}
+		}
+	}
+
 	void TerrainComponent::RefreshMaterial(Ogre::Terrain * Ot)
 	{
 		mTerrainContext->GetMaterialGenerator()->RefreshMaterial(Ot);

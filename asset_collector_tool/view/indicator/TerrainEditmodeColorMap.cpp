@@ -9,31 +9,18 @@
 #include <asset_collector_tool\qsf_editor\tools\TerrainEditColorMapToolbox.h>
 #include "ui_TerrainEditmodeColorMap.h" // Automatically created by Qt's uic (output directory is "tmp\qt\uic\qsf_editor" within the hand configured Visual Studio files, another directory when using CMake)
 
-#include <qsf_editor/operation/utility/RebuildGuiOperation.h>
-#include <qsf_editor/application/manager/CameraManager.h>
 #include <qsf_editor/EditorHelper.h>
-
-#include <qsf_editor_base/operation/entity/CreateEntityOperation.h>
-#include <qsf_editor_base/operation/entity/DestroyEntityOperation.h>
-#include <qsf_editor_base/operation/component/CreateComponentOperation.h>
-#include <qsf_editor_base/operation/component/DestroyComponentOperation.h>
-#include <qsf_editor_base/operation/component/SetComponentPropertyOperation.h>
 
 #include <qsf/map/Map.h>
 #include <qsf/map/Entity.h>
-#include <qsf/selection/EntitySelectionManager.h>
 #include <qsf/QsfHelper.h>
 #include <qsf\component\base\MetadataComponent.h>
 #include <em5\plugin\Jobs.h>
 #include <qsf/debug/request/CircleDebugDrawRequest.h>
 #include <qsf/math/CoordinateSystem.h>
-#include <qsf/debug/DebugDrawLifetimeData.h>
 #include <qsf/input/InputSystem.h>
 #include <qsf/input/device/MouseDevice.h>
 #include <qsf/map/query/RayMapQuery.h>
-#include <qsf/map/query/GroundMapQuery.h>
-#include <em5/application/Application.h>
-#include "em5/game/groundmap/GroundMaps.h"
 #include "qsf/application/WindowApplication.h"
 #include "qsf/window/WindowSystem.h"
 #include <qsf/window/Window.h>
@@ -54,21 +41,10 @@
 #include <qsf/map/EntityHelper.h>
 #include <qsf/selection/SelectionManager.h>
 #include <qsf_editor/application/Application.h>
-#include <qsf_editor/selection/entity/EntitySelectionManager.h>
 
 
 #include <qsf_editor_base/user/User.h>
-#include <qsf_editor_base/operation/CompoundOperation.h>
-#include <qsf_editor_base/operation/entity/CreateEntityOperation.h>
-#include <qsf_editor_base/operation/entity/DestroyEntityOperation.h>
-#include <qsf_editor_base/operation/layer/CreateLayerOperation.h>
-#include <qsf_editor_base/operation/layer/SetLayerPropertyOperation.h>
-#include <qsf_editor_base/operation/data/BackupPrototypeOperationData.h>
-#include <qsf_editor_base/operation/data/BackupComponentOperationData.h>
-#include <qsf_editor_base/operation/component/CreateComponentOperation.h>
-#include <qsf_editor_base/operation/component/DestroyComponentOperation.h>
-#include <qsf_editor_base/operation/component/SetComponentPropertyOperation.h>
-#include <qsf_editor/operation/entity/EntityOperationHelper.h>
+
 
 #include <qsf/prototype/PrototypeSystem.h>
 #include <qsf/prototype/PrototypeManager.h>
@@ -101,8 +77,20 @@
 #include <qsf/renderer/material/MaterialSystem.h>
 
 #include <qsf/debug/DebugDrawManager.h>
-
+#include <qsf/plugin/PluginSystem.h>
+#include <qsf\plugin\Plugin.h>
 #include <chrono>
+#include <qsf_editor/asset/AssetEditHelper.h>
+#include <qsf/asset/project/AssetPackage.h>
+#include <qsf_editor\application\Application.h>
+#include <qsf_editor/asset/import/AssetImportManager.h>
+#include <qsf/asset/project/Project.h>
+#include <qsf_editor/asset/import/AssetPackageImportHelper.h>
+#include <qsf/asset/project/Project.h>
+#include <em5\EM5Helper.h>
+#include <em5/modding/ModSystem.h>
+#include <qsf/plugin/QsfAssetTypes.h>
+#include <qsf_editor_base/asset/compiler/CopyAssetCompiler.h>
 using namespace std::chrono;
 //[-------------------------------------------------------]
 //[ Namespace                                             ]
@@ -754,6 +742,7 @@ namespace user
 			QSF_LOG_PRINTS(INFO,"buffer image is a nullptr")
 			return false;
 		}
+		SplitMapInSmallMaps();
 		return true;
 	}
 
@@ -763,6 +752,168 @@ namespace user
 		PaintJobProxy.unregister();
 		mDebugDrawProxy.unregister();
 		QSF_LOG_PRINTS(INFO, "Shutdown")
+	}
+
+	bool TerrainEditmodeColorMap::SplitMapInSmallMaps()
+	{
+		qsf::AssetPackage* AP;
+		auto mAssetEditHelper = std::shared_ptr<qsf::editor::AssetEditHelper>(new qsf::editor::AssetEditHelper());
+		for (auto a : EM5_MOD.getMods())
+		{
+			if(a.second->getName() == "asset_collector_tool_for_editor")
+			{
+				AP = a.second->getProject().getAssetPackageByName("kc_terrrain_working_dir");
+			}
+		}
+		if (AP == nullptr)
+		{
+			QSF_LOG_PRINTS(INFO, "cant find asset_collector_tool_for_editor with AP: kc_terrrain_working_dir")
+			return false;
+		}
+		auto AIH = new  qsf::editor::AssetPackageImportHelper(*AP);
+		//clear old small images
+		m_SmallImages.clear();
+		//get color map
+		if (TerrainMaster->GetColorMap().getAsset() == nullptr)
+		{
+			QSF_LOG_PRINTS(INFO,"no colormap loaded - set it up it the kc_terrain::TerrainComponent")
+			return false;
+		}
+		//get save path
+		std::string path ="";
+		for (auto a : QSF_PLUGIN.getPlugins())
+		{
+			if (a->getFilename().find("asset_collector_tool.dll") != std::string::npos)
+			{
+				
+				//it was 24 but we  want to remove x64\asset_collector_tool.dll from path
+				path = a->getFilename();
+				path.erase(path.end() - 28, path.end());
+
+
+			}
+		}
+		
+
+		if (path == "")
+		return false;
+		path += "kc_terrrain_working_dir\\colormaptextures\\";
+
+		if(image == nullptr)
+		return false;
+		//now split into images
+		std::string widthandheight = boost::lexical_cast<std::string>(partsize) + "x" + boost::lexical_cast<std::string>(partsize);
+		for (size_t x = 0; x < mParts; x++)
+		{
+			for (size_t y = 0; y < mParts; y++)
+			{
+				//QSF_LOG_PRINTS(INFO,"write map "<<x << " "<< y)
+				Magick::Image* TerrainImg =  new Magick::Image();
+				TerrainImg->size(widthandheight);
+				TerrainImg->magick("DDS");
+				TerrainImg->type(Magick::ImageType::TrueColorAlphaType);
+				int xOffset = x*partsize;
+				int yOffset = y * partsize;
+				TerrainImg->copyPixels(*image,Magick::Geometry(partsize, partsize,xOffset,yOffset),Magick::Offset(0,0));
+				TerrainImg->syncPixels();
+				std::string LocalAssetName = "asset_collector_tool_for_editor/texture/colormaptextures/terrainchunk_" + boost::lexical_cast<std::string>(x) + "_" + boost::lexical_cast<std::string>(y) + "_tecm";
+
+					QSF_LOG_PRINTS(INFO, path << "terrainchunk_" << boost::lexical_cast<std::string>(x) << "_" << boost::lexical_cast<std::string>(y) << "_tecm")
+					try
+				{
+					TerrainImg->write(path + "terrainchunk_" + boost::lexical_cast<std::string>(x) + "_" + boost::lexical_cast<std::string>(y) + "_tecm.dds");
+				}
+				catch (const std::exception& e)
+				{
+					QSF_LOG_PRINTS(INFO,e.what())
+					return false;
+				}
+				m_SmallImages.push_back(TerrainImg);
+				//add them to explorer
+
+				auto Project = QSF_EDITOR_APPLICATION.getAssetImportManager().getDefaultDestinationAssetPackageProject();
+					//672362
+				if (qsf::AssetProxy(LocalAssetName).getAsset() == nullptr)
+				{
+
+					//QSF_LOG_PRINTS(INFO, "asset not found " << LocalAssetName)
+					try
+					{
+						//QSF_ASSERT(nullptr == mAssetEditHelper, "KC copy asset tool: There's already an asset edit helper instance, this can't be", QSF_LOG_PRINTS(INFO,"Asset_edit_helper_is taken"));
+						auto Asset = mAssetEditHelper->addAsset("kc_terrrain_working_dir", qsf::QsfAssetTypes::TEXTURE, "colormaptextures", "terrainchunk_" + boost::lexical_cast<std::string>(x) + "_" + boost::lexical_cast<std::string>(y) + "_tecm");
+						// Tell asset edit helper that the source asset has changes
+						//qsf::editor::AssetPackageImportHelper(*AP).importLocalCachedAsset(*Asset, path+"texture/colormaptextures/terrainchunk_" + boost::lexical_cast<std::string>(x) + "_" + boost::lexical_cast<std::string>(y) + "_tecm.dds");
+						//qsf::editor::AssetPackageImportHelper(*AP).
+						//assetEditHelper.setAssetUploadData(Asset->getGlobalAssetId(), true, true);
+						//QSF_LOG_PRINTS(INFO,"cached asset is a nullptr")
+						//mAssetEditHelper->setAssetDatasource(Asset->getGlobalAssetId(), "$import_ordner\\terrainchunk_" + boost::lexical_cast<std::string>(x) + "_" + boost::lexical_cast<std::string>(y) + "_tecm.dds");
+						//AIH->i
+						
+						if (Asset == nullptr)
+							QSF_LOG_PRINTS(INFO, "error occured " << LocalAssetName)
+						else
+						{
+							//qsf::editor::base::CopyAssetCompiler CopyAssetCompiler;
+							//qsf::editor::base::CopyAssetCompilerConfig& config = CopyAssetCompiler.getConfig();
+							//config.fileExtension = ".dds";
+							auto CachedAsset = mAssetEditHelper->getCachedAsset(Asset->getGlobalAssetId());
+							if(CachedAsset == nullptr)
+							CachedAsset = &qsf::CachedAsset(Asset->getGlobalAssetId());
+							if (CachedAsset == nullptr)
+							{
+								QSF_LOG_PRINTS(INFO,"still a nullptr")
+							}
+							CachedAsset->setType("dds");
+							//CachedAsset->getCachedAssetDataFilename()
+							CachedAsset->setHash(qsf::AssetProxy(Asset->getGlobalAssetId()).getAbsoluteCachedAssetDataFilename());
+							QSF_LOG_PRINTS(INFO, qsf::AssetProxy(Asset->getGlobalAssetId()).getAbsoluteCachedAssetDataFilename())
+							//mAssetEditHelper->getCachedAsset(Asset->getGlobalAssetId)->setDynamicPropertyValueString("AverageImageColor","dds");
+							//if(CopyAssetCompiler.compile(path + "terrainchunk_" + boost::lexical_cast<std::string>(x) + "_" + boost::lexical_cast<std::string>(y) + "_tecm.dds", path + "terrainchunk_" + boost::lexical_cast<std::string>(x) + "_" + boost::lexical_cast<std::string>(y) + "_coptecm.dds", *mAssetEditHelper->getCachedAsset(Asset->getGlobalAssetId())))
+							//QSF_LOG_PRINTS(INFO,"Copy was not succesfull")
+							if(mAssetEditHelper->setAssetUploadData(Asset->getGlobalAssetId(), true, true))
+								QSF_LOG_PRINTS(INFO, "Caching asset was not succesfull")
+						}
+					}
+					catch (const std::exception& e)
+					{
+					 QSF_LOG_PRINTS(INFO,e.what())
+					}
+
+				}
+				else //tell them that asset was changed :)
+				{
+
+					QSF_LOG_PRINTS(INFO,"for some reasons it exists")
+					std::string TargetAssetName = qsf::AssetProxy(LocalAssetName).getAssetPackage()->getName();
+					mAssetEditHelper->tryEditAsset(qsf::AssetProxy(LocalAssetName).getGlobalAssetId(), TargetAssetName);
+					auto CachedAsset = mAssetEditHelper->getCachedAsset(qsf::AssetProxy(LocalAssetName).getAsset()->getGlobalAssetId());
+					if (CachedAsset == nullptr)
+						QSF_LOG_PRINTS(INFO, "cached asset is a nullptr")
+						else
+						QSF_LOG_PRINTS(INFO, "cached asset isnot null?")
+					mAssetEditHelper->setAssetUploadData(qsf::AssetProxy(LocalAssetName).getAsset()->getGlobalAssetId(), true, true);
+					
+				}
+
+			}
+		}
+		mAssetEditHelper->submit();
+		return true;
+
+	}
+
+	void TerrainEditmodeColorMap::ChangeMaterialToUseSmallMaps(int x, int y)
+	{
+		TerrainMaster->UseMiniColorMaps(mParts);
+	}
+
+	Magick::Image * TerrainEditmodeColorMap::GetSmallImageByTerrainId(int x, int y)
+	{
+		int index = y * mParts + x;
+		if(m_SmallImages.size() <= index)
+		return nullptr;
+		return m_SmallImages.at(index);
+		
 	}
 
 

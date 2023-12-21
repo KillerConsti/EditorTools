@@ -406,14 +406,30 @@ namespace user
 				IOL.syncPixels();
 				QSF_LOG_PRINTS(INFO,"crop left "<< CropLeft << " crop right "<< CropRight << " crop top "<< CropTop << " crop bottom "<< CropBottom)
 				IOL.crop(Geometry(width- CropLeft -CropRight,height-CropTop-CropBottom,CropLeft,CropTop));
+				try
+				{
+					IOL.write(Path.c_str());
+				}
+				catch (const std::exception& e)
+				{
+					QSF_LOG_PRINTS(INFO,e.what())
+					return;
+				}
 				
-				IOL.write(Path.c_str());
 				auto newwidth = width - CropLeft - CropRight;
 				auto newheight = height - CropTop - CropBottom;
 				//our target is width of 103 or hight of 60
 				newheight = newheight *(float)( 103.f/(float)newwidth);
 				IOL.scale(Geometry(newwidth,newheight,0,0));
-				IOL.write(Path_Mini);
+				try
+				{
+					IOL.write(Path_Mini);
+				}
+				catch (const std::exception& e)
+				{
+					QSF_LOG_PRINTS(INFO, e.what())
+						return;
+				}
 				//ColorMap.save(Path.c_str());
 				auto pm = QPixmap(Path.c_str());
 				mUiOrderInfoPictureCreator->Materialinfos->setPixmap(pm);
@@ -614,13 +630,29 @@ namespace user
 				QSF_LOG_PRINTS(INFO, "crop left " << CropLeft << " crop right " << CropRight << " crop top " << CropTop << " crop bottom " << CropBottom)
 					IOL.crop(Geometry(width - CropLeft - CropRight, height - CropTop - CropBottom, CropLeft, CropTop));
 
-				IOL.write(Path.c_str());
+				try
+				{
+					IOL.write(Path.c_str());
+				}
+				catch (const std::exception& e)
+				{
+					QSF_LOG_PRINTS(INFO, e.what())
+						return;
+				}
 				auto newwidth = width - CropLeft - CropRight;
 				auto newheight = height - CropTop - CropBottom;
 				//our target is width of 103 or hight of 60
 				newheight = newheight *(float)(103.f / (float)newwidth);
 				IOL.scale(Geometry(newwidth, newheight, 0, 0));
-				IOL.write(Path_Mini);
+				try
+				{
+					IOL.write(Path_Mini.c_str());
+				}
+				catch (const std::exception& e)
+				{
+					QSF_LOG_PRINTS(INFO, e.what())
+						return;
+				}
 				//mUiOrderInfoPictureCreator->Materialinfos->setScaledContents(true);
 				//we are in a for loop
 				auto pm = QPixmap(Path.c_str());

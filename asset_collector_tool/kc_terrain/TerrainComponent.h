@@ -372,6 +372,7 @@ namespace kc_terrain
 
 		
 		void ReloadSubTerrainMaterials(long x, long y);
+		void UseMiniColorMaps(int parts);
 		void RefreshMaterial(Ogre::Terrain* Ot);
 		void SaveTerrain();
 	//[-------------------------------------------------------]
