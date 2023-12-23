@@ -372,7 +372,8 @@ namespace kc_terrain
 
 		
 		void ReloadSubTerrainMaterials(long x, long y);
-		void UseMiniColorMaps(int parts);
+		void ReloadSmallTerrainMaterial(long x, long y,qsf::GlobalAssetId MaterialId);
+		void UseMiniColorMaps(int parts,int x,int y, std::string LocalAssetName);
 		void RefreshMaterial(Ogre::Terrain* Ot);
 		void SaveTerrain();
 	//[-------------------------------------------------------]

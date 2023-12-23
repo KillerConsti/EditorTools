@@ -58,6 +58,9 @@
 #include <qsf/renderer/component/CameraComponent.h>
 #include <qsf\platform\PlatformSystem.h>
 #include <QtWidgets\qmessagebox.h>
+#include <asset_collector_tool\extern\include\Magick++.h>
+#include <fstream>
+#include <filesystem>
 //[-------------------------------------------------------]
 //[ Namespace                                             ]
 //[-------------------------------------------------------]
@@ -115,6 +118,13 @@ namespace user
 
 		bool GUIManager::ModifyMenuBar()
 		{
+			//init Magick++ lib
+			QSF_LOG_PRINTS(INFO,"init magick start")
+			auto path = std::experimental::filesystem::current_path();
+			std::string path_string{ path.u8string() };
+			Magick::InitializeMagick(path_string.c_str());
+			QSF_LOG_PRINTS(INFO, "init magick end")
+			//Magick::InitializeMagick((char *)NULL);
 			if (QSF_EDITOR_APPLICATION.getMainWindow() == nullptr)
 				return false;
 			// Nothing to do in here

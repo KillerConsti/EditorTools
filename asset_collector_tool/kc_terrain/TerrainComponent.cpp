@@ -301,8 +301,8 @@ namespace kc_terrain
 	void TerrainComponent::SetNewColorMap(qsf::AssetProxy NewAssetId)
 	{
 		mColorMap = NewAssetId;
-		if(mInitDone)
-		Relead();
+		if (mInitDone)
+			Relead();
 		return;
 	}
 
@@ -323,18 +323,18 @@ namespace kc_terrain
 		mTerrainContext->GetMaterialGenerator()->UpdateColorMap(mOgreTerrainGroup->getTerrain(x, y));
 	}
 
-	void TerrainComponent::UseMiniColorMaps(int partsperline)
+	void TerrainComponent::ReloadSmallTerrainMaterial(long x, long y, qsf::GlobalAssetId MaterialId)
 	{
-		Ogre::TerrainGroup::TerrainIterator ogreTerrainIterator = mOgreTerrainGroup->getTerrainIterator();
-		while (ogreTerrainIterator.hasMoreElements())
-		{
-			auto * ogreTerrainit = ogreTerrainIterator.getNext();
-			Ogre::Terrain* ogreTerrain = ogreTerrainit->instance;
-			if (nullptr != ogreTerrain)
-			{
-				mTerrainContext->GetMaterialGenerator()->ChangeColorMapToSmallerMap(ogreTerrain, ogreTerrainit->x, ogreTerrainit->y,partsperline);
-			}
-		}
+		mTerrainContext->GetMaterialGenerator()->UpdateSmallColorMap(mOgreTerrainGroup->getTerrain(x, y), MaterialId);
+	}
+
+
+	void TerrainComponent::UseMiniColorMaps(int partsperline, int x, int y, std::string LocalAssetName)
+	{
+
+		mTerrainContext->GetMaterialGenerator()->ChangeColorMapToSmallerMap(mOgreTerrainGroup->getTerrain(x,y),LocalAssetName);
+		//QSF_LOG_PRINTS(INFO, " x "<< x << " y "<< y <<" "<<LocalAssetName)
+
 	}
 
 	void TerrainComponent::RefreshMaterial(Ogre::Terrain * Ot)
@@ -927,7 +927,7 @@ namespace kc_terrain
 			std::vector<std::string> Layers;
 			for (size_t t = 0; t < a->instance->getLayerCount(); t++)
 			{
-				Layers.push_back(a->instance->getLayerTextureName((uint8)t,0));
+				Layers.push_back(a->instance->getLayerTextureName((uint8)t, 0));
 				BlendDatafound = true;
 			}
 			ReadBlendMaps.push_back(Layers);
@@ -966,12 +966,12 @@ namespace kc_terrain
 					QSF_LOG_PRINTS(INFO, "colormap data " << mColorMap.getAsset()->getGlobalAssetId())
 				}
 			defineTerrain();
-				//ogreTerrain->getBlendTextureCount()
-				mTerrainContext->addContextReference(ColorMap);
+			//ogreTerrain->getBlendTextureCount()
+			mTerrainContext->addContextReference(ColorMap);
 			// Request OGRE terrain globals instance
 
 
-				mOgreTerrainGlobalOptions = mTerrainContext->getOgreTerrainGlobalOptions();
+			mOgreTerrainGlobalOptions = mTerrainContext->getOgreTerrainGlobalOptions();
 
 
 
@@ -986,7 +986,7 @@ namespace kc_terrain
 				mOgreTerrainGlobalOptions->setLayerBlendMapSize(mBlendMapSize);
 			}
 
-			
+
 
 
 
@@ -1010,62 +1010,62 @@ namespace kc_terrain
 
 
 			// We want to listen on component property changes inside the core entity: Get "qsf::BoostSignalComponent" instance or create it in case it does not exist, yet
-			if(ReadBlendMaps.empty() && ReadBlendMaps.at(0).empty())
+			if (ReadBlendMaps.empty() && ReadBlendMaps.at(0).empty())
 			{
-			//store layer-texture data :)
-			QSF_LOG_PRINTS(INFO,"a1")
-			Ogre::StringVector Textures;
-			Ogre::StringVector Textures2;
-			Ogre::StringVector Textures3;
-			Ogre::StringVector Textures4;
-			Ogre::StringVector Textures5;
-			/*
-					Textures.push_back("em5/material/terrain_layer/terrain_nature_grass01");
-		Textures.push_back("em5/material/terrain_layer/terrain_urban_medieval_cobbles");
-		Textures.push_back("em5/material/terrain_layer/terrain_nature_dirt01_fine");
-		Textures.push_back("em5/material/terrain_layer/terrain_nature_sand01");
-		Textures.push_back("em5/material/terrain_layer/terrain_urban_herringbone01");
-		Textures.push_back("em5/material/terrain_layer/terrain_urban_herringbone01");
-		Textures.push_back("em5/material/terrain_layer/terrain_urban_herringbone01");
-		Textures.push_back("em5/material/terrain_layer/terrain_urban_herringbone01");
-		Textures.push_back("em5/material/terrain_layer/terrain_urban_herringbone01");
-		Textures.push_back("em5/material/terrain_layer/terrain_urban_herringbone01");
-			*/
-			Textures.push_back("em5/material/terrain_layer/terrain_nature_grass01");
-			Textures2.push_back("em5/material/terrain_layer/terrain_urban_medieval_cobbles");
+				//store layer-texture data :)
+				QSF_LOG_PRINTS(INFO, "a1")
+					Ogre::StringVector Textures;
+				Ogre::StringVector Textures2;
+				Ogre::StringVector Textures3;
+				Ogre::StringVector Textures4;
+				Ogre::StringVector Textures5;
+				/*
+						Textures.push_back("em5/material/terrain_layer/terrain_nature_grass01");
+			Textures.push_back("em5/material/terrain_layer/terrain_urban_medieval_cobbles");
+			Textures.push_back("em5/material/terrain_layer/terrain_nature_dirt01_fine");
+			Textures.push_back("em5/material/terrain_layer/terrain_nature_sand01");
+			Textures.push_back("em5/material/terrain_layer/terrain_urban_herringbone01");
+			Textures.push_back("em5/material/terrain_layer/terrain_urban_herringbone01");
+			Textures.push_back("em5/material/terrain_layer/terrain_urban_herringbone01");
+			Textures.push_back("em5/material/terrain_layer/terrain_urban_herringbone01");
+			Textures.push_back("em5/material/terrain_layer/terrain_urban_herringbone01");
+			Textures.push_back("em5/material/terrain_layer/terrain_urban_herringbone01");
+				*/
+				Textures.push_back("em5/material/terrain_layer/terrain_nature_grass01");
+				Textures2.push_back("em5/material/terrain_layer/terrain_urban_medieval_cobbles");
 
-			Textures3.push_back("em5/material/terrain_layer/terrain_nature_dirt01_fine");
-			Textures4.push_back("em5/material/terrain_layer/terrain_nature_sand01");
-			Textures5.push_back("em5/material/terrain_layer/terrain_urban_herringbone01");
-			QSF_LOG_PRINTS(INFO, "a2")
+				Textures3.push_back("em5/material/terrain_layer/terrain_nature_dirt01_fine");
+				Textures4.push_back("em5/material/terrain_layer/terrain_nature_sand01");
+				Textures5.push_back("em5/material/terrain_layer/terrain_urban_herringbone01");
+				QSF_LOG_PRINTS(INFO, "a2")
 
-			Ogre::TerrainGroup::TerrainIterator it = getOgreTerrainGroup2()->getTerrainIterator();
-			int id = 1; // because my ID start at 0
-			while (it.hasMoreElements()) // add the layer to all terrains in the terrainGroup
-			{
-				id++;
-				Ogre::TerrainGroup::TerrainSlot* a = it.getNext();
-				a->instance->addLayer(0.0f, &Textures);
-				a->instance->addLayer(0.0f, &Textures2);
-				a->instance->addLayer(0.0f, &Textures3);
-				a->instance->addLayer(0.0f, &Textures4);
+					Ogre::TerrainGroup::TerrainIterator it = getOgreTerrainGroup2()->getTerrainIterator();
+				int id = 1; // because my ID start at 0
+				while (it.hasMoreElements()) // add the layer to all terrains in the terrainGroup
+				{
+					id++;
+					Ogre::TerrainGroup::TerrainSlot* a = it.getNext();
+					a->instance->addLayer(0.0f, &Textures);
+					a->instance->addLayer(0.0f, &Textures2);
+					a->instance->addLayer(0.0f, &Textures3);
+					a->instance->addLayer(0.0f, &Textures4);
 
-				a->instance->addLayer(0.0f, &Textures5);
-				a->instance->addLayer(0.0f, &Textures5);
-				a->instance->addLayer(0.0f, &Textures5);
-				a->instance->addLayer(0.0f, &Textures5);
-				a->instance->addLayer(0.0f, &Textures5);
-				a->instance->addLayer(0.0f, &Textures5);
-				a->instance->addLayer(0.0f, &Textures5);
-				/*QSF_LOG_PRINTS(INFO,(int32)a->instance->getBlendTextureCount())
-					for (size_t t = 1; t <= a->instance->getBlendTextureCount(); t++)
-					{
-						QSF_LOG_PRINTS(INFO,a->instance->getBlendTextureName((uint8)t));
-					}*/
-				mTerrainContext->GetMaterialGenerator()->RefreshMaterial(mOgreTerrainGroup->getTerrain(a->x,a->y));
-				//mTerrainContext->GetMaterialGenerator()->_markChanged();
-				//a->instance->dirty();
-			}
+					a->instance->addLayer(0.0f, &Textures5);
+					a->instance->addLayer(0.0f, &Textures5);
+					a->instance->addLayer(0.0f, &Textures5);
+					a->instance->addLayer(0.0f, &Textures5);
+					a->instance->addLayer(0.0f, &Textures5);
+					a->instance->addLayer(0.0f, &Textures5);
+					a->instance->addLayer(0.0f, &Textures5);
+					/*QSF_LOG_PRINTS(INFO,(int32)a->instance->getBlendTextureCount())
+						for (size_t t = 1; t <= a->instance->getBlendTextureCount(); t++)
+						{
+							QSF_LOG_PRINTS(INFO,a->instance->getBlendTextureName((uint8)t));
+						}*/
+					mTerrainContext->GetMaterialGenerator()->RefreshMaterial(mOgreTerrainGroup->getTerrain(a->x, a->y));
+					//mTerrainContext->GetMaterialGenerator()->_markChanged();
+					//a->instance->dirty();
+				}
 			}
 			else
 			{
@@ -1073,9 +1073,9 @@ namespace kc_terrain
 				while (it3.hasMoreElements()) // add the layer to all terrains in the terrainGroup
 				{
 					Ogre::TerrainGroup::TerrainSlot* a = it3.getNext();
-					if(ReadBlendMaps.empty())
-					break;
-					for(size_t t1 = 0; t1 <ReadBlendMaps.at(0).size();t1++)
+					if (ReadBlendMaps.empty())
+						break;
+					for (size_t t1 = 0; t1 < ReadBlendMaps.at(0).size(); t1++)
 					{
 						Ogre::StringVector Textures;
 						Textures.push_back(ReadBlendMaps.at(0).at(t1).c_str());
@@ -1084,7 +1084,7 @@ namespace kc_terrain
 					ReadBlendMaps.erase(ReadBlendMaps.begin());
 					mTerrainContext->GetMaterialGenerator()->RefreshMaterial(a->instance);
 				}
-				
+
 			}
 
 			//mOgreTerrainGroup->update(false);

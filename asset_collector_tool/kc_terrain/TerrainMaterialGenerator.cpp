@@ -63,8 +63,10 @@ namespace
 			// TODO(co) Proper texture coordinate offset generation
 			const float globalTerrainWorldSize = terrainComponent.getTerrainWorldSize();
 			const int terrainChunksPerEdge = terrainComponent.getTerrainChunksPerEdge();
-			float xOffset = ogreTerrain.getPosition().x - ogreTerrain.getWorldSize() * 0.5f + globalTerrainWorldSize * 0.5f;
-			float yOffset = ogreTerrain.getPosition().z - ogreTerrain.getWorldSize() * 0.5f + globalTerrainWorldSize * 0.5f;
+			//(kc)no offset if entity is not in the middle
+			auto TPos = terrainComponent.getEntity().getComponent<qsf::TransformComponent>()->getPosition();
+			float xOffset = ogreTerrain.getPosition().x- TPos.x - ogreTerrain.getWorldSize() * 0.5f + globalTerrainWorldSize * 0.5f;
+			float yOffset = ogreTerrain.getPosition().z- TPos.z - ogreTerrain.getWorldSize() * 0.5f + globalTerrainWorldSize * 0.5f;
 			xOffset /= globalTerrainWorldSize;
 			yOffset /= globalTerrainWorldSize;
 			if (scale)
@@ -74,6 +76,21 @@ namespace
 			else
 			{
 				material.setPropertyById(materialPropertyId, qsf::MaterialPropertyValue::fromFloat4(xOffset, yOffset, 1.0f, 1.0f));
+			}
+		}
+
+		void setMapTransformMaterialPropertyNoOffset(qsf::Material& material, const kc_terrain::TerrainComponent& terrainComponent, const Ogre::Terrain& ogreTerrain, qsf::MaterialPropertyId materialPropertyId, bool scale)
+		{
+			// TODO(co) Proper texture coordinate offset generation
+			const float globalTerrainWorldSize = terrainComponent.getTerrainWorldSize();
+			const int terrainChunksPerEdge = terrainComponent.getTerrainChunksPerEdge();
+			if (scale)
+			{
+				material.setPropertyById(materialPropertyId, qsf::MaterialPropertyValue::fromFloat4(0, 0, 1.0f / terrainChunksPerEdge, 1.0f / terrainChunksPerEdge));
+			}
+			else
+			{
+				material.setPropertyById(materialPropertyId, qsf::MaterialPropertyValue::fromFloat4(0, 0, 1.0f, 1.0f));
 			}
 		}
 
@@ -365,6 +382,22 @@ namespace kc_terrain
 
 	}
 
+	void TerrainMaterialGenerator::UpdateSmallColorMap(const Ogre::Terrain * ogreTerrain, qsf::GlobalAssetId MaterialAssetId)
+	{
+		if (qsf::AssetProxy(MaterialAssetId).getGlobalAssetId() != qsf::getUninitialized<uint64>())
+		{
+			auto mAssetEditHelper = std::shared_ptr<qsf::editor::AssetEditHelper>(new qsf::editor::AssetEditHelper());
+			std::string TargetAssetName = qsf::AssetProxy(MaterialAssetId).getAssetPackage()->getName();
+			mAssetEditHelper->tryEditAsset(qsf::AssetProxy(MaterialAssetId).getGlobalAssetId(), TargetAssetName);
+			if (!mAssetEditHelper->setAssetUploadData(MaterialAssetId, true, true))
+			{
+				//QSF_LOG_PRINTS(INFO,"couldnt update colormap?")
+			}
+			mAssetEditHelper->submit();
+		}
+
+	}
+
 	void TerrainMaterialGenerator::Profile::CreateOgreMaterial(const Ogre::Terrain* Terrain)
 	{
 		return;
@@ -407,14 +440,25 @@ namespace kc_terrain
 		point->_loadImages(IPL);
 	}
 
-	void TerrainMaterialGenerator::ChangeColorMapToSmallerMap(Ogre::Terrain * Terrain, int x, int y, int parts_per_line)
+	void TerrainMaterialGenerator::ChangeColorMapToSmallerMap(Ogre::Terrain * Terrain,std::string LocalAssetName)
 	{
 		qsf::MaterialManager& materialManager = QSF_MATERIAL.getMaterialManager();
 		auto matName = Terrain->getMaterialName();
 		qsf::Material* terrainMaterial = materialManager.findElement(qsf::StringHash(matName));
 
-		//terrainMaterial->setPropertyById("GlobalColorMap", qsf::MaterialPropertyValue::fromResourceName(Terrain->getGlobalColourMap()->getName()));
-		QSF_LOG_PRINTS(INFO, Terrain->getGlobalColourMap()->getName())
+		
+		
+		//QSF_LOG_PRINTS(INFO,parts_per_line)
+			const kc_terrain::TerrainComponent* terrainComponent = qsf::ComponentMapQuery(QSF_MAINMAP).getFirstInstance<kc_terrain::TerrainComponent>();
+			::detail::setMapTransformMaterialPropertyNoOffset(*terrainMaterial, *terrainComponent, *Terrain, "GlobalColorMapTransform", false);
+
+
+		auto AssetId = qsf::AssetProxy(LocalAssetName).getGlobalAssetId();
+		if (AssetId == qsf::getUninitialized<uint64>())
+		{
+			AssetId = qsf::AssetProxy("qsf/texture/default/missing").getGlobalAssetId();
+		}
+		terrainMaterial->setPropertyById("GlobalColorMap", qsf::MaterialPropertyValue::fromGlobalAssetId(AssetId));
 	}
 	//[-------------------------------------------------------]
 	//[ Private methods                                       ]

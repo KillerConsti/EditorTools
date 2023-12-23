@@ -91,89 +91,12 @@
 #include <em5/modding/ModSystem.h>
 #include <qsf/plugin/QsfAssetTypes.h>
 #include <qsf_editor_base/asset/compiler/CopyAssetCompiler.h>
+#include <qsf/file/FileSystem.h>
+#include <experimental/filesystem> 
+#include <boost\filesystem.hpp>
 using namespace std::chrono;
-//[-------------------------------------------------------]
-//[ Namespace                                             ]
-//[-------------------------------------------------------]
-namespace detail
-{
 
 
-	//[-------------------------------------------------------]
-	//[ Global functions                                      ]
-	//[-------------------------------------------------------]
-	void setIdentityMapTransformMaterialProperty(qsf::Material& material, qsf::MaterialPropertyId materialPropertyId)
-	{
-		material.setPropertyById(materialPropertyId, qsf::MaterialPropertyValue::fromFloat4(0.0f, 0.0f, 1.0f, 1.0f));
-	}
-
-	void setMapTransformMaterialProperty(qsf::Material& material, const qsf::TerrainComponent& terrainComponent, const Ogre::Terrain& ogreTerrain, qsf::MaterialPropertyId materialPropertyId, bool scale)
-	{
-		// TODO(co) Proper texture coordinate offset generation
-		const float globalTerrainWorldSize = terrainComponent.getTerrainWorldSize();
-		const int terrainChunksPerEdge = terrainComponent.getTerrainChunksPerEdge();
-		float xOffset = ogreTerrain.getPosition().x - ogreTerrain.getWorldSize() * 0.5f + globalTerrainWorldSize * 0.5f;
-		float yOffset = ogreTerrain.getPosition().z - ogreTerrain.getWorldSize() * 0.5f + globalTerrainWorldSize * 0.5f;
-		xOffset /= globalTerrainWorldSize;
-		yOffset /= globalTerrainWorldSize;
-		if (scale)
-		{
-			material.setPropertyById(materialPropertyId, qsf::MaterialPropertyValue::fromFloat4(xOffset, yOffset, 1.0f / terrainChunksPerEdge, 1.0f / terrainChunksPerEdge));
-		}
-		else
-		{
-			material.setPropertyById(materialPropertyId, qsf::MaterialPropertyValue::fromFloat4(xOffset, yOffset, 1.0f, 1.0f));
-		}
-	}
-
-	void setLayerBlendMapComponentUvMultiplier(const Ogre::Terrain& ogreTerrain, uint32 layerIndex, const std::string& layerIndexAsString, qsf::Material& terrainMaterial)
-	{
-		// Gather data
-		const int   blendMapIndex = (layerIndex - 1) / 4;
-		const int   blendMapComponent = (layerIndex - 1) % 4;
-		const float uvMultiplier = ogreTerrain.getLayerUVMultiplier(layerIndex);
-
-		// Set terrain material property value
-		terrainMaterial.setPropertyById(qsf::StringHash("LayerBlendMapComponentUvMultiplier" + layerIndexAsString), qsf::MaterialPropertyValue::fromFloat3(static_cast<float>(blendMapIndex), static_cast<float>(blendMapComponent), uvMultiplier));
-	}
-
-	void setTerrainLayerMaterialProperties(const qsf::MaterialProperties& layerMaterialProperties, const std::string& layerIndexAsString, qsf::Material& terrainMaterial)
-	{
-		// Gather parameters for maximum height, blend falloff, visible threshold and parallax scale
-		float maximumHeight = 0.0f;
-		float blendFalloff = 0.1f;
-		float parallaxOffset = 0.5f;
-		float parallaxScale = 0.5f;
-		const qsf::MaterialPropertyValue* layerMaterialPropertyValue = layerMaterialProperties.getPropertyById("MaximalHeight");	// TODO(co) Sadly, "MaximalHeight" is out there used in the material assets. Should have been "MaximumHeight".
-		if (nullptr != layerMaterialPropertyValue)
-		{
-			maximumHeight = layerMaterialPropertyValue->getFloatValue();
-		}
-		layerMaterialPropertyValue = layerMaterialProperties.getPropertyById("BlendFalloff");
-		if (nullptr != layerMaterialPropertyValue)
-		{
-			blendFalloff = layerMaterialPropertyValue->getFloatValue();
-		}
-		layerMaterialPropertyValue = layerMaterialProperties.getPropertyById("ParallaxOffset");
-		if (nullptr != layerMaterialPropertyValue)
-		{
-			parallaxOffset = layerMaterialPropertyValue->getFloatValue();
-		}
-		layerMaterialPropertyValue = layerMaterialProperties.getPropertyById("ParallaxScale");
-		if (nullptr != layerMaterialPropertyValue)
-		{
-			parallaxScale = layerMaterialPropertyValue->getFloatValue();
-		}
-
-		// Set terrain material property value
-		terrainMaterial.setPropertyById(qsf::StringHash("LayerMaterialProperties" + layerIndexAsString), qsf::MaterialPropertyValue::fromFloat4(maximumHeight, blendFalloff, parallaxOffset, parallaxScale));
-	}
-
-
-	//[-------------------------------------------------------]
-	//[ Anonymous detail namespace                            ]
-	//[-------------------------------------------------------]
-} // detail
 namespace user
 {
 	namespace editor
@@ -419,13 +342,29 @@ namespace user
 				else
 					break;
 			}
+			auto OldColor = qsf::Color4();
 			glm::vec2 ImgPoint = point;
-			auto OldColor = GetOldColor(ImgPoint);
+			//is y inverted?
+			//this calcs newY = 16-1 -(0...15)
+			int inv_yTerrain = mParts - 1 - yTerrain;
+			if (mUseSplitMaps)
+			{
+				//is y inverted?
+				//this calcs newY = 16-1 -(0...15)
+				int inv_yTerrain = mParts -1 - yTerrain;
+				int y_inv_Remaining = partsize - 1 - yRemaining;
+				OldColor = GetOldColorFromSmallMaps(glm::vec2(xRemaining, y_inv_Remaining),xTerrain, inv_yTerrain);
+			}
+			else
+			{
+				OldColor = GetOldColor(ImgPoint);
+			}
+			
 			//QSF_LOG_PRINTS(INFO, "Old Color" << "Red" << (int)(OldColor.r * 256) << " green " << (int)(OldColor.g * 256) << " Blue " << (int)(OldColor.b * 256) << " Alpha " << (int)(OldColor.a))
 			//how to mix colors?
 			auto NewColorASRGBA = TerrainEditGUI->GetSelectedColor();
-			qsf::Color4 NewColor = qsf::Color4((float)NewColorASRGBA.red(), (float)NewColorASRGBA.blue(), (float)NewColorASRGBA.green(), (float)NewColorASRGBA.alpha());
-			//QSF_LOG_PRINTS(INFO, NewColor)
+			qsf::Color4 NewColor = qsf::Color4((float)NewColorASRGBA.red(), (float)NewColorASRGBA.green(), (float)NewColorASRGBA.blue(), (float)NewColorASRGBA.alpha());
+			//QSF_LOG_PRINTS(INFO, "Selected Color NewColor" << NewColor.r << " " << NewColor.g << " " << NewColor.b)
 			if(NewColor.a != 0)
 			{
 			NewColor = NewColor/256.f;
@@ -461,11 +400,28 @@ namespace user
 				
 				
 				*/
+				//QSF_LOG_PRINTS(INFO,"Mixed Color "<< OldColor.r << " "<< OldColor.g << " "<< OldColor.b)
 				PaintMap* PM = new PaintMap();
 				PM->Pixel = ImgPoint;
 				PM->NewColor = OldColor;
-				PaintedPixels.push_back(PM);
-				NeedUpdates.push_back(Terrains(xTerrain,yTerrain));
+				PM->xTerrain = xTerrain;
+				
+				//QSF_LOG_PRINTS(INFO,"RaisePoint")
+				if (mUseSplitMaps)
+				{
+					yRemaining = partsize -1-yRemaining;
+					PM->Pixel = glm::vec2(xRemaining, yRemaining);
+					PM->yTerrain = inv_yTerrain; //only used in small maps
+					PaintedPixels.push_back(PM);
+				}
+				else
+				{
+					PM->yTerrain = yTerrain; //only used in small maps
+					PaintedPixels.push_back(PM);
+					NeedUpdates.push_back(Terrains(xTerrain, yTerrain));
+
+				}
+				
 			//QSF_LOG_PRINTS(INFO,"Mixed Color" << "Red" << (int)(OldColor.r * 256) << " green " << (int)(OldColor.g * 256) << " Blue " << (int)(OldColor.b * 256) << " Alpha " << (int)(OldColor.a))
 			return true;
 
@@ -503,6 +459,45 @@ namespace user
 			return qsf::Color4();
 
 
+		}
+
+		qsf::Color4 TerrainEditmodeColorMap::GetOldColorFromSmallMaps(glm::vec2 & Mappoint, int x, int y)
+		{
+			qsf::Color4 Color = qsf::Color4();
+			auto IMG = GetSmallImageByTerrainId(x,y).first;
+			if (IMG== nullptr)
+			{
+				QSF_LOG_PRINTS(INFO,"image to write was not found")
+				return Color;
+			}
+			//QSF_LOG_PRINTS(INFO, GetSmallImageByTerrainId(x, y).second << " x " << x << " y " << y << " MP" << Mappoint)
+			//QSF_LOG_PRINTS(INFO,MapPoint)
+			int col = (int)IMG->columns();
+			int row = (int)IMG->rows();
+			int channels = (int)IMG->channels();
+			//editor img is flipped so we need to switch Mappoint.y
+			//Mappoint.y = row - (int)Mappoint.y;
+			MagickCore::Quantum *pixels = IMG->getPixels(0, 0, col, row);
+			if (channels == 3) //rgb
+			{
+				uint64 offset = (row* Mappoint.y + Mappoint.x) * channels; //4 is because we use 4 channels
+				float Red = (float)(*(pixels + offset) / 65535);
+				float Green = (float)(*(pixels + offset + 1) / 65535);
+				float Blue = (float)(*(pixels + offset + 2) / 65535);
+				//QSF_LOG_PRINTS(INFO,"Red"<< Red << " green "<< Green << " Blue "<< Blue)
+				return qsf::Color4(Red, Green, Blue, 1.f);
+			}
+			else if (channels == 4) //rgba
+			{
+				uint64 offset = (row* Mappoint.y + Mappoint.x) * channels; //4 is because we use 4 channels
+				float Red = (float)(*(pixels + offset) / 65535);
+				float Green = (float)(*(pixels + offset + 1) / 65535);
+				float Blue = (float)(*(pixels + offset + 2) / 65535);
+				float Alpha = (float)(*(pixels + offset + 3) / 65535);
+				//QSF_LOG_PRINTS(INFO, "Red" << (int)(Red*256) << " green " << (int)(Green*256) << " Blue " << (int)(Blue*256)<< " Alpha " << (int)(Alpha))
+				return qsf::Color4(Red, Green, Blue, Alpha);
+			}
+			return qsf::Color4();
 		}
 
 		
@@ -576,10 +571,26 @@ namespace user
 				mouseisvalid = false;
 		}
 
+		void TerrainEditmodeColorMap::SetUseSplitMaps(bool use)
+		{
+			if (TerrainMaster == nullptr) //only setable if not editing
+			{
+				mUseSplitMaps = use;
+			}
+		}
+
+		bool TerrainEditmodeColorMap::GetUseSplitMaps()
+		{
+			return mUseSplitMaps;
+		}
+
 		glm::vec2 TerrainEditmodeColorMap::ConvertWorldPointToRelativePoint(glm::vec2 WorldPoint)
 		{
 			glm::vec2 copy = WorldPoint;
-			copy = (WorldPoint + Offset) / TerrainMaster->getTerrainWorldSize();
+			qsf::TransformComponent* TC = TerrainMaster->getEntity().getComponent<qsf::TransformComponent>();
+			glm::vec3 OffsetPos = /*TC->getRotation()**/TC->getPosition();
+			copy = copy - glm::vec2(OffsetPos.x, OffsetPos.z);
+			copy = (copy + Offset) / TerrainMaster->getTerrainWorldSize();
 			copy.y = 1.f - copy.y; //we need to mirror Y
 			return copy;
 		}
@@ -588,6 +599,12 @@ namespace user
 
 		void TerrainEditmodeColorMap::UpdateTerrains()
 		{
+			if (mUseSplitMaps)
+			{
+			//Replace Func
+				UpdateTerrainsForSmallMaps();
+				return;
+			}
 			//draw img
 			auto ColorMapToRead = TerrainMaster->GetColorMap();
 			if (ColorMapToRead.getAsset() == nullptr)
@@ -662,6 +679,89 @@ namespace user
 			PaintedPixels.clear();
 		}
 
+		void TerrainEditmodeColorMap::UpdateTerrainsForSmallMaps()
+		{
+			NeedUpdates.clear();
+			auto ColorMapToRead = TerrainMaster->GetColorMap();
+			if (ColorMapToRead.getAsset() == nullptr)
+			{
+				QSF_LOG_PRINTS(INFO, "no color map is set in terrain component")
+					PaintJobProxy.unregister();
+				return;
+			}
+			if (image == nullptr)
+			{
+				QSF_LOG_PRINTS(INFO, "image is null")
+					PaintJobProxy.unregister();
+				return;
+			}
+			//QSF_LOG_PRINTS(INFO, "How many painted pixels " << PaintedPixels.size())
+			for (auto a : PaintedPixels)
+			{
+				//QSF_LOG_PRINTS(INFO,"Pixel " <<a->Pixel<< " Terrain x: " << a->xTerrain<< " y: " <<a->yTerrain)
+				auto IMG = GetSmallImageByTerrainId(a->xTerrain,a->yTerrain).first;
+				if (IMG == nullptr)
+				{
+					QSF_LOG_PRINTS(INFO,"TerrainEditmodeColorMap : Painted Pixels casted a not good terrain "<< a->xTerrain << " " << a->yTerrain)
+					continue;
+				}
+				
+				int col = (int)IMG->columns();
+				int row = (int)IMG->rows();
+				int channels = (int)IMG->channels();
+				//auto start = high_resolution_clock::now();
+				MagickCore::Quantum *pixels = IMG->getPixels(0, 0, col, row);
+				if (channels == 3) //rgb
+				{
+						uint64 offset = (row* a->Pixel.y + a->Pixel.x) * channels; //4 is because we use 4 channels
+						*(pixels + offset) = a->NewColor.r * 65535;
+						*(pixels + offset + 1) = a->NewColor.g * 65535;
+						*(pixels + offset + 2) = a->NewColor.b * 65535;
+				}
+				else if (channels == 4) //rgba
+				{
+						uint64 offset = (row* a->Pixel.y + a->Pixel.x) * channels; //4 is because we use 4 channels
+						*(pixels + offset) = a->NewColor.r * 65535 ;
+						*(pixels + offset + 1) = a->NewColor.g * 65535;
+						*(pixels + offset + 2) = a->NewColor.b * 65535;
+						*(pixels + offset + 3) = a->NewColor.a * 65535;
+				}
+				//IMG->syncPixels();
+				//qsf::AssetProxy()
+				NeedUpdates.push_back(Terrains(a->xTerrain,a->yTerrain));
+			}
+			
+			
+
+			std::sort(NeedUpdates.begin(), NeedUpdates.end());
+			//NeedUpdates.erase(std::unique(NeedUpdates.begin(), NeedUpdates.end()), [](Terrains const & l, Terrains const & r) {return l.x == r.x && l.y == r.y; }, NeedUpdates.end());
+
+			NeedUpdates.erase(
+				std::unique(
+					NeedUpdates.begin(),
+					NeedUpdates.end(),
+					[](Terrains const & l, Terrains const & r) {return l.x == r.x && l.y == r.y; }
+				),
+				NeedUpdates.end()
+			);
+			for (auto a : NeedUpdates)
+			{
+				auto IMG = GetSmallImageByTerrainId(a.x, a.y);
+				if (IMG.first == nullptr)
+				{
+					QSF_LOG_PRINTS(INFO, "TerrainEditmodeColorMap : Painted Pixels casted a not good terrain " << a.x << " " << a.y)
+						continue;
+				}
+				IMG.first->syncPixels();
+				std::string FullName = qsf::AssetProxy(IMG.second).getAbsoluteCachedAssetDataFilename();
+				IMG.first->write(FullName);
+				TerrainMaster->ReloadSmallTerrainMaterial(a.x,a.y, qsf::AssetProxy(IMG.second).getGlobalAssetId());
+			}
+
+			NeedUpdates.clear();
+			PaintedPixels.clear();
+		}
+
 
 
 
@@ -679,7 +779,7 @@ namespace user
 
 	bool TerrainEditmodeColorMap::onStartup(EditMode * previousEditMode)
 	{
-
+		
 		//prevent crashs if terrain is not there yet
 		if (qsf::ComponentMapQuery(QSF_MAINMAP).getFirstInstance<qsf::TerrainComponent>() == nullptr)
 			return false;
@@ -742,6 +842,7 @@ namespace user
 			QSF_LOG_PRINTS(INFO,"buffer image is a nullptr")
 			return false;
 		}
+		mUseSplitMaps = true; //TODO use a setter
 		SplitMapInSmallMaps();
 		return true;
 	}
@@ -797,11 +898,15 @@ namespace user
 
 		if (path == "")
 		return false;
+		std::string pathtoassethelper = path;
 		path += "kc_terrrain_working_dir\\colormaptextures\\";
-
+		Ogre::ResourceGroupManager::getSingleton().addResourceLocation(path, "FileSystem");
 		if(image == nullptr)
 		return false;
 		//now split into images
+		auto IAP = mAssetEditHelper->getIntermediateAssetPackage();
+		pathtoassethelper += IAP->getName();
+		//QSF_LOG_PRINTS(INFO, IAP->getName());
 		std::string widthandheight = boost::lexical_cast<std::string>(partsize) + "x" + boost::lexical_cast<std::string>(partsize);
 		for (size_t x = 0; x < mParts; x++)
 		{
@@ -816,9 +921,8 @@ namespace user
 				int yOffset = y * partsize;
 				TerrainImg->copyPixels(*image,Magick::Geometry(partsize, partsize,xOffset,yOffset),Magick::Offset(0,0));
 				TerrainImg->syncPixels();
-				std::string LocalAssetName = "asset_collector_tool_for_editor/texture/colormaptextures/terrainchunk_" + boost::lexical_cast<std::string>(x) + "_" + boost::lexical_cast<std::string>(y) + "_tecm";
 
-					QSF_LOG_PRINTS(INFO, path << "terrainchunk_" << boost::lexical_cast<std::string>(x) << "_" << boost::lexical_cast<std::string>(y) << "_tecm")
+					//QSF_LOG_PRINTS(INFO,"Path to write "<< path << "terrainchunk_" << boost::lexical_cast<std::string>(x) << "_" << boost::lexical_cast<std::string>(y) << "_tecm")
 					try
 				{
 					TerrainImg->write(path + "terrainchunk_" + boost::lexical_cast<std::string>(x) + "_" + boost::lexical_cast<std::string>(y) + "_tecm.dds");
@@ -828,34 +932,30 @@ namespace user
 					QSF_LOG_PRINTS(INFO,e.what())
 					return false;
 				}
-				m_SmallImages.push_back(TerrainImg);
+				std::string LocalAssetName = "asset_collector_tool_for_editor/texture/colormaptextures/terrainchunk_"+boost::lexical_cast<std::string>(x)+"_"+boost::lexical_cast<std::string>(y)+"_tecm";
+				m_SmallImages.push_back(std::pair<Magick::Image*,std::string>(TerrainImg, LocalAssetName));
 				//add them to explorer
-
-				auto Project = QSF_EDITOR_APPLICATION.getAssetImportManager().getDefaultDestinationAssetPackageProject();
-					//672362
+				/*auto Project = QSF_EDITOR_APPLICATION.getAssetImportManager().getDefaultDestinationAssetPackageProject();
+					//672362*/
 				if (qsf::AssetProxy(LocalAssetName).getAsset() == nullptr)
 				{
 
 					//QSF_LOG_PRINTS(INFO, "asset not found " << LocalAssetName)
 					try
 					{
-						//QSF_ASSERT(nullptr == mAssetEditHelper, "KC copy asset tool: There's already an asset edit helper instance, this can't be", QSF_LOG_PRINTS(INFO,"Asset_edit_helper_is taken"));
+						//a add asset
 						auto Asset = mAssetEditHelper->addAsset("kc_terrrain_working_dir", qsf::QsfAssetTypes::TEXTURE, "colormaptextures", "terrainchunk_" + boost::lexical_cast<std::string>(x) + "_" + boost::lexical_cast<std::string>(y) + "_tecm");
-						// Tell asset edit helper that the source asset has changes
-						//qsf::editor::AssetPackageImportHelper(*AP).importLocalCachedAsset(*Asset, path+"texture/colormaptextures/terrainchunk_" + boost::lexical_cast<std::string>(x) + "_" + boost::lexical_cast<std::string>(y) + "_tecm.dds");
-						//qsf::editor::AssetPackageImportHelper(*AP).
-						//assetEditHelper.setAssetUploadData(Asset->getGlobalAssetId(), true, true);
-						//QSF_LOG_PRINTS(INFO,"cached asset is a nullptr")
-						//mAssetEditHelper->setAssetDatasource(Asset->getGlobalAssetId(), "$import_ordner\\terrainchunk_" + boost::lexical_cast<std::string>(x) + "_" + boost::lexical_cast<std::string>(y) + "_tecm.dds");
-						//AIH->i
-						
+						//b create folder structure in assethelper (to read and write)
+						if (!boost::filesystem::exists((QSF_FILE.getBaseDirectory() + "/data/asset_collector_tool_for_editor/" + IAP->getName() + "/texture/colormaptextures")))
+						boost::filesystem::create_directories(QSF_FILE.getBaseDirectory() + "/data/asset_collector_tool_for_editor/" + IAP->getName() + "/texture/colormaptextures");
+						//c write to new folder -I think it will copy to our direction we wrote before
+						TerrainImg->write(pathtoassethelper+"/texture/colormaptextures/terrainchunk_" + boost::lexical_cast<std::string>(x) + "_" + boost::lexical_cast<std::string>(y) + "_tecm.dds");
+
+						//d learn our assets a few thing <-> this seems not needed
 						if (Asset == nullptr)
 							QSF_LOG_PRINTS(INFO, "error occured " << LocalAssetName)
 						else
 						{
-							//qsf::editor::base::CopyAssetCompiler CopyAssetCompiler;
-							//qsf::editor::base::CopyAssetCompilerConfig& config = CopyAssetCompiler.getConfig();
-							//config.fileExtension = ".dds";
 							auto CachedAsset = mAssetEditHelper->getCachedAsset(Asset->getGlobalAssetId());
 							if(CachedAsset == nullptr)
 							CachedAsset = &qsf::CachedAsset(Asset->getGlobalAssetId());
@@ -864,12 +964,8 @@ namespace user
 								QSF_LOG_PRINTS(INFO,"still a nullptr")
 							}
 							CachedAsset->setType("dds");
-							//CachedAsset->getCachedAssetDataFilename()
-							CachedAsset->setHash(qsf::AssetProxy(Asset->getGlobalAssetId()).getAbsoluteCachedAssetDataFilename());
-							QSF_LOG_PRINTS(INFO, qsf::AssetProxy(Asset->getGlobalAssetId()).getAbsoluteCachedAssetDataFilename())
-							//mAssetEditHelper->getCachedAsset(Asset->getGlobalAssetId)->setDynamicPropertyValueString("AverageImageColor","dds");
-							//if(CopyAssetCompiler.compile(path + "terrainchunk_" + boost::lexical_cast<std::string>(x) + "_" + boost::lexical_cast<std::string>(y) + "_tecm.dds", path + "terrainchunk_" + boost::lexical_cast<std::string>(x) + "_" + boost::lexical_cast<std::string>(y) + "_coptecm.dds", *mAssetEditHelper->getCachedAsset(Asset->getGlobalAssetId())))
-							//QSF_LOG_PRINTS(INFO,"Copy was not succesfull")
+							//QSF_LOG_PRINTS(INFO, qsf::AssetProxy(Asset->getGlobalAssetId()).getAbsoluteCachedAssetDataFilename())
+
 							if(mAssetEditHelper->setAssetUploadData(Asset->getGlobalAssetId(), true, true))
 								QSF_LOG_PRINTS(INFO, "Caching asset was not succesfull")
 						}
@@ -883,35 +979,45 @@ namespace user
 				else //tell them that asset was changed :)
 				{
 
-					QSF_LOG_PRINTS(INFO,"for some reasons it exists")
+					//QSF_LOG_PRINTS(INFO,"for some reasons it exists")
 					std::string TargetAssetName = qsf::AssetProxy(LocalAssetName).getAssetPackage()->getName();
 					mAssetEditHelper->tryEditAsset(qsf::AssetProxy(LocalAssetName).getGlobalAssetId(), TargetAssetName);
 					auto CachedAsset = mAssetEditHelper->getCachedAsset(qsf::AssetProxy(LocalAssetName).getAsset()->getGlobalAssetId());
-					if (CachedAsset == nullptr)
+					/*if (CachedAsset == nullptr)
 						QSF_LOG_PRINTS(INFO, "cached asset is a nullptr")
 						else
-						QSF_LOG_PRINTS(INFO, "cached asset isnot null?")
+						QSF_LOG_PRINTS(INFO, "cached asset isnot null?")*/
 					mAssetEditHelper->setAssetUploadData(qsf::AssetProxy(LocalAssetName).getAsset()->getGlobalAssetId(), true, true);
-					
 				}
 
 			}
+		
 		}
+		//only submit add end else folder will be gone
 		mAssetEditHelper->submit();
+		ChangeMaterialToUseSmallMaps((int)0, (int)0);
 		return true;
 
 	}
 
 	void TerrainEditmodeColorMap::ChangeMaterialToUseSmallMaps(int x, int y)
 	{
-		TerrainMaster->UseMiniColorMaps(mParts);
+		for (int x = 0; x < mParts; x++)
+		{
+			for (int y = 0; y < mParts; y++)
+			{
+				int y_mirror = mParts-1 -y;
+				//QSF_LOG_PRINTS(INFO, "x "<< x << " y "<<y<< " "<< GetSmallImageByTerrainId(x, y).second)
+				TerrainMaster->UseMiniColorMaps(mParts,x, y_mirror, GetSmallImageByTerrainId(x,y).second);
+			}
+		}
 	}
 
-	Magick::Image * TerrainEditmodeColorMap::GetSmallImageByTerrainId(int x, int y)
+	std::pair<Magick::Image*, std::string> TerrainEditmodeColorMap::GetSmallImageByTerrainId(int x, int y)
 	{
-		int index = y * mParts + x;
+		int index = y + mParts * x;
 		if(m_SmallImages.size() <= index)
-		return nullptr;
+		return std::pair<Magick::Image*,std::string>(nullptr,"");
 		return m_SmallImages.at(index);
 		
 	}

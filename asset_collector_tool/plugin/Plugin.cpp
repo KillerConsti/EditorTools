@@ -32,7 +32,6 @@
 #include <qsf/plugin/QsfAssetTypes.h>
 #include <qsf/renderer/terrain/TerrainComponent.h>
 #include <asset_collector_tool\view\OrderInfoPictureCreator.h>
-#include <asset_collector_tool\extern\include\Magick++.h>
 #include <fstream>
 #include <filesystem>
 //[-------------------------------------------------------]
@@ -51,7 +50,6 @@ namespace user
 			qsf::Plugin(new em5::PluginVersion())
 		{
 			// Nothing to do in here
-			QSF_LOG_PRINTS(INFO,"even earlier")
 		}
 
 
@@ -228,12 +226,15 @@ namespace user
 
 		bool Plugin::onStartup()
 		{
-			auto path = std::experimental::filesystem::current_path();
-			std::string path_string{ path.u8string() };
-			Magick::InitializeMagick(path_string.c_str());
+			QSF_LOG_PRINTS(INFO,"startup editor tools")
+			//crash :(
+			//auto path = std::experimental::filesystem::current_path();
+			//std::string path_string{ path.u8string() };
+			//Magick::InitializeMagick(path_string.c_str());
 			//Magick::InitializeMagick((char *)NULL);
 			GUIManager::init();
 			// Done
+			QSF_LOG_PRINTS(INFO, "startup editor tools finished")
 			return true;
 		}
 

@@ -202,8 +202,8 @@ namespace user
 			//Editmodes
 			connect(mUITerrainEditColorMapToolbox->pick_a_color_button, SIGNAL(clicked(bool)), this, SLOT(onPushPickColor(bool)));
 
-			connect(mUITerrainEditColorMapToolbox->comboBox, SIGNAL(currentIndexChanged(int)), SLOT(onChangeBrushType(int)));
-			connect(mUITerrainEditColorMapToolbox->use_alpha, SIGNAL(clicked(bool)), SLOT(onuse_alpha(bool)));
+			connect(mUITerrainEditColorMapToolbox->comboBox, SIGNAL(currentIndexChanged(int)),this, SLOT(onChangeBrushType(int)));
+			connect(mUITerrainEditColorMapToolbox->use_alpha, SIGNAL(clicked(bool)),this, SLOT(onuse_alpha(bool)));
 
 			InitSavePath();
 
@@ -228,6 +228,21 @@ namespace user
 			{
 				editModeManager.selectEditModeByPointer(editModeManager.getPreviousEditMode(), editModeManager.getToolWhichSelectedEditMode());
 			}
+			QSF_LOG_PRINTS(INFO, "TET is alive")
+			disconnect(mUITerrainEditColorMapToolbox->pushButton, SIGNAL(clicked(bool)), this, SLOT(onPushSaveMap(bool)));
+			disconnect(mUITerrainEditColorMapToolbox->pushButton_2, SIGNAL(clicked(bool)), this, SLOT(onSetSaveDirectory(bool)));
+			disconnect(mUITerrainEditColorMapToolbox->pushButtonSelect, SIGNAL(clicked(bool)), this, SLOT(onPushSelectButton(bool)));
+			//connect(mUITerrainEditColorMapToolbox->horizontalSlider, SIGNAL(valueChanged(int)), this, SLOT(onMinimumSliderChanged(int)));
+			disconnect(mUITerrainEditColorMapToolbox->horizontalSlider_2, SIGNAL(valueChanged(int)), this, SLOT(onRadiusSliderChanged(int)));
+
+			//connect(mUITerrainEditColorMapToolbox->lineEdit, SIGNAL(textChanged(QString)), this, SLOT(onEditPrefab(QString)));
+			disconnect(mUITerrainEditColorMapToolbox->horizontalSlider, SIGNAL(valueChanged(int)), this, SLOT(OnBrushIntensitySliderChanged(int)));
+
+			//Editmodes
+			disconnect(mUITerrainEditColorMapToolbox->pick_a_color_button, SIGNAL(clicked(bool)), this, SLOT(onPushPickColor(bool)));
+
+			disconnect(mUITerrainEditColorMapToolbox->comboBox, SIGNAL(currentIndexChanged(int)),this, SLOT(onChangeBrushType(int)));
+			disconnect(mUITerrainEditColorMapToolbox->use_alpha, SIGNAL(clicked(bool)),this, SLOT(onuse_alpha(bool)));
 		}
 
 

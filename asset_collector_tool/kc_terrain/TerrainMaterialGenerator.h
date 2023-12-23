@@ -114,8 +114,9 @@ namespace kc_terrain
 		*/
 		virtual ~TerrainMaterialGenerator();
 		void RefreshMaterial( const Ogre::Terrain* ogreTerrain);
-		void ChangeColorMapToSmallerMap(Ogre::Terrain* Terrain, int x, int y, int parts_per_line);
+		void ChangeColorMapToSmallerMap( Ogre::Terrain* Terrain, std::string LocalAssetName);
 		void UpdateColorMap(const Ogre::Terrain* ogreTerrain);
+		void UpdateSmallColorMap(const Ogre::Terrain* ogreTerrain,qsf::GlobalAssetId MaterialAssetId);
 	//[-------------------------------------------------------]
 	//[ Private methods                                       ]
 	//[-------------------------------------------------------]

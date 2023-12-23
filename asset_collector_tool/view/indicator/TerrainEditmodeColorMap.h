@@ -29,6 +29,9 @@
 #include <asset_collector_tool\extern\include\Magick++.h>
 #include <qsf/debug/request/CompoundDebugDrawRequest.h>
 #include <qsf/math/Color4.h>
+
+//todo speed up by doing direct conversions instead of using for and while -loops
+
 //[-------------------------------------------------------]
 //[ Forward declarations                                  ]
 //[-------------------------------------------------------]
@@ -128,7 +131,8 @@ namespace user
 			int timer;
 
 			qsf::Color4 GetOldColor(glm::vec2 &MapPoint);
-
+			//Mappoint and x,y Terrain
+			qsf::Color4 GetOldColorFromSmallMaps(glm::vec2 &Mappoint,int x,int y);
 			//void 
 			//[-------------------------------------------------------]
 			//[ Private methods                                       ]
@@ -166,12 +170,16 @@ namespace user
 			struct PaintMap
 			{
 				glm::vec2 Pixel;
+
 				qsf::Color4 NewColor;
-
-
+				//Small map needs this infos
+				int xTerrain;
+				int yTerrain;
 			};
 
 			std::vector<PaintMap*> PaintedPixels;
+			void SetUseSplitMaps(bool use);
+			bool GetUseSplitMaps();
 		private:
 			glm::vec3 oldmouspoint;
 			glm::vec3 yo_mousepoint;
@@ -195,16 +203,19 @@ namespace user
 			glm::vec2 ConvertWorldPointToRelativePoint(glm::vec2 WorldPoint);
 			// return a worldpoint point from a mappoint (heighmap which is like 1024² or 2048²)
 			void UpdateTerrains();
+			void UpdateTerrainsForSmallMaps();
 			TerrainEditColorMapToolbox* TerrainEditGUI;
 			void generateMaterial();
 			virtual bool onStartup(EditMode* previousEditMode) override;
 			virtual void onShutdown(EditMode* nextEditMode) override;
 
+			bool mUseSplitMaps;
 
 			bool SplitMapInSmallMaps();
 			void ChangeMaterialToUseSmallMaps(int x , int y);
-			std::vector<Magick::Image*> m_SmallImages;
-			Magick::Image* GetSmallImageByTerrainId(int x, int y);
+			//IMG and Local Asset Name
+			std::vector<std::pair<Magick::Image*,std::string>> m_SmallImages;
+			std::pair<Magick::Image*,std::string> GetSmallImageByTerrainId(int x, int y);
 			//[-------------------------------------------------------]
 			//[ CAMP reflection system                                ]
 			//[-------------------------------------------------------]
