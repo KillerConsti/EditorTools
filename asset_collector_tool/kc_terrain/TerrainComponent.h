@@ -376,6 +376,47 @@ namespace kc_terrain
 		void UseMiniColorMaps(int parts,int x,int y, std::string LocalAssetName);
 		void RefreshMaterial(Ogre::Terrain* Ot);
 		void SaveTerrain();
+
+		//kc Camp Properties 
+		void kc_SetTerrainSize(int Size);
+		int kc_GetTerrainSize();
+		int kc_TerrainSize;
+		int kc_RealBlendMapSize;
+		void kc_SetPixelsPerChunk();
+		int kc_GetPixelsPerChunk();
+
+		qsf::AssetProxy mHeightmap;
+		qsf::AssetProxy mTexturesMap1_4;
+		//6...8 unused for now we need higher layer count for them
+		qsf::AssetProxy mTextureMap5_8;
+		qsf::AssetProxy mLayerDescription;
+		std::string uneditabld;
+		std::string automaticly_created;
+
+		void SetNewHeightMap(qsf::AssetProxy NewAssetId);
+		qsf::AssetProxy GetNewHeightMap();
+
+		void SetNewTextureMap1_4(qsf::AssetProxy NewAssetId);
+		qsf::AssetProxy GetNewTextureMap1_4();
+		void SetNewTextureMap5_8(qsf::AssetProxy NewAssetId);
+		qsf::AssetProxy GetNewTextureMap5_8();
+		//json file
+		qsf::AssetProxy GetLayerDescription();
+		//stores all data which are not in the 3 pics
+		//
+		void SetLayerDescription(qsf::AssetProxy AP);
+		//Set by TerrainEditTool /TerrainModdelingTool
+
+		float GetMinHeight();
+		void SetMinHeight(float a);
+		float GetMaxHeight();
+		void SetMaxHeight(float a);
+		float mTerrainMinHeight;
+		float mTerrainMaxHeight;
+		/*
+		void GetMinHeight();
+		void GetMaxHeight();
+		*/
 	//[-------------------------------------------------------]
 	//[ Protected virtual qsf::Component methods              ]
 	//[-------------------------------------------------------]
@@ -414,6 +455,7 @@ namespace kc_terrain
 		 void LoadHeightMap(std::vector<float> PointMap);
 		 float TerrainComponent::ReadHeightValue(glm::vec2 point);
 		 void TerrainComponent::SetHeightFromValue(glm::vec2 point,float NewHeight);
+		
 	//[-------------------------------------------------------]
 	//[ Private data                                          ]
 	//[-------------------------------------------------------]

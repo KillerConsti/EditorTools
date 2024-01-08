@@ -76,6 +76,7 @@ namespace kc_terrain
 	{
 		// TODO(co) I assume updating other data as a result is required
 		mColorMapSize = colorMapSize;
+		QSF_LOG_PRINTS(INFO,"updated colormapsize 2")
 	}
 
 	void TerrainComponent::setBlendMapSize(uint32 blendMapSize)
@@ -345,6 +346,8 @@ namespace kc_terrain
 	void TerrainComponent::SaveTerrain()
 	{
 	}
+
+	
 
 
 	//[-------------------------------------------------------]
@@ -1095,7 +1098,81 @@ namespace kc_terrain
 		return false;
 	}
 
+	/* New Camp methods for kc terrain mostly about saving,loading and resizing*/
 
+	void TerrainComponent::kc_SetTerrainSize(int Size)
+	{
+	}
+
+	int TerrainComponent::kc_GetTerrainSize()
+	{
+		return 0;
+	}
+
+	void TerrainComponent::kc_SetPixelsPerChunk()
+	{
+	}
+
+	int TerrainComponent::kc_GetPixelsPerChunk()
+	{
+		return 0;
+	}
+
+	void TerrainComponent::SetNewHeightMap(qsf::AssetProxy NewAssetId)
+	{
+		mHeightmap = NewAssetId;
+	}
+
+	qsf::AssetProxy TerrainComponent::GetNewHeightMap()
+	{
+		return mHeightmap;
+	}
+
+
+
+	void TerrainComponent::SetNewTextureMap1_4(qsf::AssetProxy NewAssetId)
+	{
+	}
+
+	qsf::AssetProxy TerrainComponent::GetNewTextureMap1_4()
+	{
+		return qsf::AssetProxy();
+	}
+
+	void TerrainComponent::SetNewTextureMap5_8(qsf::AssetProxy NewAssetId)
+	{
+	}
+
+
+	qsf::AssetProxy TerrainComponent::GetNewTextureMap5_8()
+	{
+		return qsf::AssetProxy();
+	}
+
+	qsf::AssetProxy TerrainComponent::GetLayerDescription()
+	{
+		return qsf::AssetProxy();
+	}
+
+	void TerrainComponent::SetLayerDescription(qsf::AssetProxy AP)
+	{
+	}
+	float TerrainComponent::GetMinHeight()
+	{
+		return mTerrainMinHeight;
+	}
+	void TerrainComponent::SetMinHeight(float a)
+	{
+		mTerrainMinHeight = a;
+	}
+	float TerrainComponent::GetMaxHeight()
+	{
+		return mTerrainMaxHeight;
+	}
+	void TerrainComponent::SetMaxHeight(float a)
+	{
+		mTerrainMaxHeight = a;
+	}
 	//[-------------------------------------------------------]
 	//[ Namespace                                             ]
 	//[-------------------------------------------------------]

@@ -29,7 +29,11 @@ namespace kc_terrain
 		mIsEditing(false),
 		mColorMap(qsf::getUninitialized<uint64>()),
 		mPos(glm::vec3(0,0,0)),
-		mInitDone(false)
+		mInitDone(false),
+		mTerrainMinHeight(0.f),
+		mTerrainMaxHeight(0.f),
+		automaticly_created("generated when using terrain edit tools.Used for saving and loading terrains"),
+		uneditabld("------------------------------------")
 	{
 		// Nothing to do in here
 	}

@@ -29,7 +29,8 @@
 #include <asset_collector_tool\extern\include\Magick++.h>
 #include <qsf/debug/request/CompoundDebugDrawRequest.h>
 #include <qsf/math/Color4.h>
-
+#include <qsf_editor/asset/AssetEditHelper.h>
+#include <chrono>
 //todo speed up by doing direct conversions instead of using for and while -loops
 
 //[-------------------------------------------------------]
@@ -129,10 +130,9 @@ namespace user
 			void RaiseTerrain(glm::vec2 Mappoint);
 			bool RaisePoint(glm::vec2 Mappoint, float Intensity);
 			int timer;
-
-			qsf::Color4 GetOldColor(glm::vec2 &MapPoint);
-			//Mappoint and x,y Terrain
 			qsf::Color4 GetOldColorFromSmallMaps(glm::vec2 &Mappoint,int x,int y);
+			//this is a combined function of getting and setting which may be a lot faster
+			bool SetNewColor(qsf::Color4 NewColor,int Intensity, glm::vec2 &Mappoint, int x, int y);
 			//void 
 			//[-------------------------------------------------------]
 			//[ Private methods                                       ]
@@ -160,9 +160,9 @@ namespace user
 					x = _x;
 					y = _y;
 				}
-				bool operator<(const Terrains& a) const
+				bool operator<(const Terrains& a) const //Sort algorithm as we want to use std::unique
 				{
-					return (x < a.x);
+					return (x+1000*y < a.x+1000*a.y);
 				}
 			};
 			std::vector<Terrains> NeedUpdates;
@@ -195,8 +195,8 @@ namespace user
 			bool mIsInsideVisible;
 			float percentage;
 			float Offset;
-			float ColorMapSize;
-			float Scale;
+			float mColorMapSize;
+			float mScale;
 			int mParts;
 			qsf::WeakPtr<kc_terrain::TerrainComponent> TerrainMaster;
 			// return a relative point from a world point (notice that z axis is mirrored)
@@ -212,10 +212,19 @@ namespace user
 			bool mUseSplitMaps;
 
 			bool SplitMapInSmallMaps();
+
+			void SplitMap_waitForSaveTerrain(boost::function<void(bool)> resultCallback);
+			void onSplitMap_waitForSave_TerrainDone(bool isGood);
+			std::shared_ptr<qsf::editor::AssetEditHelper>	 mAssetEditHelper;
 			void ChangeMaterialToUseSmallMaps(int x , int y);
 			//IMG and Local Asset Name
 			std::vector<std::pair<Magick::Image*,std::string>> m_SmallImages;
 			std::pair<Magick::Image*,std::string> GetSmallImageByTerrainId(int x, int y);
+
+			std::chrono::time_point<std::chrono::steady_clock> mJobStartTime;
+			qsf::AssetPackage* m_OldAssetPackage;
+
+			void OnFinishEditing();
 			//[-------------------------------------------------------]
 			//[ CAMP reflection system                                ]
 			//[-------------------------------------------------------]

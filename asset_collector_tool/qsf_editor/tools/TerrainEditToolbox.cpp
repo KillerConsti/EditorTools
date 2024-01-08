@@ -376,11 +376,17 @@ namespace user
 			auto Dialog = QFileDialog::getOpenFileName(nullptr,QString("Heightmap to open"),QString(path),filter);
 			if(Dialog.size() < 1)
 			return;
+			std::string directory;
+			const size_t last_slash_idx = Dialog.toStdString().rfind('/');
+			if (std::string::npos != last_slash_idx)
+			{
+				directory = Dialog.toStdString().substr(0, last_slash_idx);
+			}
 			std::string Dia = Dialog.toStdString();
-			Dia.erase(0,std::string(path).size()+1);
-			QSF_LOG_PRINTS(INFO, Dia << " path " << path);
+			Dia.erase(0,std::string(directory).size()+1);
+			QSF_LOG_PRINTS(INFO, Dia << " path " << directory);
 			if(QSF_EDITOR_EDITMODE_MANAGER.getSelectedEditMode() != nullptr && QSF_EDITOR_EDITMODE_MANAGER.get<TerrainEditTool>() == QSF_EDITOR_EDITMODE_MANAGER.getSelectedEditMode())
-				QSF_EDITOR_EDITMODE_MANAGER.get<TerrainEditTool>()->LoadMap(Dia,path);
+				QSF_EDITOR_EDITMODE_MANAGER.get<TerrainEditTool>()->LoadMap(Dia, directory);
 		}
 
 

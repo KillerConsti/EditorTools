@@ -100,6 +100,15 @@
 #include <sstream>
 #include <qsf/input/device/KeyboardDevice.h>
 #include <qsf/debug/DebugDrawManager.h>
+
+#include <qsf/file/FileSystem.h>
+#include <experimental/filesystem> 
+#include <boost\filesystem.hpp>
+#include <qsf/plugin/QsfAssetTypes.h>
+#include <qsf/asset/project/AssetPackage.h>
+#include <qsf_editor/asset/import/AssetImportManager.h>
+#include <QtWidgets\qinputdialog.h>
+#include <windows.h>
 //[-------------------------------------------------------]
 //[ Namespace                                             ]
 //[-------------------------------------------------------]
@@ -120,7 +129,7 @@ namespace user
 		TerrainEditTool::TerrainEditTool(qsf::editor::EditModeManager* editModeManager) :
 			EditMode(editModeManager)
 		{
-			timer =0;
+			timer = 0;
 
 		}
 
@@ -148,7 +157,7 @@ namespace user
 				const qsf::Ray ray = cameraComponent->getRayAtViewportPosition(normalizedPosition.x, normalizedPosition.y);
 				Ogre::Ray ogreRay = qsf::Convert::getOgreRay(ray);
 				for (kc_terrain::TerrainComponent* terrainComponent : qsf::ComponentMapQuery(QSF_MAINMAP).getAllInstances<kc_terrain::TerrainComponent>())
-				//for (qsf::TerrainComponent* terrainComponent : qsf::ComponentMapQuery(QSF_MAINMAP).getAllInstances<qsf::TerrainComponent>())
+					//for (qsf::TerrainComponent* terrainComponent : qsf::ComponentMapQuery(QSF_MAINMAP).getAllInstances<qsf::TerrainComponent>())
 				{
 					if (terrainComponent->getTerrainHitBoundingBoxByRay(ogreRay))
 					{
@@ -216,9 +225,9 @@ namespace user
 			//mDebugDrawProxy.registerAt(QSF_MAINMAP.getDebugDrawManager());
 			if (TerrainEditGUI->GetBrushShape() == TerrainEditGUI->Quad)
 			{
-				glm::vec3 up = oldmouspoint + glm::vec3(Radius,0,Radius);
+				glm::vec3 up = oldmouspoint + glm::vec3(Radius, 0, Radius);
 				glm::vec3 down = oldmouspoint + glm::vec3(-Radius, 0, -Radius);
-				DebugRequsts.mSegments.push_back(qsf::SegmentDebugDrawRequest(qsf::Segment::fromTwoPoints(up,glm::vec3(up.x,up.y,down.z)),qsf::Color4::GREEN));
+				DebugRequsts.mSegments.push_back(qsf::SegmentDebugDrawRequest(qsf::Segment::fromTwoPoints(up, glm::vec3(up.x, up.y, down.z)), qsf::Color4::GREEN));
 				DebugRequsts.mSegments.push_back(qsf::SegmentDebugDrawRequest(qsf::Segment::fromTwoPoints(up, glm::vec3(down.x, up.y, up.z)), qsf::Color4::GREEN));
 				DebugRequsts.mSegments.push_back(qsf::SegmentDebugDrawRequest(qsf::Segment::fromTwoPoints(down, glm::vec3(up.x, up.y, down.z)), qsf::Color4::GREEN));
 				DebugRequsts.mSegments.push_back(qsf::SegmentDebugDrawRequest(qsf::Segment::fromTwoPoints(down, glm::vec3(down.x, up.y, up.z)), qsf::Color4::GREEN));
@@ -228,16 +237,16 @@ namespace user
 				DebugRequsts.mCircles.push_back(qsf::CircleDebugDrawRequest(oldmouspoint, qsf::CoordinateSystem::getUp(), Radius, qsf::Color4::GREEN));
 			}
 			mDetailViewSingleTrack = QSF_DEBUGDRAW.requestDraw(DebugRequsts);
-				
+
 			if (!mouseisvalid)
 				return;
-			if(!QSF_INPUT.getMouse().Left.isPressed())
+			if (!QSF_INPUT.getMouse().Left.isPressed())
 				return;
-			if(QSF_INPUT.getKeyboard().anyControlPressed())
+			if (QSF_INPUT.getKeyboard().anyControlPressed())
 				return;
 			glm::vec2 Mappoint = ConvertWorldPointToRelativePoint(glm::vec2(oldmouspoint.x, oldmouspoint.z));
 			Mappoint = Mappoint*Heighmapsize;
-			QSF_LOG_PRINTS(INFO,"outpoint")
+			//QSF_LOG_PRINTS(INFO,"outpoint")
 			switch (TerrainEditGUI->GetEditMode()) //Special Handlings
 			{
 			case 0: //Set
@@ -269,14 +278,14 @@ namespace user
 
 		void TerrainEditTool::RaiseTerrain(glm::vec2 MapPoint)
 		{
-		
-		if(TerrainEditGUI == nullptr)
-		return;
-		timer++;
-		if (timer >= 5)
-			timer = 0;
-		else
-			return;
+
+			if (TerrainEditGUI == nullptr)
+				return;
+			timer++;
+			if (timer >= 5)
+				timer = 0;
+			else
+				return;
 			float TotalRadius = Radius * Scale;
 			float BrushIntensity = TerrainEditGUI->GetBrushIntensity()*0.25f;
 			int MapPointMinX = glm::clamp((int)glm::ceil(MapPoint.x - TotalRadius), 0, (int)Heighmapsize);
@@ -293,13 +302,13 @@ namespace user
 					{
 						if (TotalRadius > glm::sqrt((t - MapPoint.x)* (t - MapPoint.x) + (j - MapPoint.y) * (j - MapPoint.y)))
 						{
-							if(TerrainEditGUI->GetBrushShape() == TerrainEditGUI->Circle)
-								RaisePoint(glm::vec2(t, j), BrushIntensity,false);
+							if (TerrainEditGUI->GetBrushShape() == TerrainEditGUI->Circle)
+								RaisePoint(glm::vec2(t, j), BrushIntensity, false);
 							else if (TerrainEditGUI->GetBrushShape() == TerrainEditGUI->Cone)
 							{
-								float Distance = glm::distance(glm::vec2(t,j),MapPoint);
+								float Distance = glm::distance(glm::vec2(t, j), MapPoint);
 								//intensity formula here
-								float IntensityMod = 1.0f - (Distance/TotalRadius);
+								float IntensityMod = 1.0f - (Distance / TotalRadius);
 								RaisePoint(glm::vec2(t, j), BrushIntensity*IntensityMod, false);
 							}
 							else if (TerrainEditGUI->GetBrushShape() == TerrainEditGUI->Dome)
@@ -387,14 +396,14 @@ namespace user
 				{
 					for (int j = MapPointMinY; j < MapPointMaxY; j++)
 					{
-						RaisePoint(glm::vec2(t, j), BrushIntensity,true);
+						RaisePoint(glm::vec2(t, j), BrushIntensity, true);
 					}
 				}
 			}
 			UpdateTerrains();
 		}
 
-		void TerrainEditTool::RaisePoint(glm::vec2 point, float Intensity,bool Decrease)
+		void TerrainEditTool::RaisePoint(glm::vec2 point, float Intensity, bool Decrease)
 		{
 			int xTerrain = 0;
 			int xRemaining = (int)point.x;
@@ -434,7 +443,7 @@ namespace user
 			if (Decrease)
 				newIntensity = -1.f*newIntensity;
 			auto old = Terrain->getHeightAtPoint(xRemaining, yRemaining);
-			auto NewHeight = old+ newIntensity;
+			auto NewHeight = old + newIntensity;
 			Terrain->setHeightAtPoint(xRemaining, yRemaining, NewHeight);
 			//QSF_LOG_PRINTS(INFO, Terrain->getHeightAtPoint(xRemaining, yRemaining) << " old " << old)
 		}
@@ -476,7 +485,7 @@ namespace user
 			UpdateTerrains();
 		}
 
-		
+
 
 
 		void TerrainEditTool::IncreaseHeight(glm::vec2 point, float NewHeight)
@@ -488,36 +497,109 @@ namespace user
 			//QSF_LOG_PRINTS(INFO,point.x << " " << point.y);
 			//we have a pattern like 4x4 (so in total 16 Terrains ... now find the correct one)
 			//remaining is the point on the selected Terrain
+			int official_partsize = partsize;
+
+			//xpair and ypair are a lil bit special - let the bitmap be 1025*1025 and with 16 parts
+			/*
+			each part will have 65 polys. To let them match each other it seems that index 64 and index 0 of the next chunk have to be the same (height). This was the first working attempt to get a map loaded without relicts.
+			So there are 16 parts with 65 polys but since they overlap each other you get 1024 + 1 at the end (or beginning) which is not overlapping. Notice if you are at index x= 64 y = 64 you have 4 chunks to feed in all other cases its just 1 or 2
+			*/
+
+			
+			std::vector<glm::vec2> xPairs;
+			std::vector<glm::vec2> yPairs;
 			while (true)
 			{
-				if ((xRemaining - partsize) >= 0)
+				if ((xRemaining - official_partsize) > 0)
 				{
 					xTerrain++;
-					xRemaining = xRemaining - partsize;
+					xRemaining = xRemaining - official_partsize;
+				}
+				else if(xRemaining - official_partsize == 0)
+				{
+					//we need to edit both terrains
+					xPairs.push_back(glm::vec2(xTerrain,xRemaining));
+					xPairs.push_back(glm::vec2(xTerrain+1,0));
+					break;
 				}
 				else
+
 					break;
 			}
 			while (true)
 			{
-				if ((yRemaining - partsize) >= 0)
+				if ((yRemaining - official_partsize) > 0)
 				{
 					yTerrain++;
-					yRemaining = yRemaining - partsize;
+					yRemaining = yRemaining - official_partsize;
+				}
+				else if (yRemaining - official_partsize == 0)
+				{
+					//we need to edit both terrains
+					yPairs.push_back(glm::vec2(yTerrain,yRemaining));
+					yPairs.push_back(glm::vec2( yTerrain + 1,0));
+					break;
 				}
 				else
 					break;
 			}
+			if(xPairs.empty() && yPairs.empty())
+			{
 			//QSF_LOG_PRINTS(INFO, xTerrain << " " << yTerrain << " " << xRemaining << " " << yRemaining)
 			auto Terrain = TerrainMaster->getOgreTerrainGroup()->getTerrain(xTerrain, yTerrain);
 			if (Terrain == nullptr)
 			{
-				QSF_LOG_PRINTS(INFO, "Terrain is a nullptr")
+				QSF_LOG_PRINTS(INFO, "Terrain is a nullptr" << xTerrain <<" " << yTerrain<< "Remaining x and y "<< xRemaining <<" "<< yRemaining<< " orig point "<< point.x << " " << point.y)
 					return;
 			}
 
 			Terrain->setHeightAtPoint(xRemaining, yRemaining, NewHeight);//TerrainEditGUI->GetHeight());
+			}
+			else if(yPairs.empty())
+			{
+				for (auto a : xPairs)
+				{
+					auto Terrain = TerrainMaster->getOgreTerrainGroup()->getTerrain((int)a.x, yTerrain);
+					if (Terrain == nullptr)
+					{
+						
+						QSF_LOG_PRINTS(INFO, "Terrain is a nullptr [mode 1]" << a.x << " " << yTerrain << "Remaining x and y " << a.y << " " << yRemaining << " orig point " << point.x << " " << point.y)
+							continue;
+					}
+					Terrain->setHeightAtPoint(a.y, yRemaining, NewHeight);//TerrainEditGUI->GetHeight());
+				}
+			}
+			else if (xPairs.empty())
+			{
+				for (auto a : yPairs)
+				{
+					auto Terrain = TerrainMaster->getOgreTerrainGroup()->getTerrain(xTerrain,(int)a.x);
+					if (Terrain == nullptr)
+					{
+						
+						QSF_LOG_PRINTS(INFO, "Terrain is a nullptr [mode 2]" << xTerrain << " " << a.x << "Remaining x and y " << xRemaining << " " << a.y << " orig point " << point.x << " " << point.y)
+							continue;
+					}
+					Terrain->setHeightAtPoint(xRemaining, a.y, NewHeight);//TerrainEditGUI->GetHeight());
+				}
+			}
+			else
+			{
+				for (auto x_1 : xPairs)
+				{
+					for (auto y_1 : yPairs)
+					{
+						auto Terrain = TerrainMaster->getOgreTerrainGroup()->getTerrain((int)x_1.x, (int)y_1.x);
+						if (Terrain == nullptr)
+						{
 
+							QSF_LOG_PRINTS(INFO, "Terrain is a nullptr [mode 3]" << (int)x_1.x << " " << (int)y_1.x << "Remaining x and y " << x_1.y << " " << y_1.y << " orig point " << point.x << " " << point.y)
+								continue;
+						}
+						Terrain->setHeightAtPoint(x_1.y, y_1.y, NewHeight);//TerrainEditGUI->GetHeight());
+					}
+				}
+			}
 			//Terrain->update(false);
 		}
 
@@ -526,8 +608,8 @@ namespace user
 			if (TerrainEditGUI == nullptr)
 				return;
 			timer++;
-			if(timer >=5)
-			timer = 0;
+			if (timer >= 5)
+				timer = 0;
 			else
 				return;
 
@@ -545,12 +627,12 @@ namespace user
 					for (int j = MapPointMinY; j < MapPointMaxY; j++)
 					{
 						if ((Radius * Scale) > glm::sqrt((t - MapPoint.x)* (t - MapPoint.x) + (j - MapPoint.y) * (j - MapPoint.y)))
-						
-							{
-								glm::vec3 newIndex = ApplySmooth(glm::vec2(t, j), BrushIntensity);
-								if(newIndex != glm::vec3())
+
+						{
+							glm::vec3 newIndex = ApplySmooth(glm::vec2(t, j), BrushIntensity);
+							if (newIndex != glm::vec3())
 								SmoothTerrains.push_back(newIndex);
-							}
+						}
 					}
 				}
 			}
@@ -569,35 +651,35 @@ namespace user
 			}
 			for (auto a : SmoothTerrains)
 			{
-				IncreaseHeight(glm::vec2(a.x,a.y),a.z);
+				IncreaseHeight(glm::vec2(a.x, a.y), a.z);
 			}
 			UpdateTerrains();
 		}
 
-		glm::vec3 TerrainEditTool::ApplySmooth(glm::vec2 Point,float Intensity)
+		glm::vec3 TerrainEditTool::ApplySmooth(glm::vec2 Point, float Intensity)
 		{
 			const int smoothWindow = 5;
 			int counter = 0;
 			float value = 0;
-			for (size_t x = Point.x - smoothWindow; x < (Point.x + smoothWindow);x++)
+			for (size_t x = Point.x - smoothWindow; x < (Point.x + smoothWindow); x++)
 			{
-				if(x < 0 || x >= Heighmapsize)
-				continue;
-			for (size_t y = Point.y - smoothWindow; y < (Point.y + smoothWindow);y++)
-			{
-				if (y < 0 || y >= Heighmapsize)
+				if (x < 0 || x >= Heighmapsize)
 					continue;
-				value += ReadValue(glm::vec2(x,y));
-				counter++;
+				for (size_t y = Point.y - smoothWindow; y < (Point.y + smoothWindow); y++)
+				{
+					if (y < 0 || y >= Heighmapsize)
+						continue;
+					value += ReadValue(glm::vec2(x, y));
+					counter++;
+				}
 			}
-			}
-			if(counter == 0)
+			if (counter == 0)
 				return glm::vec3();
-				float Oldvalue = ReadValue(Point);
-				float newIntensity = glm::clamp(Intensity* 0.5f,0.f,1.f);
-				float DifValue = ((value / (float)counter)- Oldvalue) * newIntensity;
-			return glm::vec3(Point.x,Point.y, Oldvalue + DifValue);
-			
+			float Oldvalue = ReadValue(Point);
+			float newIntensity = glm::clamp(Intensity* 0.5f, 0.f, 1.f);
+			float DifValue = ((value / (float)counter) - Oldvalue) * newIntensity;
+			return glm::vec3(Point.x, Point.y, Oldvalue + DifValue);
+
 		}
 
 
@@ -646,12 +728,20 @@ namespace user
 
 		void TerrainEditTool::SaveTheFuckingMap()
 		{
-			if(TerrainEditGUI == nullptr)
-			return;
-			if(TerrainMaster.get() == nullptr)
-			return;
+			if (TerrainEditGUI == nullptr)
+				return;
+			if (TerrainMaster.get() == nullptr)
+				return;
 			auto path = TerrainEditGUI->GetSavePath();
 			//scalemap
+
+
+			std::string widthandheight = boost::lexical_cast<std::string>(Heighmapsize) + "x" + boost::lexical_cast<std::string>(Heighmapsize);
+			Magick::Image* MagImage = new Magick::Image();
+			MagImage->size(widthandheight);
+			MagImage->magick("TIF");
+			MagImage->type(Magick::ImageType::GrayscaleType);
+
 			float lowestpoint = 99999.f;
 			float highestpoint = -999999.f;
 			for (size_t t = 0; t < Heighmapsize - 1; t++)
@@ -669,7 +759,7 @@ namespace user
 			std::string height = boost::lexical_cast<std::string>(highestpoint);
 			//highestpoint = highestpoint - lowestpoint;
 
-			uint8* buffer = new uint8[Heighmapsize * Heighmapsize * 8];
+			/*uint8* buffer = new uint8[Heighmapsize * Heighmapsize * 8];
 			Ogre::Image ogreImage;
 			ogreImage.loadDynamicImage(buffer, Heighmapsize, Heighmapsize, Ogre::PixelFormat::PF_FLOAT32_GR);
 			for (size_t t = 0; t < Heighmapsize - 1; t++)
@@ -680,16 +770,31 @@ namespace user
 					//QSF_LOG_PRINTS(INFO,"value" << value << " high " )
 					const Ogre::ColourValue ogreColorValue = Ogre::ColourValue(value, value, value);
 					ogreImage.setColourAt(ogreColorValue, t, j, 0);
-					//float = (Richtiger Punkt - nP) / (hP - np)  
+					//float = (Richtiger Punkt - nP) / (hP - np)
 					//120 (bei 180 und 90 als Okt)
 					//120-90 = 30
 					// 30 / (180-90) =1/3
 				}
 				//ogreImage.setColourAt()
 			}
-			ogreImage.flipAroundX();
+			ogreImage.flipAroundX();*/
+			QSF_LOG_PRINTS(INFO, "Heightmap channelcount" << MagImage->channels() << Heighmapsize);
+			MagickCore::Quantum*  Pixels = MagImage->getPixels(0, 0, Heighmapsize, Heighmapsize);
+			for (size_t x = 0; x < Heighmapsize; x++)
+			{
+				for (size_t y = 0; y < Heighmapsize; y++)
+				{
+					float value = (ReadValue(glm::vec2(x, y)) - lowestpoint) / (highestpoint - lowestpoint);
+					uint64 offset = (y* Heighmapsize + x) * MagImage->channels(); //4 is because we use 4 channels
+					*(Pixels + offset) = value * 65535.f;
+				}
+			}
+
+			MagImage->flip();
+			MagImage->syncPixels();
+
 			uint64 globalMapAssetId = QSF_MAINMAP.getGlobalAssetId();
-			if (qsf::AssetProxy(globalMapAssetId).getGlobalAssetId() == qsf::getUninitialized<qsf::GlobalAssetId>())
+			/*if (qsf::AssetProxy(globalMapAssetId).getGlobalAssetId() == qsf::getUninitialized<qsf::GlobalAssetId>())
 			{
 				ogreImage.save(path+"\\heightmap___min__" + low + "__max__" + height + "__date__"+GetCurrentTimeForFileName()+".tif");
 			}
@@ -705,13 +810,104 @@ namespace user
 				}
 				else
 					ogreImage.save(path + "\\heightmap___min__" + low + "__max__" + height + "__date__" + GetCurrentTimeForFileName() + ".tif");
+			}*/
+			//put it into our project
+			mAssetEditHelper = std::shared_ptr<qsf::editor::AssetEditHelper>(new qsf::editor::AssetEditHelper());
+			auto IAP = mAssetEditHelper->getIntermediateAssetPackage();
+			if (TerrainMaster->GetNewHeightMap().getAsset() == nullptr)
+			{
+
+				//QSF_LOG_PRINTS(INFO, "asset not found " << LocalAssetName)
+				try
+				{
+					//a add asset
+					auto TimeStamp = GetCurrentTimeForFileName();
+					auto Name = TerrainMaster->getEntity().getComponent<qsf::MetadataComponent>()->getName();
+
+
+					//b create folder structure in assethelper (to read and write)
+					if (!boost::filesystem::exists((QSF_FILE.getBaseDirectory() + "/" + IAP->getRelativeDirectory() + "/texture/heightmap")))
+						boost::filesystem::create_directories(QSF_FILE.getBaseDirectory() + "/" + IAP->getRelativeDirectory() + "/texture/heightmap");
+					//c write to new folder -I think it will copy to our direction we wrote before
+					//ogreImage.save(QSF_FILE.getBaseDirectory() + "/" + IAP->getRelativeDirectory() + "/texture/heightmap/heightmap_" + Name + "_" + TimeStamp +".tif");
+					auto relAssetDirectory = QSF_EDITOR_APPLICATION.getAssetImportManager().getDefaultDestinationAssetPackage()->getRelativeDirectory();
+					if (!boost::filesystem::exists((QSF_FILE.getBaseDirectory() + "/" + relAssetDirectory + "/texture/heightmap")))
+						boost::filesystem::create_directories(QSF_FILE.getBaseDirectory() + "/" + relAssetDirectory + "/texture/heightmap");
+
+
+
+					//MagImage->write(QSF_FILE.getBaseDirectory() + "/" + relAssetDirectory + "/texture/heightmap/heightmap_" + Name  +  ".tif");
+					QSF_LOG_PRINTS(INFO, "saved ogre img to " << QSF_FILE.getBaseDirectory() + "/" + IAP->getRelativeDirectory() + "/texture/heightmap/heightmap_" + Name + ".tif")
+						//d learn our assets a few thing <-> this seems not needed
+						//delete[] buffer;
+
+						auto Asset = mAssetEditHelper->addAsset(QSF_EDITOR_APPLICATION.getAssetImportManager().getDefaultDestinationAssetPackage()->getName(), qsf::QsfAssetTypes::TEXTURE, "heightmap", "heightmap_" + Name);
+					MagImage->write(QSF_FILE.getBaseDirectory() + "/" + IAP->getRelativeDirectory() + "/texture/heightmap/heightmap_" + Name + ".tif");
+					if (Asset == nullptr)
+						QSF_LOG_PRINTS(INFO, "error occured " << Name << " could not create an asset")
+					else
+					{
+						auto CachedAsset = mAssetEditHelper->getCachedAsset(Asset->getGlobalAssetId());
+						if (CachedAsset == nullptr)
+							CachedAsset = &qsf::CachedAsset(Asset->getGlobalAssetId());
+						if (CachedAsset == nullptr)
+						{
+							QSF_LOG_PRINTS(INFO, "still a nullptr")
+						}
+						CachedAsset->setType("tif");
+						//QSF_LOG_PRINTS(INFO, qsf::AssetProxy(Asset->getGlobalAssetId()).getAbsoluteCachedAssetDataFilename())
+
+						if (mAssetEditHelper->setAssetUploadData(Asset->getGlobalAssetId(), true, true))
+							QSF_LOG_PRINTS(INFO, "Caching asset was not succesfull")
+					}
+					TerrainMaster->SetNewHeightMap(qsf::AssetProxy(Asset->getGlobalAssetId()));
+				}
+				catch (const std::exception& e)
+				{
+					QSF_LOG_PRINTS(INFO, e.what())
+				}
+
 			}
-			
+			else //tell them that asset was changed :)
+			{
+
+				//QSF_LOG_PRINTS(INFO,"for some reasons it exists")
+				//ogreImage.save(TerrainMaster->GetNewHeightMap().getAbsoluteCachedAssetDataFilename());
+				MagImage->write(TerrainMaster->GetNewHeightMap().getAbsoluteCachedAssetDataFilename());
+				std::string TargetAssetName = qsf::AssetProxy(TerrainMaster->GetNewHeightMap()).getAssetPackage()->getName();
+				mAssetEditHelper->tryEditAsset(qsf::AssetProxy(TerrainMaster->GetNewHeightMap()).getGlobalAssetId(), TargetAssetName);
+				auto CachedAsset = mAssetEditHelper->getCachedAsset(qsf::AssetProxy(TerrainMaster->GetNewHeightMap()).getAsset()->getGlobalAssetId());
+				/*if (CachedAsset == nullptr)
+				QSF_LOG_PRINTS(INFO, "cached asset is a nullptr")
+				else
+				QSF_LOG_PRINTS(INFO, "cached asset isnot null?")*/
+				mAssetEditHelper->setAssetUploadData(qsf::AssetProxy(TerrainMaster->GetNewHeightMap()).getAsset()->getGlobalAssetId(), true, true);
+				//delete[] buffer;
+			}
 
 			// Cleanup
-			delete[] buffer;
+
 			QSF_LOG_PRINTS(INFO, "Map was saved succesfully")
+				mAssetEditHelper->submit();
+			mAssetEditHelper->callWhenFinishedUploading(boost::bind(&TerrainEditTool::WaitForSaveTerrain, this, boost::function<void(bool)>(boost::bind(&TerrainEditTool::onWaitForSave_TerrainDone, this, _1))));
+			TerrainMaster->SetMaxHeight(highestpoint);
+			TerrainMaster->SetMinHeight(lowestpoint);
+			TerrainMaster->setAllPropertyOverrideFlags(true);
 		}
+
+		void TerrainEditTool::WaitForSaveTerrain(boost::function<void(bool)> resultCallback)
+		{
+		}
+
+		void TerrainEditTool::onWaitForSave_TerrainDone(bool isGood)
+		{
+			/*QSF_LOG_PRINTS(INFO, "Created Splitmaps func 2")
+			QSF_CHECK(nullptr != mAssetEditHelper, "qsf::editor::TerrainEditHelper::onSaveTerrainDone(): nullptr != mAssetEditHelper", QSF_REACT_THROW);
+			mAssetEditHelper->reset();
+			QSF_EDITOR_APPLICATION.getAssetImportManager().setDefaultDestinationAssetPackage(m_OldAssetPackage->getProject().getName(), m_OldAssetPackage->getName());
+			m_OldAssetPackage = nullptr;*/
+		}
+
 
 		void TerrainEditTool::CopyFromQSFMap(const qsf::MessageParameters & parameters)
 		{
@@ -747,7 +943,7 @@ namespace user
 				counter++;
 			}
 			int CopyFromParts = CopyFromTerrain->getOgreTerrainGroup()->getTerrainSize();
-			int OrigParts  = CopyFromTerrain->getOgreTerrainGroup()->getTerrainSize();
+			int OrigParts = CopyFromTerrain->getOgreTerrainGroup()->getTerrainSize();
 			if (CopyFromParts != OrigParts)
 			{
 				QSF_LOG_PRINTS(INFO, "Cant do that number of parts not matching. Source has " << CopyFromParts << " and Target has " << OrigParts)
@@ -761,11 +957,11 @@ namespace user
 				Ogre::TerrainGroup::TerrainSlot* TS_source = it_source.getNext();
 				Ogre::TerrainGroup::TerrainSlot* TS_target = it_target.getNext();
 
-				for(size_t x =0; x< partsize;x++ )
+				for (size_t x = 0; x < partsize; x++)
 				{
-					for (size_t y = 0; y< partsize; y++)
+					for (size_t y = 0; y < partsize; y++)
 					{
-						TS_target->instance->setHeightAtPoint((long)x,(long)y,TS_source->instance->getHeightAtPoint((long)x,(long)y));
+						TS_target->instance->setHeightAtPoint((long)x, (long)y, TS_source->instance->getHeightAtPoint((long)x, (long)y));
 					}
 				}
 				TS_target->instance->update();
@@ -773,36 +969,86 @@ namespace user
 
 		}
 
-		void TerrainEditTool::LoadMap(std::string realfilename,std::string realfilepath)
+		void TerrainEditTool::LoadMap(std::string realfilename, std::string realfilepath)
 		{
 			auto filename = realfilename;
 			auto pathcopy = realfilepath;
-			QSF_LOG_PRINTS(INFO, "load map1");
+			float lowestpoint = 0.f;
+			float highestpoint = 0.f;
 			if (TerrainEditGUI == nullptr)
 				return;
 			if (TerrainMaster.get() == nullptr)
 				return;
 			auto path = TerrainEditGUI->GetSavePath();
 			//scalemap
-			QSF_LOG_PRINTS(INFO, "load map2" << filename);
+			QSF_LOG_PRINTS(INFO, "load heightmap" << filename);
 			auto id = filename.find("__min__");
-			if(std::string::npos == id)
-			return;
-			filename.erase(0,id+7);
-			id = filename.find("__max__");
 			if (std::string::npos == id)
-				return;
-			std::string min, max;
-			min = filename;
-			min = min.erase(id,min.size()-1);
-			filename.erase(0,id+7);
-			max = filename;
-			id = filename.find("__date__");
-			if (std::string::npos == id)
-				return;
-			max = max.erase(id, max.size() - 1);
-			float lowestpoint = boost::lexical_cast<float>(min);
-			float highestpoint = boost::lexical_cast<float>(max);
+			{
+				bool ok;
+				QString text = QInputDialog::getText(0, "Could not find Min Height",
+					"Min Height", QLineEdit::Normal,
+					"", &ok);
+				if (ok && !text.isEmpty()) {
+					try
+					{
+						lowestpoint = boost::lexical_cast<float>(text.toStdString());
+					}
+					catch (const std::exception& e)
+					{
+						QSF_LOG_PRINTS(INFO, e.what())
+							return;
+					}
+				}
+				else
+				{
+					return;
+				}
+
+				text = QInputDialog::getText(0, "Could not find Max Height",
+					"Max Height", QLineEdit::Normal,
+					"", &ok);
+				if (ok && !text.isEmpty()) {
+					try
+					{
+						highestpoint = boost::lexical_cast<float>(text.toStdString());
+					}
+					catch (const std::exception& e)
+					{
+						QSF_LOG_PRINTS(INFO, e.what())
+							return;
+					}
+				}
+				else
+				{
+					return;
+
+				}
+				if (lowestpoint >= highestpoint)
+				{
+					QSF_LOG_PRINTS(INFO,"error lowestpoint and highestpoint are same level")
+					return;
+				}
+			}
+			if (lowestpoint == 0 && highestpoint == 0)
+			{
+				filename.erase(0, id + 7);
+				id = filename.find("__max__");
+				if (std::string::npos == id)
+					return;
+				std::string min, max;
+				min = filename;
+				min = min.erase(id, min.size() - 1);
+				filename.erase(0, id + 7);
+				max = filename;
+				id = filename.find("__date__");
+				if (std::string::npos == id)
+					return;
+				max = max.erase(id, max.size() - 1);
+
+				lowestpoint = boost::lexical_cast<float>(min);
+				highestpoint = boost::lexical_cast<float>(max);
+			}
 			QSF_LOG_PRINTS(INFO, highestpoint);
 			QSF_LOG_PRINTS(INFO, lowestpoint);
 			Ogre::String Heightmaps = "FileSystem";
@@ -811,12 +1057,12 @@ namespace user
 			OI.load(Ogre::String(realfilename).c_str(), Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
 			if (&OI == nullptr)
 			{
-				QSF_LOG_PRINTS(ERROR,"sth went wrong with importing texture")
-				return;
+				QSF_LOG_PRINTS(ERROR, "sth went wrong with importing texture")
+					return;
 			}
 			auto width = OI.getHeight();
 			auto height = OI.getWidth();
-			
+
 			OI.flipAroundX();
 			QSF_LOG_PRINTS(INFO, "Reshaping the world");
 			for (size_t t = 0; t < height - 1; t++) //improve height map check?
@@ -825,17 +1071,19 @@ namespace user
 					continue;
 				for (size_t j = 0; j < width - 1; j++)
 				{
-					if(j > Heighmapsize)
-					continue;
-					auto val = OI.getColourAt(t,j,0).r;
+					if (j > Heighmapsize)
+						continue;
+					auto val = OI.getColourAt(t, j, 0).r;
 					//Punktval = (Richtiger Punkt - nP) / (hP - np)  
 					//Richtiger Punkkt = Punktval *(hP-nP)+nP
 					float RealPointHeight = val * (highestpoint - lowestpoint) + lowestpoint;
-					IncreaseHeight(glm::vec2(t,j), RealPointHeight);
+					IncreaseHeight(glm::vec2(t, j), RealPointHeight);
+					if(RealPointHeight < 20)
+					QSF_LOG_PRINTS(INFO,t << " j "<< j << " "<< RealPointHeight)
 				}
 				//ogreImage.setColourAt()
 			}
-			QSF_LOG_PRINTS(INFO,"Done with reshaping the world");
+			QSF_LOG_PRINTS(INFO, "Done with reshaping the world");
 			UpdateTerrains();
 
 		}
@@ -894,18 +1142,18 @@ namespace user
 		{
 			if (Qt::LeftButton == qMouseEvent.button() && TerrainEditGUI != nullptr && TerrainEditGUI->GetEditMode() == TerrainEditGUI->Set) //copy height with ctrl + left
 			{
-				if(QSF_INPUT.getKeyboard().anyControlPressed())
+				if (QSF_INPUT.getKeyboard().anyControlPressed())
 				{
-				glm::vec3 mousepos2;
-				if (evaluateBrushPosition(qMouseEvent.pos(), mousepos2))
-				{
-					glm::vec2 Mappoint = ConvertWorldPointToRelativePoint(glm::vec2(mousepos2.x, mousepos2.z));
-					Mappoint = Mappoint*Heighmapsize;
-					float value = ReadValue(glm::vec2(glm::round(Mappoint.x), glm::round(Mappoint.y)));
-					TerrainEditGUI->SetHeight(value);
+					glm::vec3 mousepos2;
+					if (evaluateBrushPosition(qMouseEvent.pos(), mousepos2))
+					{
+						glm::vec2 Mappoint = ConvertWorldPointToRelativePoint(glm::vec2(mousepos2.x, mousepos2.z));
+						Mappoint = Mappoint*Heighmapsize;
+						float value = ReadValue(glm::vec2(glm::round(Mappoint.x), glm::round(Mappoint.y)));
+						TerrainEditGUI->SetHeight(value);
+						return;
+					}
 					return;
-				}
-				return;
 				}
 			}
 			if (Qt::LeftButton != qMouseEvent.button()) //only left button
@@ -998,8 +1246,8 @@ namespace user
 
 		bool TerrainEditTool::onStartup(EditMode * previousEditMode)
 		{
-			
-			
+
+
 			//prevent crashs if terrain is not there yet
 			if (qsf::ComponentMapQuery(QSF_MAINMAP).getFirstInstance<kc_terrain::TerrainComponent>() == nullptr)
 				return false;
@@ -1023,7 +1271,7 @@ namespace user
 
 			if (!PaintJobProxy.isValid())
 				PaintJobProxy.registerAt(em5::Jobs::ANIMATION_VEHICLE, boost::bind(&TerrainEditTool::PaintJob, this, _1));
-				//PaintJobProxy.changeTimeBetweenCalls(qsf::Time::fromMilliseconds(50.f));
+			//PaintJobProxy.changeTimeBetweenCalls(qsf::Time::fromMilliseconds(50.f));
 			QSF_LOG_PRINTS(INFO, "scale" << Heighmapsize / TerrainMaster->getTerrainWorldSize() << " units per meter");
 			Scale = Heighmapsize / TerrainMaster->getTerrainWorldSize();
 			mParts = floor(Heighmapsize / (partsize - 1.f));
@@ -1054,7 +1302,6 @@ namespace user
 			SaveTheFuckingMap();
 			QSF_LOG_PRINTS(INFO, "Shutdown")
 		}
-
 
 
 

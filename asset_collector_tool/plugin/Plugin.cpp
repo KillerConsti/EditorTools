@@ -65,9 +65,14 @@ namespace user
 				QSF_START_CAMP_CLASS_EXPORT(kc_terrain::TerrainComponent, "KC TerrainComponent" ,"Killers first terrain")
 					QSF_CAMP_IS_COMPONENT_DERIVED(qsf::TerrainComponent)
 					//QSF_ADD_CAMP_PROPERTY(New Global Glossiness, EditorToolsHelperComponent::GetGlobalGlossiness, EditorToolsHelperComponent::SetGlobalGlossiness, "set it directly with the tool", 0.75f)
+					QSF_ADD_CAMP_PROPERTY_DIRECT_ACCESS(Do Not Edit above the line,kc_terrain::TerrainComponent::uneditabld,"All values above are from old terrain","------------------------------------").tag("Serializable", false)
 					QSF_ADD_CAMP_PROPERTY(New Color Map, kc_terrain::TerrainComponent::GetColorMap, kc_terrain::TerrainComponent::SetNewColorMap, "set it directly with the tool", qsf::getUninitialized<uint64>()).tag("AssetType", qsf::QsfAssetTypes::TEXTURE.getName())
 					QSF_ADD_CAMP_PROPERTY(Set Position Offset, kc_terrain::TerrainComponent::getPosition, kc_terrain::TerrainComponent::SetPosition, "set it directly with the tool", glm::vec3())
 					QSF_ADD_CAMP_PROPERTY(KC Terrain size, kc_terrain::TerrainComponent::getTerrainWorldSize, kc_terrain::TerrainComponent::setTerrainWorldSize, "set it directly with the tool", 1500)
+					QSF_ADD_CAMP_PROPERTY_DIRECT_ACCESS(Automaticly generated, kc_terrain::TerrainComponent::automaticly_created, "All values above are from old terrain", "generated when using terrain edit tools. Used for saving and loading terrains").tag("Serializable", false)
+					QSF_ADD_CAMP_PROPERTY(Min Height,kc_terrain::TerrainComponent::GetMinHeight, kc_terrain::TerrainComponent::SetMinHeight,"you should not set sth for now... just for display - maybe later for scaling",0.f)
+					QSF_ADD_CAMP_PROPERTY(Max Height, kc_terrain::TerrainComponent::GetMaxHeight, kc_terrain::TerrainComponent::SetMaxHeight, "you should not set sth for now... just for display - maybe later for scaling", 0.f)
+					QSF_ADD_CAMP_PROPERTY(Height Map Asset, kc_terrain::TerrainComponent::GetNewHeightMap, kc_terrain::TerrainComponent::SetNewHeightMap, "this points to the heightmap asset. Notice it may not be a dds file because ogre cannot read pixel values of this file. Use *.png or *.tif pls", 0.f).tag("AssetType", qsf::QsfAssetTypes::UNKNOWN.getName())
 					QSF_ADD_CAMP_PROPERTY(Reload, kc_terrain::TerrainComponent::GetUpdate, kc_terrain::TerrainComponent::SetUpdate, "set it directly with the tool", false).tag("Serializable", false)
 					QSF_END_CAMP_CLASS_EXPORT
 

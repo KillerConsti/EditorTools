@@ -27,7 +27,9 @@
 #include <asset_collector_tool\qsf_editor\tools\TerrainEditToolbox.h>
 #include <qsf/message/MessageProxy.h>
 
+#include <qsf_editor/asset/AssetEditHelper.h>
 #include <asset_collector_tool\kc_terrain\TerrainComponent.h>
+#include <asset_collector_tool\extern\include\Magick++.h>
 //[-------------------------------------------------------]
 //[ Forward declarations                                  ]
 //[-------------------------------------------------------]
@@ -188,12 +190,16 @@ namespace user
 
 			virtual bool onStartup(EditMode* previousEditMode) override;
 			virtual void onShutdown(EditMode* nextEditMode) override;
-
+			std::shared_ptr<qsf::editor::AssetEditHelper>	 mAssetEditHelper;
 			//new map
 			//void onPreNewEmptyMap(const qsf::MessageParameters& parameters);
 			//qsf::MessageProxy mOnPreNewEmptyMapMessageProxy;
 			//mOnPreNewEmptyMapMessageProxy.registerAt(qsf::MessageConfiguration(qsf::editor::Messages::PRE_NEW_EMPTY_MAP), boost::bind(&Plugin::onPreNewEmptyMap, this, _1));
 			//use post new map instead
+
+			//callback functions
+			void WaitForSaveTerrain(boost::function<void(bool)> resultCallback);
+			void onWaitForSave_TerrainDone(bool isGood);
 		//[-------------------------------------------------------]
 		//[ CAMP reflection system                                ]
 		//[-------------------------------------------------------]
