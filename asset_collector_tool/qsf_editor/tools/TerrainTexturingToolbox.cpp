@@ -523,9 +523,11 @@ namespace user
 			mUITerrainTexturingToolbox->checkBox_erase->setChecked(NewMode);
 			mUITerrainTexturingToolbox->checkBox_combined->setChecked(!NewMode);
 			mUITerrainTexturingToolbox->horizontalSlider->setEnabled(!NewMode);
-
+			QSF_LOG_PRINTS(INFO,"Mode changed "<< NewMode)
 
 		}
+
+
 
 
 
@@ -539,7 +541,7 @@ namespace user
 
 
 
-
+		
 
 
 

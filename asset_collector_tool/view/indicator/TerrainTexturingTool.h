@@ -211,24 +211,26 @@ namespace user
 			int GetBlendMapWithTextureName(int xTerrain,int yTerrain);
 			uint8 TMG_getMaxLayers(const Ogre::Terrain* ogreTerrain) const;
 			
-			struct kc_vec2
+			struct kc_vec3
 			{
 
 				uint16 x;
 				uint16 y;
-				kc_vec2(uint16 _x, uint16 _y)
+				float Intensity;
+				kc_vec3(uint16 _x, uint16 _y, float _Intensity)
 				{
 					x =_x;
 					y =_y;
+					Intensity = _Intensity;
 				}
-				bool operator<(const kc_vec2& a) const
+				bool operator<(const kc_vec3& a) const
 				{
 					return (x*1000+y < a.x*1000+a.y);
 				}
 			};
 
 
-			std::vector<kc_vec2> AffectedPoints[16][16];
+			std::vector<kc_vec3> AffectedPoints[16][16];
 			// return a relative point from a world point (notice that z axis is mirrored)
 			glm::vec2 ConvertWorldPointToRelativePoint(glm::vec2 WorldPoint);
 			// return a worldpoint point from a mappoint (heighmap which is like 1024² or 2048²)
@@ -239,6 +241,17 @@ namespace user
 			virtual bool onStartup(EditMode* previousEditMode) override;
 			virtual void onShutdown(EditMode* nextEditMode) override;
 
+
+			struct NewMixedIntensities
+			{
+				float IntensityLayer1 =0;
+				float IntensityLayer2 =0;
+				float IntensityLayer3 =0;
+				float IntensityLayer4 =0;
+				float IntensityLayer5 =0; 
+			};
+
+			void MixIntensitiesTerrain(NewMixedIntensities* NMI, int LayerId, float NewIntensity);
 		//[-------------------------------------------------------]
 		//[ CAMP reflection system                                ]
 		//[-------------------------------------------------------]

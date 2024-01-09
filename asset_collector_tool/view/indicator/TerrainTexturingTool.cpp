@@ -266,12 +266,15 @@ namespace user
 
 		void TerrainTexturingTool::RaiseTerrain(glm::vec2 MapPoint)
 		{
+
 			//QSF_LOG_PRINTS(INFO, "Raise Terrain")
 			if (TerrainEditGUI == nullptr)
 				return;
+			bool InEraseMode = TerrainEditGUI->IsInEraseMode();
 			//QSF_LOG_PRINTS(INFO,"aha 1")
 			float TotalRadius = Radius * Scale;
-			float BrushIntensity = TerrainEditGUI->GetBrushIntensity()*0.25f;
+			float BrushIntensity = TerrainEditGUI->GetBrushIntensity()*0.01;
+
 			//QSF_LOG_PRINTS(INFO,"Mappoint "<< MapPoint.x <<" y " << MapPoint.y)
 			int MapPointMinX = glm::clamp((int)glm::ceil(MapPoint.x - TotalRadius), 0, (int)BlendMapSize);
 			int MapPointMaxX = glm::clamp((int)glm::floor(MapPoint.x + TotalRadius), 0, (int)BlendMapSize);
@@ -290,7 +293,10 @@ namespace user
 						{
 							if (TerrainEditGUI->GetBrushShape() == TerrainEditGUI->Circle)
 							{
-								RaisePoint(glm::vec2(t, j), BrushIntensity);
+								if (!InEraseMode)
+									RaisePoint(glm::vec2(t, j), BrushIntensity);
+								else
+									RaisePoint(glm::vec2(t, j), 1);
 								counter++;
 								//break;
 							}
@@ -299,7 +305,10 @@ namespace user
 								float Distance = glm::distance(glm::vec2(t, j), MapPoint);
 								//intensity formula here
 								float IntensityMod = 1.0f - (Distance / TotalRadius);
-								RaisePoint(glm::vec2(t, j), BrushIntensity*IntensityMod);
+								if (!InEraseMode)
+									RaisePoint(glm::vec2(t, j), BrushIntensity*IntensityMod);
+								else
+									RaisePoint(glm::vec2(t, j), 1);
 								counter++;
 								//break;
 							}
@@ -309,7 +318,10 @@ namespace user
 								float Distance = glm::distance(glm::vec2(t, j), MapPoint);
 								//intensity formula here
 								float IntensityMod = glm::cos((Distance / TotalRadius) * glm::pi<float>()) * 0.5f + 0.5f;
-								RaisePoint(glm::vec2(t, j), BrushIntensity*IntensityMod);
+								if (!InEraseMode)
+									RaisePoint(glm::vec2(t, j), BrushIntensity*IntensityMod);
+								else
+									RaisePoint(glm::vec2(t, j), 1);
 								counter++;
 								//break;
 
@@ -325,7 +337,10 @@ namespace user
 				{
 					for (int j = MapPointMinY; j < MapPointMaxY; j++)
 					{
-						RaisePoint(glm::vec2(t, j), BrushIntensity);
+						if (!InEraseMode)
+							RaisePoint(glm::vec2(t, j), BrushIntensity);
+						else
+							RaisePoint(glm::vec2(t, j), 1);
 						counter++;
 						//break;
 					}
@@ -338,8 +353,7 @@ namespace user
 
 		void TerrainTexturingTool::RaisePoint(glm::vec2 point, float Intensity)
 		{
-			//QSF_LOG_PRINTS(INFO,"Raise Point 1")
-			int xTerrain = 0;
+				int xTerrain = 0;
 			int xRemaining = (int)point.x;
 			int yTerrain = 0;
 			int yRemaining = (int)point.y;
@@ -381,75 +395,70 @@ namespace user
 				return;
 			//QSF_LOG_PRINTS(INFO, "Raise Point Terrain:" << xTerrain << " " <<yTerrain)
 			//QSF_LOG_PRINTS(INFO, xTerrain << " " << yTerrain << " " << xRemaining << " " << yRemaining)
-			AffectedPoints[xTerrain][yTerrain].push_back(kc_vec2(xRemaining, yRemaining));
+			//QSF_LOG_PRINTS(INFO, "Raise Point" << Intensity)
+			AffectedPoints[xTerrain][yTerrain].push_back(kc_vec3(xRemaining, yRemaining, Intensity));
 			//QSF_LOG_PRINTS(INFO, "Raise Point 3")
 
 			//do remaining stuff in update
 			return;
-			auto Terrain = TerrainMaster->getOgreTerrainGroup()->getTerrain(xTerrain, yTerrain);
-
-
-			//QSF_LOG_PRINTS(INFO, "Raise Point 2")
-			//here was sth
-		//we meed to mirror x for some unknown reason. Maybe this map is also "mirrored"
-			//QSF_LOG_PRINTS(INFO, "get blend map index")
-		//now apply correct blendmap
-			int BlendMapIndex = GetBlendMapWithTextureName(xTerrain, yTerrain);
-			if (BlendMapIndex == -1)
-				return;
-
-			const uint32 maximumNumberOfLayers = TMG_getMaxLayers(Terrain);
-			const uint32 numberOfLayers = std::min(maximumNumberOfLayers, static_cast<uint32>(Terrain->getBlendTextureCount()));
-			//QSF_LOG_PRINTS(INFO, "numberOfLayers " << numberOfLayers << "a123 " << BlendMapIndex << " Blendtexturecount "<< Terrain->getBlendTextureCount())
-			for (uint32 layerIndex = 1; layerIndex < 6; ++layerIndex)
-			{
-				//	QSF_LOG_PRINTS(INFO,"layerIndex" << layerIndex)
-				if (Terrain->getLayerBlendMap(layerIndex) == nullptr)
-					continue;
-				if (layerIndex == BlendMapIndex)
-				{
-					//QSF_LOG_PRINTS(INFO, "found the layer")
-			//		QSF_LOG_PRINTS(INFO, "layerIndex == BlendMapIndex and now change sth"<< layerIndex)
-					Terrain->getLayerBlendMap(layerIndex)->setBlendValue(xRemaining, yRemaining, 1);
-					//QSF_LOG_PRINTS(INFO, "match" << layerIndex)
-				}
-				else
-				{
-					//	QSF_LOG_PRINTS(INFO, "layerIndex == BlendMapIndex and now change reset it..." << layerIndex)
-					Terrain->getLayerBlendMap(layerIndex)->setBlendValue(xRemaining, yRemaining, 0);
-				}
-			}
-
-			/*
-
-			ogreTerrain->getLayerBlendMap(1)->setBlendValue(xRemaining, yRemaining, 0);
-			ogreTerrain->getLayerBlendMap(2)->setBlendValue(xRemaining, yRemaining, 0);
-			ogreTerrain->getLayerBlendMap(3)->setBlendValue(xRemaining, yRemaining, 1);
-			//QSF_LOG_PRINTS(INFO,ogreTerrain->getLayerBlendMapSize() << " x " <<xRemaining << " y " << yRemaining);
-			ogreTerrain->getLayerBlendMap(4)->setBlendValue(xRemaining, yRemaining, 0);
-			return;
-
-			//never Executed
-
-			//float newIntensity = glm::clamp(Intensity* 0.5f, 0.f, 5.f);
-			//Terrain->setHeightAtPoint(xRemaining, yRemaining, Terrain->getHeightAtPoint(xRemaining, yRemaining) + Intensity);
-			//QSF_LOG_PRINTS(INFO," a aha " <<(uint32)Terrain->getBlendTextureCount());
-			//Terrain->getLayerBlendMap(0)->getLayerIndex()
-			for (uint8 t = 1; t <= (uint32)Terrain->getBlendTextureCount() + 1; t++)
-			{
-				auto BlendMap = Terrain->getLayerBlendMap(t);
-				if (BlendMap != nullptr)
-				{
-
-					//QSF_LOG_PRINTS(INFO, (uint32)t << " " <<Terrain->getBlendTextureName(t).c_str());
-					QSF_LOG_PRINTS(INFO, "Texture Index is " << (uint32)Terrain->getBlendTextureIndex(t) << " " << Terrain->getBlendTextureName(t).c_str());
-					QSF_LOG_PRINTS(INFO, "Channel Index " << (uint32)Terrain->getLayerBlendTextureIndex(t).first << " RGBA" << (uint32)Terrain->getLayerBlendTextureIndex(t).second);
-				}
-				else
-					QSF_LOG_PRINTS(INFO, "Blendmap layer " << (uint32)t << " is a nullptr")
-			}*/
 
 		}
+
+		void TerrainTexturingTool::MixIntensitiesTerrain(TerrainTexturingTool::NewMixedIntensities * NMI, int LayerId, float NewIntensity2)
+		{
+		//tickzcahl ist wahrscheinlich sonst zu hoch
+			float NewIntensity = NewIntensity2 * 0.25f;
+			//QSF_LOG_PRINTS(INFO, "input i1 " <<  NMI->IntensityLayer1  << " i2 " <<  NMI->IntensityLayer2  <<" i3 "<< NMI->IntensityLayer3 << " i4 " << NMI->IntensityLayer4)
+			float AllIntensitiesTogether = NMI->IntensityLayer1 + NMI->IntensityLayer2 + NMI->IntensityLayer3 + NMI->IntensityLayer4 + NMI->IntensityLayer5;
+			if (AllIntensitiesTogether <= 0.1) //cant divide by 0
+				AllIntensitiesTogether = 1;
+			float AllNewIntensíty = 1.f - NewIntensity;
+			
+			NMI->IntensityLayer1 = (NMI->IntensityLayer1 / AllIntensitiesTogether) * AllNewIntensíty; //first normalize to 1 - then apply removed intensity
+			NMI->IntensityLayer2 = (NMI->IntensityLayer2 / AllIntensitiesTogether) * AllNewIntensíty;
+			NMI->IntensityLayer3 = (NMI->IntensityLayer3 / AllIntensitiesTogether) * AllNewIntensíty;
+			NMI->IntensityLayer4 = (NMI->IntensityLayer4 / AllIntensitiesTogether) * AllNewIntensíty;
+			NMI->IntensityLayer5 = (NMI->IntensityLayer5 / AllIntensitiesTogether) * AllNewIntensíty;
+			
+			switch (LayerId)
+			{
+			case 0:
+			{
+				//duno?
+				break;
+			}
+			case 1:
+			{
+				NMI->IntensityLayer1 = NMI->IntensityLayer1 + NewIntensity;
+
+				break;
+			}
+			case 2:
+			{
+				NMI->IntensityLayer2 = NMI->IntensityLayer2 + NewIntensity;
+				break;
+			}
+			case 3:
+			{
+				NMI->IntensityLayer3 = NMI->IntensityLayer3 + NewIntensity;
+				break;
+			}
+			case 4:
+			{
+				NMI->IntensityLayer4 = NMI->IntensityLayer4 + NewIntensity;
+				break;
+			}
+			case 5:
+			{
+				NMI->IntensityLayer5 = NMI->IntensityLayer5 + NewIntensity;
+				break;
+			}
+			default:
+				break;
+			}
+			//QSF_LOG_PRINTS(INFO, "layer " << LayerId << " int "<< NewIntensity << " i1 "<<  NMI->IntensityLayer1 << " NMI->IntensityLayer2 " << NMI->IntensityLayer2 << " NMI->IntensityLayer3 " << NMI->IntensityLayer3 << " NMI->IntensityLayer4 " << NMI->IntensityLayer4)
+		}
+
 
 		void TerrainTexturingTool::ReplaceLayer(int LayerId, std::string NewMaterial)
 		{
@@ -457,17 +466,17 @@ namespace user
 
 			//they are known from WriteTerrainTextureList
 			auto Terrain_chunck = TerrainMaster->getOgreTerrainGroup()->getTerrain(SelectedChunk_x, SelectedChunk_y);
-			if(Terrain_chunck == nullptr)
+			if (Terrain_chunck == nullptr)
 			{
-				QSF_LOG_PRINTS(INFO,"cant find terrain chunk "<< SelectedChunk_x <<" "<< SelectedChunk_y)
-				return;
+				QSF_LOG_PRINTS(INFO, "cant find terrain chunk " << SelectedChunk_x << " " << SelectedChunk_y)
+					return;
 			}
-			if(qsf::AssetProxy(NewMaterial).getAsset() == nullptr)
-			return;
+			if (qsf::AssetProxy(NewMaterial).getAsset() == nullptr)
+				return;
 			if (LayerId >= Terrain_chunck->getLayerCount())
-			return;
+				return;
 			//QSF_LOG_PRINTS(INFO, "LayerId " << LayerId << " NewMaterial " << NewMaterial)
-				Terrain_chunck->setLayerTextureName(LayerId,0, NewMaterial.c_str());
+			Terrain_chunck->setLayerTextureName(LayerId, 0, NewMaterial.c_str());
 			TerrainMaster->RefreshMaterial(Terrain_chunck);
 			WriteTerrainTextureList(true);
 
@@ -692,17 +701,17 @@ namespace user
 			MagImage_5_8->magick("TIF");
 			MagImage_5_8->type(Magick::ImageType::GrayscaleType);
 
-			auto Quant1_4 = MagImage_1_4->getPixels(0,0,BlendMapSize,BlendMapSize);
+			auto Quant1_4 = MagImage_1_4->getPixels(0, 0, BlendMapSize, BlendMapSize);
 			auto Quant5_8 = MagImage_5_8->getPixels(0, 0, BlendMapSize, BlendMapSize);
 			for (size_t x = 0; x < mParts; x++)
 			{
 				for (size_t y = 0; y < mParts; y++)
 				{
-					
-					auto Terrain = TerrainMaster->getOgreTerrainGroup()->getTerrain((long)x,(long)y);
+
+					auto Terrain = TerrainMaster->getOgreTerrainGroup()->getTerrain((long)x, (long)y);
 					if (Terrain == nullptr)
 					{
-						QSF_LOG_PRINTS(INFO,"Terrain x"<< x<< " Terrain y "<< y << " is a nullptr")
+						QSF_LOG_PRINTS(INFO, "Terrain x" << x << " Terrain y " << y << " is a nullptr")
 					}
 					const uint32 maximumNumberOfLayers = TMG_getMaxLayers(Terrain);
 					const uint32 numberOfLayers = std::min(maximumNumberOfLayers, (uint32)Terrain->getLayerCount());
@@ -724,7 +733,7 @@ namespace user
 
 						//pixel data
 
-							auto BM = Terrain->getLayerBlendMap(layerIndex);
+						auto BM = Terrain->getLayerBlendMap(layerIndex);
 						for (size_t intern_x = 0; intern_x < partsize; intern_x++)
 						{
 							for (size_t intern_y = 0; intern_y < partsize; intern_y++)
@@ -733,9 +742,9 @@ namespace user
 								//map 1
 								if (layerIndex < 5) //1 - r 2-g  3-b 4-a
 								{
-									float value = BM->getBlendValue(intern_x,intern_y);
+									float value = BM->getBlendValue(intern_x, intern_y);
 									//notice that we mirror intern_y here
-									uint64 offset = ((Offsety + partsize-1-intern_y)* BlendMapSize + Offsetx + intern_x) * 4 + layerIndex - 1; //4 is because we use 4 channels
+									uint64 offset = ((Offsety + partsize - 1 - intern_y)* BlendMapSize + Offsetx + intern_x) * 4 + layerIndex - 1; //4 is because we use 4 channels
 									//layerindex -1 is the channel selection 0 is red, 1 is green, 2 is blue and 3 is alpha. As we start at layerindex 1 we have to substract -1
 									*(Quant1_4 + offset) = value * 65535.f;
 								}
@@ -779,15 +788,15 @@ namespace user
 					if (!boost::filesystem::exists((QSF_FILE.getBaseDirectory() + "/" + relAssetDirectory + "/texture/heightmap")))
 						boost::filesystem::create_directories(QSF_FILE.getBaseDirectory() + "/" + relAssetDirectory + "/texture/heightmap");
 
-					auto fileName = "terraintexture_c1_to_c4_"+Name;
+					auto fileName = "terraintexture_c1_to_c4_" + Name;
 
 					//MagImage->write(QSF_FILE.getBaseDirectory() + "/" + relAssetDirectory + "/texture/heightmap/heightmap_" + Name  +  ".tif");
-					QSF_LOG_PRINTS(INFO, "saved ogre img to " << QSF_FILE.getBaseDirectory() + "/" + IAP->getRelativeDirectory() + "/texture/heightmap/"+ fileName+".tif")
+					QSF_LOG_PRINTS(INFO, "saved ogre img to " << QSF_FILE.getBaseDirectory() + "/" + IAP->getRelativeDirectory() + "/texture/heightmap/" + fileName + ".tif")
 						//d learn our assets a few thing <-> this seems not needed
 						//delete[] buffer;
 
 						auto Asset = mAssetEditHelper->addAsset(QSF_EDITOR_APPLICATION.getAssetImportManager().getDefaultDestinationAssetPackage()->getName(), qsf::QsfAssetTypes::TEXTURE, "heightmap", fileName);
-					MagImage_1_4->write(QSF_FILE.getBaseDirectory() + "/" + IAP->getRelativeDirectory() + "/texture/heightmap/"+ fileName+ ".tif");
+					MagImage_1_4->write(QSF_FILE.getBaseDirectory() + "/" + IAP->getRelativeDirectory() + "/texture/heightmap/" + fileName + ".tif");
 					if (Asset == nullptr)
 						QSF_LOG_PRINTS(INFO, "error occured " << Name << " could not create an asset")
 					else
@@ -932,24 +941,24 @@ namespace user
 			{
 				//QSF_LOG_PRINTS(INFO, mousepos2);
 				oldmouspoint = mousepos2;
-				
+
 				//if mouse was invalid we enforce an update of our debug draw "grid"
 				WriteTerrainTextureList(mouseisvalid);
 				mouseisvalid = true;
-				
+
 				//QSF_LOG_PRINTS(INFO, "Radius is" << Radius)
 				return;
 			}
 			else
 				//QSF_LOG_PRINTS(INFO, "invalid");
-				{
+			{
 				mouseisvalid = false;
 				if (qsf::isInitialized(mChunkDrawRequestId))
 				{
 					QSF_DEBUGDRAW.cancelRequest(mChunkDrawRequestId);
 					mChunkDrawRequestId = qsf::getUninitialized<unsigned int>();
 				}
-				}
+			}
 		}
 
 		void TerrainTexturingTool::UpdateChunkDebugDrawg(glm::vec3 worldpos, int x_in, int y_in)
@@ -983,8 +992,8 @@ namespace user
 				const float snapSize = worldSize / static_cast<float>(TerrainMaster->getTerrainChunksPerEdge());
 				const float snapSizeHalf = snapSize * 0.5f;
 
-				position.x = snapSize*x_in+snapSizeHalf+position.x -worldSizeHalf;
-				position.z = worldSizeHalf - snapSize*y_in-snapSizeHalf+position.z;
+				position.x = snapSize*x_in + snapSizeHalf + position.x - worldSizeHalf;
+				position.z = worldSizeHalf - snapSize*y_in - snapSizeHalf + position.z;
 				//position.z = 1.f*-(snapSize*y_in + snapSizeHalf) + position.x + worldSizeHalf;
 
 				transform.setPosition(position);
@@ -1028,7 +1037,7 @@ namespace user
 				else
 					break;
 			}
-			if(m_NeedUpdatingTerrainList.x == xTerrain && m_NeedUpdatingTerrainList.y == yTerrain && m_NeedUpdatingTerrainList.z == 0)
+			if (m_NeedUpdatingTerrainList.x == xTerrain && m_NeedUpdatingTerrainList.y == yTerrain && m_NeedUpdatingTerrainList.z == 0)
 			{
 				if (!MouseWasvalid)
 				{
@@ -1039,7 +1048,7 @@ namespace user
 			else
 			{
 
-					UpdateChunkDebugDrawg(oldmouspoint, xTerrain, yTerrain);
+				UpdateChunkDebugDrawg(oldmouspoint, xTerrain, yTerrain);
 
 				m_NeedUpdatingTerrainList.x = xTerrain;
 				m_NeedUpdatingTerrainList.y = yTerrain;
@@ -1070,23 +1079,23 @@ namespace user
 					continue;
 				}
 				int count = 0;
-				if(layerIndex != 0)
+				if (layerIndex != 0)
 				{
-				if (Terrain->getLayerBlendMap(layerIndex) != nullptr)
-				{
-					auto BM = Terrain->getLayerBlendMap(layerIndex);
-					//QSF_LOG_PRINTS(INFO, "found the layer")
-					//		QSF_LOG_PRINTS(INFO, "layerIndex == BlendMapIndex and now change sth"<< layerIndex)
-					for (size_t x = 0; x < partsize; x++)
+					if (Terrain->getLayerBlendMap(layerIndex) != nullptr)
 					{
-						for (size_t y = 0; y < partsize; y++)
+						auto BM = Terrain->getLayerBlendMap(layerIndex);
+						//QSF_LOG_PRINTS(INFO, "found the layer")
+						//		QSF_LOG_PRINTS(INFO, "layerIndex == BlendMapIndex and now change sth"<< layerIndex)
+						for (size_t x = 0; x < partsize; x++)
 						{
-							if (BM->getBlendValue(x,y) > 0)
-								count++;
+							for (size_t y = 0; y < partsize; y++)
+							{
+								if (BM->getBlendValue(x, y) > 0)
+									count++;
 
+							}
+							//QSF_LOG_PRINTS(INFO, "match" << layerIndex)
 						}
-						//QSF_LOG_PRINTS(INFO, "match" << layerIndex)
-					}
 					}
 				}
 				TerrainNames.push_back(std::pair<std::string, int>(qsf::AssetProxy(globalAssetIdAsString).getLocalAssetName(), count));
@@ -1102,12 +1111,12 @@ namespace user
 
 		int TerrainTexturingTool::onAddNewTerrain(std::string BlendMapName, int x, int y)
 		{
-			if(BlendMapName == "")
-			return -1;
+			if (BlendMapName == "")
+				return -1;
 			//first check if there is a layer twice
 			std::vector<std::string> LayerNames;
-			
-			Ogre::Terrain* Terrain = TerrainMaster->getOgreTerrainGroup()->getTerrain(x,y);
+
+			Ogre::Terrain* Terrain = TerrainMaster->getOgreTerrainGroup()->getTerrain(x, y);
 			bool doubleLayer = false;
 			int LayerToReplace = -1;
 			for (size_t t = 0; t < Terrain->getLayerCount() && t < 6; t++)
@@ -1135,9 +1144,9 @@ namespace user
 			}
 			if (LayerToReplace == -1)
 			{
-				for (size_t t = 1; t < Terrain->getLayerCount() && Terrain->getLayerCount()<6; t++)
+				for (size_t t = 1; t < Terrain->getLayerCount() && Terrain->getLayerCount() < 6; t++)
 				{
-					if(TerrainLayerIsEmpty(Terrain,(uint8)t))
+					if (TerrainLayerIsEmpty(Terrain, (uint8)t))
 					{
 						//QSF_LOG_PRINTS(INFO,"replace empty layer" <<t)
 						LayerToReplace = (int)t;
@@ -1150,9 +1159,9 @@ namespace user
 			}
 			if (LayerToReplace == -1)
 			{
-				QSF_LOG_PRINTS(INFO,"Did not found a good layer")
-				//we may search for an empty layer
-				return false;
+				QSF_LOG_PRINTS(INFO, "Did not found a good layer")
+					//we may search for an empty layer
+					return false;
 			}
 
 			//place layer
@@ -1160,17 +1169,17 @@ namespace user
 			{
 				if (qsf::AssetProxy(BlendMapName).getAsset() == nullptr)
 				{
-					QSF_LOG_PRINTS(INFO,"cant applay Blendmap with name "<< BlendMapName << " unknown asset ")
-					return -1;
+					QSF_LOG_PRINTS(INFO, "cant applay Blendmap with name " << BlendMapName << " unknown asset ")
+						return -1;
 				}
-				Terrain->setLayerTextureName(LayerToReplace,0,BlendMapName.c_str());
+				Terrain->setLayerTextureName(LayerToReplace, 0, BlendMapName.c_str());
 			}
 			else
 			{
-				if(LayerToReplace <= 5 && Terrain->getLayerCount() <=6)
+				if (LayerToReplace <= 5 && Terrain->getLayerCount() <= 6)
 				{
-				Terrain->addLayer();
-				Terrain->setLayerTextureName(LayerToReplace, 0, BlendMapName);
+					Terrain->addLayer();
+					Terrain->setLayerTextureName(LayerToReplace, 0, BlendMapName);
 				}
 
 			}
@@ -1185,8 +1194,8 @@ namespace user
 		{
 			for (auto a : ToCheck)
 			{
-				if(a == CheckMe)
-				return true;
+				if (a == CheckMe)
+					return true;
 			}
 			ToCheck.push_back(CheckMe);
 			return false;
@@ -1195,14 +1204,14 @@ namespace user
 		bool TerrainTexturingTool::TerrainLayerIsEmpty(Ogre::Terrain* Terrain, int layer)
 		{
 			auto BlendMap = Terrain->getLayerBlendMap(layer);
-			if(BlendMap == nullptr)
-			return false;
+			if (BlendMap == nullptr)
+				return false;
 			for (size_t x = 0; x < partsize; x++)
 			{
 				for (size_t y = 0; y < partsize; y++)
 				{
-					if(BlendMap->getBlendValue(x,y) > 0)
-					return false;
+					if (BlendMap->getBlendValue(x, y) > 0)
+						return false;
 				}
 			}
 			return true;
@@ -1298,40 +1307,84 @@ namespace user
 							std::unique(
 								AffectedPoints[t][i].begin(),
 								AffectedPoints[t][i].end(),
-								[](kc_vec2 const & l, kc_vec2 const & r) {return l.x == r.x && l.y == r.y; }
+								[](kc_vec3 const & l, kc_vec3 const & r) {return l.x == r.x && l.y == r.y; }
 							),
 							AffectedPoints[t][i].end()
 						);
-						 
+
 						//AffectedPoints[t][i].erase(std::unique(AffectedPoints[t][i].begin(), AffectedPoints[t][i].end()), AffectedPoints[t][i].end());
 						int BlendMapIndex = GetBlendMapWithTextureName((long)t, (long)i);
 						//QSF_LOG_PRINTS(INFO,BlendMapIndex);
 						if (BlendMapIndex == -1)
 						{
-							onAddNewTerrain(GetSelectedLayerColor(),(int)t,(int)i);
+							onAddNewTerrain(GetSelectedLayerColor(), (int)t, (int)i);
 							//int BlendMapIndex = GetBlendMapWithTextureName((long)t, (long)i);
 							//if (BlendMapIndex == -1)
 							continue;
 						}
-							
+
 						auto Terrain = TerrainMaster->getOgreTerrainGroup()->getTerrain(t, i);
 						const uint32 maximumNumberOfLayers = TMG_getMaxLayers(Terrain);
 						const uint32 numberOfLayers = std::min(maximumNumberOfLayers, static_cast<uint32>(Terrain->getBlendTextureCount()));
 
-
-						for (uint32 layerIndex = 1; layerIndex < 6; ++layerIndex)
+						if (TerrainEditGUI->IsInEraseMode())
 						{
-							bool MapChanged = false;
-							if(Terrain->getLayerCount() <= layerIndex)
-							continue;
-							//if(layerIndex > Terrain->getBlendTextureCount())
-							//continue;
-							auto CurrentBlendMap = Terrain->getLayerBlendMap(layerIndex);
-							if (CurrentBlendMap == nullptr)
-								continue;
-							//if (Terrain->getLayerBlendMap(layerIndex) == nullptr)
-								//continue;
+							for (uint32 layerIndex = 1; layerIndex < 6; ++layerIndex)
+							{
+								bool MapChanged = false;
+								if (Terrain->getLayerCount() <= layerIndex)
+									continue;
+								auto CurrentBlendMap = Terrain->getLayerBlendMap(layerIndex);
+								if (CurrentBlendMap == nullptr)
+									continue;
+								for (auto points : AffectedPoints[t][i])
+								{
+									//if(layerIndex == 1)
+									//QSF_LOG_PRINTS(INFO,points.x << " "<< points.y << " and map is << "<< t << " " << i)
+									//we need to recalc why we get 64 :)
+									if (points.x >= partsize || points.y >= partsize)
+										continue;
+									try
+									{
+										//QSF_LOG_PRINTS(INFO, "eval point "<<points.x <<" " << points.y)
+										if (layerIndex == BlendMapIndex)
+										{
+											//QSF_LOG_PRINTS(INFO, "found the layer")
+											if (CurrentBlendMap->getBlendValue(points.x, points.y) == 1)
+												continue;
+											CurrentBlendMap->setBlendValue(points.x, points.y, 1);
+											MapChanged = true;
+											//QSF_LOG_PRINTS(INFO, "match" << layerIndex)
+										}
+										else
+										{
+											if (CurrentBlendMap->getBlendValue(points.x, points.y) == 0)
+												continue;
+											CurrentBlendMap->setBlendValue(points.x, points.y, 0);
+											MapChanged = true;
+										}
+									}
+									catch (const std::exception& /*e*/)
+									{
+										//QSF_LOG_PRINTS(INFO,"layer index "<< layerIndex << " " <<e.what())
+										continue;
+									}
+								}
 
+								if (Terrain->getLayerBlendMap(layerIndex) != nullptr)
+								{
+									//if(MapChanged)
+									{
+										CurrentBlendMap->dirty();
+										CurrentBlendMap->update();
+									}
+								}
+								//End
+
+							}
+						}
+						else //mixed intensities
+						{
 							for (auto points : AffectedPoints[t][i])
 							{
 								//if(layerIndex == 1)
@@ -1339,43 +1392,78 @@ namespace user
 								//we need to recalc why we get 64 :)
 								if (points.x >= partsize || points.y >= partsize)
 									continue;
-								try
+
+								NewMixedIntensities* Mixer = new NewMixedIntensities;
+								for (uint32 layerIndex = 1; layerIndex < 6; ++layerIndex)
 								{
-									//QSF_LOG_PRINTS(INFO, "eval point "<<points.x <<" " << points.y)
-									if (layerIndex == BlendMapIndex)
+									if (Terrain->getLayerCount() <= layerIndex)
+										continue;
+									if (Terrain->getLayerBlendMap(layerIndex) == nullptr)
+										continue;
+									if (layerIndex == 1)
 									{
-										//QSF_LOG_PRINTS(INFO, "found the layer")
-										if (CurrentBlendMap->getBlendValue(points.x, points.y) == 1)
-											continue;
-										CurrentBlendMap->setBlendValue(points.x, points.y, 1);
-										MapChanged = true;
-										//QSF_LOG_PRINTS(INFO, "match" << layerIndex)
+										Mixer->IntensityLayer1 = Terrain->getLayerBlendMap(layerIndex)->getBlendValue(points.x, points.y);
 									}
-									else
+									else if (layerIndex == 2)
 									{
-										if (CurrentBlendMap->getBlendValue(points.x, points.y) == 0)
-											continue;
-										CurrentBlendMap->setBlendValue(points.x, points.y, 0);
-										MapChanged = true;
+										Mixer->IntensityLayer2 = Terrain->getLayerBlendMap(layerIndex)->getBlendValue(points.x, points.y);
+									}
+									else if (layerIndex == 3)
+									{
+										Mixer->IntensityLayer3 = Terrain->getLayerBlendMap(layerIndex)->getBlendValue(points.x, points.y);
+									}
+									else if (layerIndex == 4)
+									{
+										Mixer->IntensityLayer4 = Terrain->getLayerBlendMap(layerIndex)->getBlendValue(points.x, points.y);
+									}
+									else if (layerIndex == 5)
+									{
+										Mixer->IntensityLayer5 = Terrain->getLayerBlendMap(layerIndex)->getBlendValue(points.x, points.y);
 									}
 								}
-								catch (const std::exception& /*e*/)
+								//put new values
+								//QSF_LOG_PRINTS(INFO, "New Intensity value" << points.Intensity)
+									MixIntensitiesTerrain(Mixer, BlendMapIndex, points.Intensity);
+								for (uint32 layerIndex = 1; layerIndex < 6; ++layerIndex)
 								{
-									//QSF_LOG_PRINTS(INFO,"layer index "<< layerIndex << " " <<e.what())
-									continue;
+									if (Terrain->getLayerCount() <= layerIndex)
+										continue;
+									if (Terrain->getLayerBlendMap(layerIndex) == nullptr)
+										continue;
+									if (layerIndex == 1)
+									{
+										Terrain->getLayerBlendMap(layerIndex)->setBlendValue(points.x, points.y, Mixer->IntensityLayer1);
+									}
+									else if (layerIndex == 2)
+									{
+										Terrain->getLayerBlendMap(layerIndex)->setBlendValue(points.x, points.y, Mixer->IntensityLayer2);
+									}
+									else if (layerIndex == 3)
+									{
+										Terrain->getLayerBlendMap(layerIndex)->setBlendValue(points.x, points.y, Mixer->IntensityLayer3);
+									}
+									else if (layerIndex == 4)
+									{
+										Terrain->getLayerBlendMap(layerIndex)->setBlendValue(points.x, points.y, Mixer->IntensityLayer4);
+									}
+									else if (layerIndex == 5)
+									{
+										Terrain->getLayerBlendMap(layerIndex)->setBlendValue(points.x, points.y, Mixer->IntensityLayer5);
+									}
 								}
 							}
-
-							if (Terrain->getLayerBlendMap(layerIndex) != nullptr)
+							//all points done now update blend maps
+							for (uint32 layerIndex = 1; layerIndex < 6; ++layerIndex)
 							{
-								//if(MapChanged)
-								{
-									CurrentBlendMap->dirty();
-									CurrentBlendMap->update();
-								}
-							}
-							//End
+								if (Terrain->getLayerCount() <= layerIndex)
+									continue;
+								auto CurrentBlendMap = Terrain->getLayerBlendMap(layerIndex);
+								if (CurrentBlendMap == nullptr)
+									continue;
+								CurrentBlendMap->dirty();
+								CurrentBlendMap->update();
 
+							}
 						}
 						AffectedPoints[t][i].clear();
 
