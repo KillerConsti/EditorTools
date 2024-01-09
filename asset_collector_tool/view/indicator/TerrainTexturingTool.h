@@ -28,6 +28,9 @@
 #include <qsf/message/MessageProxy.h>
 #include <qsf/debug/request/CompoundDebugDrawRequest.h>
 #include <qsf\debug\request\RectangleDebugDrawRequest.h>
+
+#include <qsf_editor/asset/AssetEditHelper.h>
+#include <asset_collector_tool\extern\include\Magick++.h>
 //[-------------------------------------------------------]
 //[ Forward declarations                                  ]
 //[-------------------------------------------------------]
@@ -154,11 +157,9 @@ namespace user
 			qsf::MessageProxy		mReplaceGroundLayer;
 			void ReplaceGroundLayer(const qsf::MessageParameters& parameters);
 
-
+			//when loading we may need to pay attention to "y"-Axis as it is flipped
 			void SaveTheFuckingMap();
 			std::string GetCurrentTimeForFileName();
-			float ReadValue(glm::vec2);
-			inline virtual void mousePressEvent(QMouseEvent& qMouseEvent) override;
 			inline virtual void mouseMoveEvent(QMouseEvent& qMouseEvent) override;
 
 			struct LayerData
@@ -185,6 +186,8 @@ namespace user
 			unsigned int		mChunkDrawRequestId;	///< Debug draw request IDs for chunk visualisation
 
 			void UpdateChunkDebugDrawg(glm::vec3 worldpos,int x ,int y);
+			int SelectedChunk_x;
+			int SelectedChunk_y;
 			//terrains shape
 			float partsize;
 			float mHeight;
@@ -196,7 +199,7 @@ namespace user
 			int mParts;
 			qsf::WeakPtr<kc_terrain::TerrainComponent> TerrainMaster;
 
-			void WriteTerrainTextureList();
+			void WriteTerrainTextureList(bool mousewasvalid);
 
 			int onAddNewTerrain(std::string BlendMapName,int x,int y);
 			bool TerrainTextureAllreadyExists(std::string CheckMe, std::vector<std::string>& ToCheck);
@@ -207,18 +210,7 @@ namespace user
 			std::string GetSelectedLayerColor();
 			int GetBlendMapWithTextureName(int xTerrain,int yTerrain);
 			uint8 TMG_getMaxLayers(const Ogre::Terrain* ogreTerrain) const;
-			void LoadOldMap();
-			/*struct kc_vec2
-			{
-				uint16 x;
-				uint16 y;
-				bool compare(kc_vec2 a, kc_vec2 b) {
-					if (a.x < b.x || a.y <b.y)
-						return 1;
-					else
-						return 0;
-				};
-				std::vector<kc_vec2> AffectedPoints[16][16];*/
+			
 			struct kc_vec2
 			{
 
@@ -243,7 +235,7 @@ namespace user
 			glm::vec2 ConvertMappointToWorldPoint(glm::vec2 WorldPoint);
 			void UpdateTerrains();
 			TerrainTexturingToolbox* TerrainEditGUI;
-
+			std::shared_ptr<qsf::editor::AssetEditHelper>	 mAssetEditHelper;
 			virtual bool onStartup(EditMode* previousEditMode) override;
 			virtual void onShutdown(EditMode* nextEditMode) override;
 

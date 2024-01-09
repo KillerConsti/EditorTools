@@ -140,6 +140,7 @@ namespace user
 			std::string GetLocalAssetNameFromBaseName(std::string BaseAssetName);
 			//BaseName, LocalAssetName
 			std::vector<std::pair<std::string,std::string>> m_AssetList;
+			bool IsInEraseMode();
 		protected:
 			virtual bool onStartup(qsf::editor::ToolboxView& toolboxView) override;
 			virtual void retranslateUi(qsf::editor::ToolboxView& toolboxView) override;
@@ -168,13 +169,16 @@ namespace user
 			void onCopyFromQSFTerrain(const bool pressed);
 
 			void ShowContextMenu(const QPoint &pos);
+			void onPushEraseMode(const bool pressed);
+			void onPushCombinedMode(const bool pressed);
 			//[-------------------------------------------------------]
 			//[ Private data                                          ]
 			//[-------------------------------------------------------]
 		private:
 			boost::container::flat_set <uint64> CreatedUnits;
 			bool WasPressed;
-
+			void ChangeMode(bool NewMode);
+			bool mEraseMode;
 			//[-------------------------------------------------------]
 			//[ CAMP reflection system                                ]
 			//[-------------------------------------------------------]

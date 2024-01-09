@@ -169,6 +169,7 @@ namespace user
 			return (mUITerrainEditToolbox->horizontalSlider->value());
 		}
 
+
 		bool TerrainEditToolbox::onStartup(qsf::editor::ToolboxView & toolboxView)
 		{
 		if(mUITerrainEditToolbox != nullptr)
@@ -390,6 +391,7 @@ namespace user
 		}
 
 
+
 		void TerrainEditToolbox::onChangeBrushType(const int Type)
 		{
 
@@ -405,6 +407,7 @@ namespace user
 		{
 			QSF_MESSAGE.emitMessage(qsf::MessageConfiguration("kc::copy_heightmap"));
 		}
+
 
 		TerrainEditToolbox::TerrainEditMode2 TerrainEditToolbox::GetEditMode()
 		{

@@ -1132,21 +1132,23 @@ namespace kc_terrain
 
 	void TerrainComponent::SetNewTextureMap1_4(qsf::AssetProxy NewAssetId)
 	{
+		mTexturesMap1_4 = NewAssetId;
 	}
 
 	qsf::AssetProxy TerrainComponent::GetNewTextureMap1_4()
 	{
-		return qsf::AssetProxy();
+		return mTexturesMap1_4;
 	}
 
 	void TerrainComponent::SetNewTextureMap5_8(qsf::AssetProxy NewAssetId)
 	{
+		mTextureMap5_8 = NewAssetId;
 	}
 
 
 	qsf::AssetProxy TerrainComponent::GetNewTextureMap5_8()
 	{
-		return qsf::AssetProxy();
+		return mTextureMap5_8;
 	}
 
 	qsf::AssetProxy TerrainComponent::GetLayerDescription()

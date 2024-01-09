@@ -732,8 +732,6 @@ namespace user
 				return;
 			if (TerrainMaster.get() == nullptr)
 				return;
-			auto path = TerrainEditGUI->GetSavePath();
-			//scalemap
 
 
 			std::string widthandheight = boost::lexical_cast<std::string>(Heighmapsize) + "x" + boost::lexical_cast<std::string>(Heighmapsize);

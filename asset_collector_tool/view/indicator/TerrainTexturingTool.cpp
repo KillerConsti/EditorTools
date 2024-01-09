@@ -109,6 +109,13 @@
 
 #include <qsf/debug/DebugDrawManager.h>
 #include <qsf/debug/request/RectangleDebugDrawRequest.h>
+
+#include <qsf/file/FileSystem.h>
+#include <experimental/filesystem> 
+#include <boost\filesystem.hpp>
+#include <qsf/plugin/QsfAssetTypes.h>
+#include <qsf/asset/project/AssetPackage.h>
+#include <qsf_editor/asset/import/AssetImportManager.h>
 //[-------------------------------------------------------]
 //[ Namespace                                             ]
 //[-------------------------------------------------------]
@@ -446,39 +453,15 @@ namespace user
 
 		void TerrainTexturingTool::ReplaceLayer(int LayerId, std::string NewMaterial)
 		{
-			qsf::Transform transform;
-			{
-				const qsf::TransformComponent* transformComponent = TerrainMaster->getEntity().getComponent<qsf::TransformComponent>();
-				if (nullptr != transformComponent)
-				{
-					transform = transformComponent->getTransform();
-				}
-			}
-			auto worldpos = oldmouspoint;
-			const float worldSize = TerrainMaster->getTerrainWorldSize();
-			const float worldSizeHalf = worldSize * 0.5f;
-			const float size = worldSize * 0.5f / TerrainMaster->getTerrainChunksPerEdge();
-			const glm::vec3 brushPosition = worldpos;
-
-			glm::vec3 position = transform.getPosition();
-			position.y = brushPosition.y;
-
-			const float snapSize = worldSize / static_cast<float>(TerrainMaster->getTerrainChunksPerEdge());
-			const float snapSizeHalf = snapSize * 0.5f;
-			position.x = glm::round((brushPosition.x - snapSizeHalf + worldSizeHalf) / snapSize) * snapSize - worldSizeHalf + snapSizeHalf;
-			position.z = glm::round((brushPosition.z - snapSizeHalf - worldSizeHalf) / snapSize) * snapSize + worldSizeHalf + snapSizeHalf;
-
-			transform.setPosition(position);
-			transform.setScale(glm::vec3(size, 1.0f, size));
 
 
-			const uint32 chunkX = glm::floor(((float)position.x + worldSizeHalf) / snapSize);
-			const uint32 chunkY = glm::floor((worldSizeHalf - (float)position.z) / snapSize);
-
-			//QSF_LOG_PRINTS(INFO,"x "<< xTerrain << " y " << yTerrain)
-			auto Terrain_chunck = TerrainMaster->getOgreTerrainGroup()->getTerrain(chunkX, chunkY);
+			//they are known from WriteTerrainTextureList
+			auto Terrain_chunck = TerrainMaster->getOgreTerrainGroup()->getTerrain(SelectedChunk_x, SelectedChunk_y);
 			if(Terrain_chunck == nullptr)
-			return;
+			{
+				QSF_LOG_PRINTS(INFO,"cant find terrain chunk "<< SelectedChunk_x <<" "<< SelectedChunk_y)
+				return;
+			}
 			if(qsf::AssetProxy(NewMaterial).getAsset() == nullptr)
 			return;
 			if (LayerId >= Terrain_chunck->getLayerCount())
@@ -486,7 +469,7 @@ namespace user
 			//QSF_LOG_PRINTS(INFO, "LayerId " << LayerId << " NewMaterial " << NewMaterial)
 				Terrain_chunck->setLayerTextureName(LayerId,0, NewMaterial.c_str());
 			TerrainMaster->RefreshMaterial(Terrain_chunck);
-			WriteTerrainTextureList();
+			WriteTerrainTextureList(true);
 
 		}
 
@@ -694,62 +677,239 @@ namespace user
 
 		void TerrainTexturingTool::SaveTheFuckingMap()
 		{
-			if (TerrainEditGUI == nullptr)
-				return;
-			if (TerrainMaster.get() == nullptr)
-				return;
-			auto path = TerrainEditGUI->GetSavePath();
-			for (long t = 0; t <= (mParts - 1); t++)
-			{
-				for (long i = 0; i <= (mParts - 1); i++)
-				{
+			//take a look how it's done in terrain edit tool (modelling)
+			//we need to save 5 layers and the layerlist
+			//layer 0 is always 100% and cant be read anyway
+			std::string widthandheight = boost::lexical_cast<std::string>(BlendMapSize) + "x" + boost::lexical_cast<std::string>(BlendMapSize);
+			Magick::Image* MagImage_1_4 = new Magick::Image();
+			MagImage_1_4->size(widthandheight);
+			MagImage_1_4->magick("TIF");
+			MagImage_1_4->type(Magick::ImageType::TrueColorAlphaType);
 
-					//QSF_LOG_PRINTS(INFO, " t " << t << " i " << i)
-					if (TerrainMaster->getOgreTerrainGroup()->getTerrain(t, i) != nullptr)
+			//for now we support only #5 so make it grayscale
+			Magick::Image* MagImage_5_8 = new Magick::Image();
+			MagImage_5_8->size(widthandheight);
+			MagImage_5_8->magick("TIF");
+			MagImage_5_8->type(Magick::ImageType::GrayscaleType);
+
+			auto Quant1_4 = MagImage_1_4->getPixels(0,0,BlendMapSize,BlendMapSize);
+			auto Quant5_8 = MagImage_5_8->getPixels(0, 0, BlendMapSize, BlendMapSize);
+			for (size_t x = 0; x < mParts; x++)
+			{
+				for (size_t y = 0; y < mParts; y++)
+				{
+					
+					auto Terrain = TerrainMaster->getOgreTerrainGroup()->getTerrain((long)x,(long)y);
+					if (Terrain == nullptr)
 					{
-						TerrainMaster->getOgreTerrainGroup()->getTerrain(t, i)->save(path + "\\a" + boost::lexical_cast<std::string>(t) + "_" + boost::lexical_cast<std::string>((i)) + ".chunk");
+						QSF_LOG_PRINTS(INFO,"Terrain x"<< x<< " Terrain y "<< y << " is a nullptr")
+					}
+					const uint32 maximumNumberOfLayers = TMG_getMaxLayers(Terrain);
+					const uint32 numberOfLayers = std::min(maximumNumberOfLayers, (uint32)Terrain->getLayerCount());
+					std::vector<std::pair<std::string, int>> TerrainNames;
+					//QSF_LOG_PRINTS(INFO, "we are here"<< (int)maximumNumberOfLayers<<  " ...."<< numberOfLayers  <<"...."<<  (uint32)Terrain->getLayerCount())
+					int Offsetx = x*partsize;
+					int Offsety = y* partsize;
+					for (uint32 layerIndex = 0; layerIndex < numberOfLayers; ++layerIndex)
+					{
+						if (layerIndex == 0)
+						{
+							//just json data
+							continue;
+						}
+						if (Terrain->getLayerBlendMap(layerIndex) == nullptr)
+							continue;
+						//json data + pixeldata
+						//json data
+
+						//pixel data
+
+							auto BM = Terrain->getLayerBlendMap(layerIndex);
+						for (size_t intern_x = 0; intern_x < partsize; intern_x++)
+						{
+							for (size_t intern_y = 0; intern_y < partsize; intern_y++)
+							{
+								//Read and write data
+								//map 1
+								if (layerIndex < 5) //1 - r 2-g  3-b 4-a
+								{
+									float value = BM->getBlendValue(intern_x,intern_y);
+									//notice that we mirror intern_y here
+									uint64 offset = ((Offsety + partsize-1-intern_y)* BlendMapSize + Offsetx + intern_x) * 4 + layerIndex - 1; //4 is because we use 4 channels
+									//layerindex -1 is the channel selection 0 is red, 1 is green, 2 is blue and 3 is alpha. As we start at layerindex 1 we have to substract -1
+									*(Quant1_4 + offset) = value * 65535.f;
+								}
+								else
+								{
+									float value = BM->getBlendValue(intern_x, intern_y);
+									uint64 offset = ((Offsety + partsize - 1 - intern_y)* BlendMapSize + Offsetx + intern_x); //just one greyscale channel <-> no offset
+									*(Quant5_8 + offset) = value * 65535.f;
+								}
+							}
+						}
 					}
 				}
 			}
-			//qsf::Asset* asset = nullptr;
-			//asset = mAssetEditHelper->duplicateAsset(a, OrginalPackage, nullptr, a);
+			//flip?
+			MagImage_1_4->flip();
+			MagImage_5_8->flip();
+			MagImage_1_4->syncPixels();
+			MagImage_5_8->syncPixels();
 
-
-			//we need to push this stuff in a assetpackage!
-		}
-
-		void TerrainTexturingTool::LoadOldMap()
-		{
-
-			//SaveTheFuckingMap();
-			if (TerrainEditGUI == nullptr)
-				return;
-			if (TerrainMaster.get() == nullptr)
-				return;
-			auto path = TerrainEditGUI->GetSavePath();
-			TerrainMaster->getOgreTerrainGroup()->removeAllTerrains();
-			QSF_RENDERER.getOgreRoot()->addResourceLocation(path, "", "./chunks");
-			for (long x = 0; x <= (mParts - 1); x++)
+			//finaaly we need to tell our asset system
+			mAssetEditHelper = std::shared_ptr<qsf::editor::AssetEditHelper>(new qsf::editor::AssetEditHelper());
+			auto IAP = mAssetEditHelper->getIntermediateAssetPackage();
+			if (TerrainMaster->GetNewTextureMap1_4().getAsset() == nullptr)
 			{
-				for (long y = 0; y <= (mParts - 1); y++)
+
+				//QSF_LOG_PRINTS(INFO, "asset not found " << LocalAssetName)
+				try
 				{
-					if (x == 0 && y == 0)
-					{
-						TerrainMaster->getOgreTerrainGroup()->defineTerrain(0, 0, "em5/unknown/default/0_0");
-						//QSF_LOG_PRINTS(INFO, x << " 1" << y)
-					}
+					//a add asset
+					auto TimeStamp = GetCurrentTimeForFileName();
+					auto Name = TerrainMaster->getEntity().getComponent<qsf::MetadataComponent>()->getName();
+
+
+					//b create folder structure in assethelper (to read and write)
+					if (!boost::filesystem::exists((QSF_FILE.getBaseDirectory() + "/" + IAP->getRelativeDirectory() + "/texture/heightmap")))
+						boost::filesystem::create_directories(QSF_FILE.getBaseDirectory() + "/" + IAP->getRelativeDirectory() + "/texture/heightmap");
+					//c write to new folder -I think it will copy to our direction we wrote before
+					//ogreImage.save(QSF_FILE.getBaseDirectory() + "/" + IAP->getRelativeDirectory() + "/texture/heightmap/heightmap_" + Name + "_" + TimeStamp +".tif");
+					auto relAssetDirectory = QSF_EDITOR_APPLICATION.getAssetImportManager().getDefaultDestinationAssetPackage()->getRelativeDirectory();
+					if (!boost::filesystem::exists((QSF_FILE.getBaseDirectory() + "/" + relAssetDirectory + "/texture/heightmap")))
+						boost::filesystem::create_directories(QSF_FILE.getBaseDirectory() + "/" + relAssetDirectory + "/texture/heightmap");
+
+					auto fileName = "terraintexture_c1_to_c4_"+Name;
+
+					//MagImage->write(QSF_FILE.getBaseDirectory() + "/" + relAssetDirectory + "/texture/heightmap/heightmap_" + Name  +  ".tif");
+					QSF_LOG_PRINTS(INFO, "saved ogre img to " << QSF_FILE.getBaseDirectory() + "/" + IAP->getRelativeDirectory() + "/texture/heightmap/"+ fileName+".tif")
+						//d learn our assets a few thing <-> this seems not needed
+						//delete[] buffer;
+
+						auto Asset = mAssetEditHelper->addAsset(QSF_EDITOR_APPLICATION.getAssetImportManager().getDefaultDestinationAssetPackage()->getName(), qsf::QsfAssetTypes::TEXTURE, "heightmap", fileName);
+					MagImage_1_4->write(QSF_FILE.getBaseDirectory() + "/" + IAP->getRelativeDirectory() + "/texture/heightmap/"+ fileName+ ".tif");
+					if (Asset == nullptr)
+						QSF_LOG_PRINTS(INFO, "error occured " << Name << " could not create an asset")
 					else
 					{
-						TerrainMaster->getOgreTerrainGroup()->defineTerrain(x, y, Ogre::String("chunks/a" + boost::lexical_cast<std::string>(x) + "_" + boost::lexical_cast<std::string>((y)) + ""));
-						//QSF_LOG_PRINTS(INFO, x << " " << y)
+						auto CachedAsset = mAssetEditHelper->getCachedAsset(Asset->getGlobalAssetId());
+						if (CachedAsset == nullptr)
+							CachedAsset = &qsf::CachedAsset(Asset->getGlobalAssetId());
+						if (CachedAsset == nullptr)
+						{
+							QSF_LOG_PRINTS(INFO, "still a nullptr")
+						}
+						CachedAsset->setType("tif");
+						//QSF_LOG_PRINTS(INFO, qsf::AssetProxy(Asset->getGlobalAssetId()).getAbsoluteCachedAssetDataFilename())
+
+						if (mAssetEditHelper->setAssetUploadData(Asset->getGlobalAssetId(), true, true))
+							QSF_LOG_PRINTS(INFO, "Caching asset was not succesfull")
 					}
+					TerrainMaster->SetNewTextureMap1_4(qsf::AssetProxy(Asset->getGlobalAssetId()));
 				}
+				catch (const std::exception& e)
+				{
+					QSF_LOG_PRINTS(INFO, e.what())
+				}
+
+			}
+			else //tell them that asset was changed :)
+			{
+
+				//QSF_LOG_PRINTS(INFO,"for some reasons it exists")
+				//ogreImage.save(TerrainMaster->GetNewHeightMap().getAbsoluteCachedAssetDataFilename());
+				MagImage_1_4->write(TerrainMaster->GetNewTextureMap1_4().getAbsoluteCachedAssetDataFilename());
+				std::string TargetAssetName = qsf::AssetProxy(TerrainMaster->GetNewTextureMap1_4()).getAssetPackage()->getName();
+				mAssetEditHelper->tryEditAsset(qsf::AssetProxy(TerrainMaster->GetNewTextureMap1_4()).getGlobalAssetId(), TargetAssetName);
+				auto CachedAsset = mAssetEditHelper->getCachedAsset(qsf::AssetProxy(TerrainMaster->GetNewTextureMap1_4()).getAsset()->getGlobalAssetId());
+				/*if (CachedAsset == nullptr)
+				QSF_LOG_PRINTS(INFO, "cached asset is a nullptr")
+				else
+				QSF_LOG_PRINTS(INFO, "cached asset isnot null?")*/
+				mAssetEditHelper->setAssetUploadData(qsf::AssetProxy(TerrainMaster->GetNewTextureMap1_4()).getAsset()->getGlobalAssetId(), true, true);
+				//delete[] buffer;
 			}
 
-			TerrainMaster->getOgreTerrainGroup()->loadAllTerrains(true);
-			TerrainMaster->getOgreTerrainGroup()->freeTemporaryResources();
-			//QSF_LOG_PRINTS(INFO, "Load old map done!")
+			if (TerrainMaster->GetNewTextureMap5_8().getAsset() == nullptr)
+			{
+
+				//QSF_LOG_PRINTS(INFO, "asset not found " << LocalAssetName)
+				try
+				{
+					//a add asset
+					auto TimeStamp = GetCurrentTimeForFileName();
+					auto Name = TerrainMaster->getEntity().getComponent<qsf::MetadataComponent>()->getName();
+
+
+					//b create folder structure in assethelper (to read and write)
+					if (!boost::filesystem::exists((QSF_FILE.getBaseDirectory() + "/" + IAP->getRelativeDirectory() + "/texture/heightmap")))
+						boost::filesystem::create_directories(QSF_FILE.getBaseDirectory() + "/" + IAP->getRelativeDirectory() + "/texture/heightmap");
+					//c write to new folder -I think it will copy to our direction we wrote before
+					//ogreImage.save(QSF_FILE.getBaseDirectory() + "/" + IAP->getRelativeDirectory() + "/texture/heightmap/heightmap_" + Name + "_" + TimeStamp +".tif");
+					auto relAssetDirectory = QSF_EDITOR_APPLICATION.getAssetImportManager().getDefaultDestinationAssetPackage()->getRelativeDirectory();
+					if (!boost::filesystem::exists((QSF_FILE.getBaseDirectory() + "/" + relAssetDirectory + "/texture/heightmap")))
+						boost::filesystem::create_directories(QSF_FILE.getBaseDirectory() + "/" + relAssetDirectory + "/texture/heightmap");
+
+					auto fileName = "terraintexture_c5_" + Name;
+
+					//MagImage->write(QSF_FILE.getBaseDirectory() + "/" + relAssetDirectory + "/texture/heightmap/heightmap_" + Name  +  ".tif");
+					QSF_LOG_PRINTS(INFO, "saved ogre img to " << QSF_FILE.getBaseDirectory() + "/" + IAP->getRelativeDirectory() + "/texture/heightmap/" + fileName + ".tif")
+						//d learn our assets a few thing <-> this seems not needed
+						//delete[] buffer;
+
+						auto Asset = mAssetEditHelper->addAsset(QSF_EDITOR_APPLICATION.getAssetImportManager().getDefaultDestinationAssetPackage()->getName(), qsf::QsfAssetTypes::TEXTURE, "heightmap", fileName);
+					MagImage_5_8->write(QSF_FILE.getBaseDirectory() + "/" + IAP->getRelativeDirectory() + "/texture/heightmap/" + fileName + ".tif");
+					if (Asset == nullptr)
+						QSF_LOG_PRINTS(INFO, "error occured " << Name << " could not create an asset")
+					else
+					{
+						auto CachedAsset = mAssetEditHelper->getCachedAsset(Asset->getGlobalAssetId());
+						if (CachedAsset == nullptr)
+							CachedAsset = &qsf::CachedAsset(Asset->getGlobalAssetId());
+						if (CachedAsset == nullptr)
+						{
+							QSF_LOG_PRINTS(INFO, "still a nullptr")
+						}
+						CachedAsset->setType("tif");
+						//QSF_LOG_PRINTS(INFO, qsf::AssetProxy(Asset->getGlobalAssetId()).getAbsoluteCachedAssetDataFilename())
+
+						if (mAssetEditHelper->setAssetUploadData(Asset->getGlobalAssetId(), true, true))
+							QSF_LOG_PRINTS(INFO, "Caching asset was not succesfull")
+					}
+					TerrainMaster->SetNewTextureMap5_8(qsf::AssetProxy(Asset->getGlobalAssetId()));
+				}
+				catch (const std::exception& e)
+				{
+					QSF_LOG_PRINTS(INFO, e.what())
+				}
+
+			}
+			else //tell them that asset was changed :)
+			{
+
+				//QSF_LOG_PRINTS(INFO,"for some reasons it exists")
+				//ogreImage.save(TerrainMaster->GetNewHeightMap().getAbsoluteCachedAssetDataFilename());
+				MagImage_5_8->write(TerrainMaster->GetNewTextureMap5_8().getAbsoluteCachedAssetDataFilename());
+				std::string TargetAssetName = qsf::AssetProxy(TerrainMaster->GetNewTextureMap5_8()).getAssetPackage()->getName();
+				mAssetEditHelper->tryEditAsset(qsf::AssetProxy(TerrainMaster->GetNewTextureMap5_8()).getGlobalAssetId(), TargetAssetName);
+				auto CachedAsset = mAssetEditHelper->getCachedAsset(qsf::AssetProxy(TerrainMaster->GetNewTextureMap5_8()).getAsset()->getGlobalAssetId());
+				/*if (CachedAsset == nullptr)
+				QSF_LOG_PRINTS(INFO, "cached asset is a nullptr")
+				else
+				QSF_LOG_PRINTS(INFO, "cached asset isnot null?")*/
+				mAssetEditHelper->setAssetUploadData(qsf::AssetProxy(TerrainMaster->GetNewTextureMap5_8()).getAsset()->getGlobalAssetId(), true, true);
+				//delete[] buffer;
+			}
+
+			// Cleanup
+
+			QSF_LOG_PRINTS(INFO, "Map was saved succesfully")
+				mAssetEditHelper->submit();
+			//mAssetEditHelper->callWhenFinishedUploading(boost::bind(&TerrainEditTool::WaitForSaveTerrain, this, boost::function<void(bool)>(boost::bind(&TerrainEditTool::onWaitForSave_TerrainDone, this, _1))));
+			TerrainMaster->setAllPropertyOverrideFlags(true);
+
 		}
+
 
 
 		std::string TerrainTexturingTool::GetCurrentTimeForFileName()
@@ -762,85 +922,6 @@ namespace user
 			return s;
 		}
 
-		float TerrainTexturingTool::ReadValue(glm::vec2 point)
-		{
-			int xTerrain = 0;
-			int xRemaining = (int)point.x;
-			int yTerrain = 0;
-			int yRemaining = (int)point.y;
-			//QSF_LOG_PRINTS(INFO,point.x << " " << point.y);
-			//we have a pattern like 4x4 (so in total 16 Terrains ... now find the correct one)
-			//remaining is the point on the selected Terrain
-			while (true)
-			{
-				if ((xRemaining - partsize) > 0)
-				{
-					xTerrain++;
-					xRemaining = xRemaining - partsize;
-				}
-				else
-					break;
-			}
-			while (true)
-			{
-				if ((yRemaining - partsize) > 0)
-				{
-					yTerrain++;
-					yRemaining = yRemaining - partsize;
-				}
-				else
-					break;
-			}
-			//QSF_LOG_PRINTS(INFO, xTerrain << " " << yTerrain << " " << xRemaining << " " << yRemaining)
-			auto Terrain = TerrainMaster->getOgreTerrainGroup()->getTerrain(xTerrain, yTerrain);
-			if (Terrain == nullptr)
-			{
-
-				//QSF_LOG_PRINTS(INFO, "Terrain is a nullptr" << xTerrain << " " << yTerrain)
-				return 0.f;
-			}
-			return Terrain->getHeightAtPoint(xRemaining, yRemaining);//TerrainEditGUI->GetHeight());
-		}
-
-		inline void TerrainTexturingTool::mousePressEvent(QMouseEvent & qMouseEvent)
-		{
-			if (Qt::RightButton == qMouseEvent.button() && TerrainEditGUI != nullptr && TerrainEditGUI->GetEditMode() == TerrainEditGUI->Set)
-			{
-				glm::vec3 mousepos2;
-				if (evaluateBrushPosition(qMouseEvent.pos(), mousepos2))
-				{
-					glm::vec2 Mappoint = ConvertWorldPointToRelativePoint(glm::vec2(mousepos2.x, mousepos2.z));
-					Mappoint = Mappoint*BlendMapSize;
-					float value = ReadValue(glm::vec2(glm::round(Mappoint.x), glm::round(Mappoint.y)));
-					//TerrainEditGUI->SetHeight(value);
-					return;
-				}
-			}
-			if (Qt::LeftButton != qMouseEvent.button()) //only left button
-				return;
-
-			glm::vec3 mousepos2;
-			if (evaluateBrushPosition(qMouseEvent.pos(), mousepos2))
-			{
-				//QSF_LOG_PRINTS(INFO,mousepos2);
-				oldmouspoint = mousepos2;
-				mouseisvalid = true;
-
-				if (TerrainEditGUI != nullptr)
-					Radius = TerrainEditGUI->GetBrushRadius();
-				//QSF_LOG_PRINTS(INFO, "Radius is" << Radius)
-				return;
-
-			}
-			else
-				//QSF_LOG_PRINTS(INFO,"invalid");
-				mouseisvalid = false;
-
-			//TerrainEditGUI.set(TET);
-			if (TerrainEditGUI != nullptr)
-				Radius = TerrainEditGUI->GetBrushRadius();
-			//QSF_LOG_PRINTS(INFO,"Radius is"<< Radius)
-		}
 
 		inline void TerrainTexturingTool::mouseMoveEvent(QMouseEvent & qMouseEvent)
 		{
@@ -851,8 +932,11 @@ namespace user
 			{
 				//QSF_LOG_PRINTS(INFO, mousepos2);
 				oldmouspoint = mousepos2;
+				
+				//if mouse was invalid we enforce an update of our debug draw "grid"
+				WriteTerrainTextureList(mouseisvalid);
 				mouseisvalid = true;
-				WriteTerrainTextureList();
+				
 				//QSF_LOG_PRINTS(INFO, "Radius is" << Radius)
 				return;
 			}
@@ -863,11 +947,12 @@ namespace user
 				if (qsf::isInitialized(mChunkDrawRequestId))
 				{
 					QSF_DEBUGDRAW.cancelRequest(mChunkDrawRequestId);
+					mChunkDrawRequestId = qsf::getUninitialized<unsigned int>();
 				}
 				}
 		}
 
-		void TerrainTexturingTool::UpdateChunkDebugDrawg(glm::vec3 worldpos, int x, int y)
+		void TerrainTexturingTool::UpdateChunkDebugDrawg(glm::vec3 worldpos, int x_in, int y_in)
 		{
 			if (qsf::isUninitialized(mChunkDrawRequestId))
 			{
@@ -897,29 +982,19 @@ namespace user
 
 				const float snapSize = worldSize / static_cast<float>(TerrainMaster->getTerrainChunksPerEdge());
 				const float snapSizeHalf = snapSize * 0.5f;
-				position.x = glm::round((brushPosition.x - snapSizeHalf + worldSizeHalf) / snapSize) * snapSize - worldSizeHalf + snapSizeHalf;
-				position.z = glm::round((brushPosition.z - snapSizeHalf - worldSizeHalf) / snapSize) * snapSize + worldSizeHalf + snapSizeHalf;
+
+				position.x = snapSize*x_in+snapSizeHalf+position.x -worldSizeHalf;
+				position.z = worldSizeHalf - snapSize*y_in-snapSizeHalf+position.z;
+				//position.z = 1.f*-(snapSize*y_in + snapSizeHalf) + position.x + worldSizeHalf;
 
 				transform.setPosition(position);
 				transform.setScale(glm::vec3(size, 1.0f, size));
-
-				{ // Tell the world about the selected chunk
-					const uint32 chunkX = glm::floor(((float)position.x + worldSizeHalf) / snapSize);
-					const uint32 chunkY = glm::floor((worldSizeHalf - (float)position.z) / snapSize);
-					if (x != chunkX || y != chunkY)
-					{
-						x = chunkX;
-						y = chunkY;
-						//Q_EMIT chunkChanged(chunkX, chunkY);
-					}
-				}
-
 				// Tell the debug draw request about the transform
 				QSF_DEBUGDRAW.setRequestTransform(mChunkDrawRequestId, transform);
 			}
 		}
 
-		void TerrainTexturingTool::WriteTerrainTextureList()
+		void TerrainTexturingTool::WriteTerrainTextureList(bool MouseWasvalid)
 		{
 			//if (TerrainEditGUI->GetLayerColor() != "")
 				//return;
@@ -955,6 +1030,10 @@ namespace user
 			}
 			if(m_NeedUpdatingTerrainList.x == xTerrain && m_NeedUpdatingTerrainList.y == yTerrain && m_NeedUpdatingTerrainList.z == 0)
 			{
+				if (!MouseWasvalid)
+				{
+					UpdateChunkDebugDrawg(oldmouspoint, xTerrain, yTerrain);
+				}
 				return;
 			}
 			else
@@ -1017,6 +1096,8 @@ namespace user
 			}
 			//kc
 			TerrainEditGUI->SetCurrentTerrainData(TerrainNames, xTerrain, yTerrain);
+			SelectedChunk_x = xTerrain;
+			SelectedChunk_y = yTerrain;
 		}
 
 		int TerrainTexturingTool::onAddNewTerrain(std::string BlendMapName, int x, int y)
@@ -1045,7 +1126,11 @@ namespace user
 				if (Terrain->getLayerCount() < 6)
 				{
 					LayerToReplace = Terrain->getLayerCount();
-					//QSF_LOG_PRINTS(INFO, "add completly new layer")
+					QSF_LOG_PRINTS(INFO, "add completly new layer" << LayerToReplace)
+				}
+				else
+				{
+					//QSF_LOG_PRINTS(INFO, "add completly new layer failed " << Terrain->getLayerCount())
 				}
 			}
 			if (LayerToReplace == -1)
@@ -1082,7 +1167,7 @@ namespace user
 			}
 			else
 			{
-				if(LayerToReplace < 5 && Terrain->getLayerCount() <=6)
+				if(LayerToReplace <= 5 && Terrain->getLayerCount() <=6)
 				{
 				Terrain->addLayer();
 				Terrain->setLayerTextureName(LayerToReplace, 0, BlendMapName);

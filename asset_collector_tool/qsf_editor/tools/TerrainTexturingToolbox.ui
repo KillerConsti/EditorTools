@@ -12,8 +12,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>297</width>
-    <height>484</height>
+    <width>425</width>
+    <height>746</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -132,6 +132,33 @@ text-decoration: underline;</string>
       <enum>QAbstractItemView::DragOnly</enum>
      </property>
     </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <property name="sizeConstraint">
+      <enum>QLayout::SetDefaultConstraint</enum>
+     </property>
+     <property name="leftMargin">
+      <number>1</number>
+     </property>
+     <property name="topMargin">
+      <number>10</number>
+     </property>
+     <item>
+      <widget class="QCheckBox" name="checkBox_erase">
+       <property name="text">
+        <string>Erase Mode (100% Intensity)</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="checkBox_combined">
+       <property name="text">
+        <string>Combined Mode</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_2"/>

@@ -52,7 +52,8 @@ namespace user
 			mUITerrainTexturingToolbox(new Ui::TerrainTexturingToolbox()),
 			mMode(Set),
 			mSavepath(""),
-			OldTerrain(glm::vec2(-1, -1))
+			OldTerrain(glm::vec2(-1, -1)),
+			mEraseMode(true)
 		{
 
 		}
@@ -88,6 +89,11 @@ namespace user
 			return (mUITerrainTexturingToolbox->horizontalSlider->value());
 		}
 
+		bool TerrainTexturingToolbox::IsInEraseMode()
+		{
+			return mEraseMode;
+		}
+
 		bool TerrainTexturingToolbox::onStartup(qsf::editor::ToolboxView & toolboxView)
 		{
 
@@ -96,6 +102,7 @@ namespace user
 				mUITerrainTexturingToolbox->setupUi(toolboxView.widget());
 			if (mUITerrainTexturingToolbox == nullptr) //shouldnt happen
 				return false;
+			ChangeMode(true);
 			QObject::connect(mUITerrainTexturingToolbox->pushButton, SIGNAL(clicked(bool)), this, SLOT(onPushSaveMap(bool)));
 			QObject::connect(mUITerrainTexturingToolbox->pushButton_2, SIGNAL(clicked(bool)), this, SLOT(onSetSaveDirectory(bool)));
 			QObject::connect(mUITerrainTexturingToolbox->pushButtonSelect, SIGNAL(clicked(bool)), this, SLOT(onPushSelectButton(bool)));
@@ -106,7 +113,8 @@ namespace user
 			QObject::connect(mUITerrainTexturingToolbox->horizontalSlider, SIGNAL(valueChanged(int)), this, SLOT(OnBrushIntensitySliderChanged(int)));
 			QObject::connect(mUITerrainTexturingToolbox->CopyFromQSFTerrain, SIGNAL(clicked(bool)), this, SLOT(onCopyFromQSFTerrain(bool)));
 			//Editmodes
-
+			QObject::connect(mUITerrainTexturingToolbox->checkBox_erase, SIGNAL(clicked(bool)), this, SLOT(onPushEraseMode(bool)));
+			QObject::connect(mUITerrainTexturingToolbox->checkBox_combined, SIGNAL(clicked(bool)), this, SLOT(onPushCombinedMode(bool)));
 			QObject::connect(mUITerrainTexturingToolbox->comboBox, SIGNAL(currentIndexChanged(int)), SLOT(onChangeBrushType(int)));
 			InitSavePath();
 			UpdateTerrainList();
@@ -497,6 +505,26 @@ namespace user
 				//QSF_LOG_PRINTS(INFO,"got a nice mode")
 					static_cast<TerrainTexturingTool*>(editModeManager.get<TerrainTexturingTool>())->ReplaceLayer(id, GetLocalAssetNameFromBaseName(Text));
 			}
+		}
+
+		void TerrainTexturingToolbox::onPushEraseMode(const bool pressed)
+		{
+			ChangeMode(true);
+		}
+
+		void TerrainTexturingToolbox::onPushCombinedMode(const bool pressed)
+		{
+			ChangeMode(false);
+		}
+
+		void TerrainTexturingToolbox::ChangeMode(bool NewMode)
+		{
+			mEraseMode = NewMode;
+			mUITerrainTexturingToolbox->checkBox_erase->setChecked(NewMode);
+			mUITerrainTexturingToolbox->checkBox_combined->setChecked(!NewMode);
+			mUITerrainTexturingToolbox->horizontalSlider->setEnabled(!NewMode);
+
+
 		}
 
 

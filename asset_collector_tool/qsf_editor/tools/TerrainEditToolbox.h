@@ -158,8 +158,6 @@ namespace user
 			void onPushSmooth(const bool pressed);
 			void onSetSaveDirectory(const bool pressed);
 			void onPushLoadMap(const bool pressed);
-
-			
 			void onChangeBrushType(const int Type);
 			//void onEditPrefab(QT::QString String);
 			void onPushSaveMap(const bool pressed);
@@ -171,7 +169,8 @@ namespace user
 		private:
 			boost::container::flat_set <uint64> CreatedUnits;
 			bool WasPressed;
-
+			
+			
 			//[-------------------------------------------------------]
 			//[ CAMP reflection system                                ]
 			//[-------------------------------------------------------]
