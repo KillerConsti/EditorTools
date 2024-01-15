@@ -1,0 +1,193 @@
+void AssetCollectorTool::ProcessMaterials(const qsf::JobArguments & jobArguments)
+	{
+		 mScanJobState;
+
+		switch (mScanJobState.mState)
+		{
+		case user::editor::AssetCollectorTool::STATE_SETUP:
+		{
+			auto label = "Category: " + mScanJobState.mCategoryName;
+			mUiAssetCollectorTool->label->setText(QString(label.c_str()));
+			
+			mScanJobState.AssetsForNormalScan = ReadCategory(mScanJobState.mCategoryName);
+			if (mScanJobState.AssetsForNormalScan.empty())
+			{
+				QSF_LOG_PRINTS(INFO, "Category was found but has no prefabs within " << mScanJobState.mCategoryName)
+					mProcessMaterials.unregister();
+					return;
+			}
+			mScanJobState.CurrentIndex = 0;
+			mScanJobState.mState = STATE_COLLECTING_GENERAL;
+			return;
+		}
+		case user::editor::AssetCollectorTool::STATE_COLLECTING_GENERAL:
+			{
+				if(mScanJobState.CurrentIndex < mScanJobState.AssetsForNormalScan.size()) //is this enough?
+				{
+					ReadAssetDependeciesAndFilter();
+					mScanJobState.CurrentIndex++;
+					return;
+				}
+				else
+				{
+					//thats a lot of work so filter now double stuff out
+					std::sort(mScanJobState.MaterialsToCopy.begin(), mScanJobState.MaterialsToCopy.end());
+					mScanJobState.MaterialsToCopy.erase(std::unique(mScanJobState.MaterialsToCopy.begin(), mScanJobState.MaterialsToCopy.end()), mScanJobState.MaterialsToCopy.end());
+					mScanJobState.mState = STATE_ANALYSE_MATERIAL_GENERAL;
+					return;
+				}
+					
+
+			}
+		case user::editor::AssetCollectorTool::STATE_ANALYSE_MATERIAL_GENERAL:
+			break;
+		case user::editor::AssetCollectorTool::STATE_ANALYSE_MATERIAL_DEEP:
+			break;
+		case user::editor::AssetCollectorTool::STATE_COPY_STUFF:
+			break;
+		default:
+			break;
+		}
+		std::vector<uint64> CompleteList = ReadAssetDependeciesAndFilter(Assets);
+		//copy and paste
+
+		QString Text;
+		//filter from text
+		std::vector<std::string> IgnoreModListProto;
+		//mods that really exist
+		//only this one is used later
+		std::vector<std::string> IgnoreModListFinal;
+		//Mods we have in our EM5 installation
+		std::vector<std::string> Modlist;
+		auto Modsystem = EM5_MOD.getMods();
+		for (auto a : Modsystem)
+		{
+			Modlist.push_back(a.second->getName());
+		}
+		//not a mod but we may want to filter it
+		Modlist.push_back("em5");
+		std::string Input = mUiAssetCollectorTool->IgnoreList->toPlainText().toStdString();
+		//each project should be written on its own line e.g.
+		/*
+		em5
+		Feuerwehr Wuppertal
+		Mod 3
+		...
+		*/
+		// and we put them in a vector by splitting when we read the next line char \n
+		boost::split(IgnoreModListProto, Input, boost::is_any_of("\n"));
+		for (auto a : IgnoreModListProto)
+		{
+			bool found = false;
+			for (auto b : Modlist)
+			{
+				if (b == a)
+				{
+					IgnoreModListFinal.push_back(a);
+					found = true;
+					continue;
+				}
+			}
+			if (!found)
+				QSF_LOG_PRINTS(INFO, "The mod " << a << " on your ignore list was not found");
+		}
+
+
+		//now go through all assets
+		//this is just for the Log
+		int CopiedCounter = 0;
+		int IgnoreCounter = 0;
+		//we do not only count but also log the asset numbers 
+		std::vector<uint64> MissingAssetsCounter;
+		for (auto b : CompleteList)
+
+		{
+			std::stringstream ss;
+			ss << b;
+			if (qsf::AssetProxy(b).getAsset() == nullptr)
+			{
+				MissingAssetsCounter.push_back(b);
+				continue;
+			}
+			auto Package = qsf::AssetProxy(b).getAssetPackage();
+			auto ProjectName = Package->getProject().getName();
+			Text += QString(ss.str().c_str()) + " " + QString(qsf::AssetProxy(b).getLocalAssetName().c_str()) + " (" + QString(ProjectName.c_str()) + ")\n";
+			//now check if it is ignored
+			bool found = false;
+			for (auto a : IgnoreModListFinal)
+			{
+				if (a == ProjectName)
+				{
+					found = true;
+					IgnoreCounter++;
+					continue;
+				}
+			}
+			if (!found)
+			{
+				mylist.push_back(b);
+				CopiedCounter++;
+			}
+		}
+
+		//how many missing assets
+		if (MissingAssetsCounter.empty())
+		{
+			QSF_LOG_PRINTS(INFO, "There are no missing assets");
+		}
+		else
+		{
+			std::stringstream st;
+			st << MissingAssetsCounter.size();
+			std::string MissingAssets = "We found " + st.str() + " missing assets: ";
+			for (auto a : MissingAssetsCounter)
+			{
+				std::stringstream ss;
+				ss << a;
+				MissingAssets += ss.str() + ", ";
+			}
+			QSF_LOG_PRINTS(INFO, MissingAssets)
+		}
+		// ignored assets
+		QSF_LOG_PRINTS(INFO, IgnoreCounter << " assets will be ignored")
+			// copy counter
+			QSF_LOG_PRINTS(INFO, CopiedCounter << " assets will be copied")
+			mUiAssetCollectorTool->textBrowser->setText(Text);
+	}
+
+	std::vector<uint64> AssetCollectorTool::ReadAssetDependeciesAndFilter()
+	{
+		mScanJobState.MaterialsToCopy;
+		std::vector<uint64> CompleteList;
+		auto a = mScanJobState.AssetsForNormalScan.at(mScanJobState.CurrentIndex);
+		auto ADC = qsf::AssetDependencyCollector(a->getGlobalAssetId());
+		std::vector<uint64> EntityList;
+		ADC.collectUniqueRecursiveAssetDependenciesWithDeriverance(EntityList);
+		mScanJobState.MaterialsToCopy.insert(mScanJobState.MaterialsToCopy.end(), EntityList.begin(), EntityList.end());
+		
+	}
+	
+	
+				qsf::JobProxy mProcessMaterials;
+			void ProcessMaterials(const qsf::JobArguments& jobArguments);
+
+				enum ScanState
+			{
+				STATE_SETUP,
+				STATE_COLLECTING_GENERAL,
+				STATE_ANALYSE_MATERIAL_GENERAL,
+				STATE_ANALYSE_MATERIAL_DEEP,
+				STATE_COPY_STUFF
+			};
+
+				struct JobState
+				{
+					ScanState mState = STATE_SETUP;
+					std::string mCategoryName; //has to be set
+					qsf::Assets AssetsForNormalScan;
+					std::vector<uint64> MaterialsToScan;
+					uint64 CurrentIndex;
+					std::vector<uint64> MaterialsToCopy;
+					
+
+			};

@@ -1175,6 +1175,14 @@ namespace kc_terrain
 	{
 		mTerrainMaxHeight = a;
 	}
+	void TerrainComponent::SetTerrainLayerList(qsf::AssetProxy NewAssetId)
+	{
+		mTerrainLayerList = NewAssetId;
+	}
+	qsf::AssetProxy TerrainComponent::GetTerrainLayerList()
+	{
+		return mTerrainLayerList;
+	}
 	//[-------------------------------------------------------]
 	//[ Namespace                                             ]
 	//[-------------------------------------------------------]

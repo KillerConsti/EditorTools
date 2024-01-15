@@ -327,9 +327,6 @@
     </QtRCC>
   </ItemGroup>
   <ItemGroup>
-    <QtUI Include="asset_collector_tool\view\indicator\AssetCollectorTool.ui">
-      <Filter>Source Files\view\AssetCollectorTool</Filter>
-    </QtUI>
     <QtUI Include="asset_collector_tool\view\indicator\UnitPlacerView.ui">
       <Filter>Source Files\view\AssetCollectorTool</Filter>
     </QtUI>
@@ -358,6 +355,9 @@
       <Filter>Source Files\view\AssetCollectorTool</Filter>
     </QtUI>
     <QtUI Include="asset_collector_tool\view\OrderInfoPictureCreator.ui">
+      <Filter>Source Files\view\AssetCollectorTool</Filter>
+    </QtUI>
+    <QtUI Include="asset_collector_tool\view\indicator\AssetCollectorTool.ui">
       <Filter>Source Files\view\AssetCollectorTool</Filter>
     </QtUI>
   </ItemGroup>

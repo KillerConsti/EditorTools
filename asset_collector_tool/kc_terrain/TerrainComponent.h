@@ -417,6 +417,9 @@ namespace kc_terrain
 		void GetMinHeight();
 		void GetMaxHeight();
 		*/
+		void SetTerrainLayerList(qsf::AssetProxy NewAssetId);
+		qsf::AssetProxy GetTerrainLayerList();
+		qsf::AssetProxy mTerrainLayerList;
 	//[-------------------------------------------------------]
 	//[ Protected virtual qsf::Component methods              ]
 	//[-------------------------------------------------------]

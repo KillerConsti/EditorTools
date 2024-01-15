@@ -204,6 +204,9 @@
     <ClInclude Include="asset_collector_tool\PrecompiledHeader.h" />
   </ItemGroup>
   <ItemGroup>
+    <QtUI Include="asset_collector_tool\view\indicator\AssetCollectorTool.ui">
+      <FileType>Document</FileType>
+    </QtUI>
     <QtUI Include="asset_collector_tool\view\OrderInfoPictureCreator.ui">
       <FileType>Document</FileType>
     </QtUI>
@@ -231,9 +234,6 @@
       <FileType>Document</FileType>
     </QtUI>
     <QtUI Include="asset_collector_tool\view\indicator\ScenarioScriptTool.ui">
-      <FileType>Document</FileType>
-    </QtUI>
-    <QtUI Include="asset_collector_tool\view\indicator\AssetCollectorTool.ui">
       <FileType>Document</FileType>
     </QtUI>
     <QtUI Include="asset_collector_tool\view\indicator\UnitPlacerView.ui">

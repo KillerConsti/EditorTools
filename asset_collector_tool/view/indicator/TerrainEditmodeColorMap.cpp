@@ -95,6 +95,7 @@
 #include <experimental/filesystem> 
 #include <boost\filesystem.hpp>
 #include <qsf_editor/asset/AssetEditHelper.h>
+#include <experimental/filesystem>
 using namespace std::chrono;
 
 
@@ -883,7 +884,16 @@ namespace user
 					qsf::AssetProxy AP = qsf::AssetProxy(LocalAssetNameToCheck);
 					if (AP.getAsset() != nullptr)
 					{
-						//this is an update function
+						//does it exists?
+						if(!std::experimental::filesystem::exists(AP.getAbsoluteCachedAssetDataFilename()))
+						{
+						//if not destroy it amd create new //... this can happen when using ramdisk which i recommend
+						AP.getAssetPackage()->destroyAssetByGlobalAssetId(AP.getGlobalAssetId());
+						}
+					}
+					AP = qsf::AssetProxy(LocalAssetNameToCheck);
+					if (AP.getAsset() != nullptr)
+					{
 						try
 						{
 							TerrainImg->write(AP.getAbsoluteCachedAssetDataFilename());
@@ -896,6 +906,7 @@ namespace user
 						{
 							QSF_LOG_PRINTS(INFO, e.what())
 						}
+
 
 					}
 					else

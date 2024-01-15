@@ -459,6 +459,94 @@ namespace user
 			//QSF_LOG_PRINTS(INFO, "layer " << LayerId << " int "<< NewIntensity << " i1 "<<  NMI->IntensityLayer1 << " NMI->IntensityLayer2 " << NMI->IntensityLayer2 << " NMI->IntensityLayer3 " << NMI->IntensityLayer3 << " NMI->IntensityLayer4 " << NMI->IntensityLayer4)
 		}
 
+		void TerrainTexturingTool::WriteTerrainTextureJson(qsf::editor::AssetEditHelper* IAP)
+		{
+			QSF_LOG_PRINTS(INFO,"Write Terrain Textures 1")
+			boost::property_tree::ptree rootPTree;
+			auto it = TerrainMaster->getOgreTerrainGroup()->getTerrainIterator();
+			int counter =0;
+			while (it.hasMoreElements()) // add the layer to all terrains in the terrainGroup
+			{
+				Ogre::TerrainGroup::TerrainSlot* a = it.getNext();
+				boost::property_tree::ptree layers;
+				for (size_t x = 0; x < a->instance->getLayerCount() && x < 6; x++)
+				{
+					layers.put("Layer"+boost::lexical_cast<std::string>(x),a->instance->getLayerTextureName((uint8)x,0).c_str());
+					QSF_LOG_PRINTS(INFO, a->instance->getLayerTextureName((uint8)x, 0).c_str())
+				}
+				QSF_LOG_PRINTS(INFO, "Write Terrain Textures 2 "<< counter)
+				counter++;
+				rootPTree.add_child(boost::lexical_cast<std::string>(a->x)+"_"+ boost::lexical_cast<std::string>(a->y), layers);
+			}
+			QSF_LOG_PRINTS(INFO, "Write Terrain Textures 3 " << counter)
+			//now save
+			auto AP = qsf::AssetProxy(TerrainMaster->GetTerrainLayerList());
+			std::string LocalAssetName = "";
+			if (AP.getAsset() != nullptr)
+			{
+				LocalAssetName = AP.getLocalAssetName();
+				if (!std::experimental::filesystem::exists(AP.getAbsoluteCachedAssetDataFilename()))
+				{
+					//if not destroy it amd create new //... this can happen when using ramdisk which i recommend
+					AP.getAssetPackage()->destroyAssetByGlobalAssetId(AP.getGlobalAssetId());
+				}
+			}
+			AP = qsf::AssetProxy(LocalAssetName);
+			if(AP.getAsset() != nullptr) //we need to overwrite it
+			//write to disk
+			{
+			boost::nowide::ofstream ofs(AP.getAbsoluteCachedAssetDataFilename());
+			qsf::FileHelper::writeJson(ofs, rootPTree);
+			IAP->tryEditAsset(AP.getGlobalAssetId(), AP.getAssetPackage()->getName());
+			IAP->setAssetUploadData(AP.getGlobalAssetId(), true, true);
+			}
+			else //Asset does not exists (yet)
+			{
+
+				auto TimeStamp = GetCurrentTimeForFileName();
+				auto Name = TerrainMaster->getEntity().getComponent<qsf::MetadataComponent>()->getName();
+
+
+				//b create folder structure in assethelper (to read and write)
+				if (!boost::filesystem::exists((QSF_FILE.getBaseDirectory() + "/" + IAP->getIntermediateAssetPackage()->getRelativeDirectory() + "/texture/heightmap")))
+					boost::filesystem::create_directories(QSF_FILE.getBaseDirectory() + "/" + IAP->getIntermediateAssetPackage()->getRelativeDirectory() + "/texture/heightmap");
+				//c write to new folder -I think it will copy to our direction we wrote before
+				//ogreImage.save(QSF_FILE.getBaseDirectory() + "/" + IAP->getRelativeDirectory() + "/texture/heightmap/heightmap_" + Name + "_" + TimeStamp +".tif");
+				auto relAssetDirectory = QSF_EDITOR_APPLICATION.getAssetImportManager().getDefaultDestinationAssetPackage()->getRelativeDirectory();
+				if (!boost::filesystem::exists((QSF_FILE.getBaseDirectory() + "/" + relAssetDirectory + "/texture/heightmap")))
+					boost::filesystem::create_directories(QSF_FILE.getBaseDirectory() + "/" + relAssetDirectory + "/texture/heightmap");
+
+				auto fileName = "terrain_layerdescription_" + Name;
+
+				//MagImage->write(QSF_FILE.getBaseDirectory() + "/" + relAssetDirectory + "/texture/heightmap/heightmap_" + Name  +  ".tif");
+				QSF_LOG_PRINTS(INFO, "saved terrainlayerdescription to " << QSF_FILE.getBaseDirectory() + "/" + IAP->getIntermediateAssetPackage()->getRelativeDirectory() + "/texture/heightmap/" + fileName + ".json")
+					//d learn our assets a few thing <-> this seems not needed
+					//delete[] buffer;
+
+					auto Asset = IAP->addAsset(QSF_EDITOR_APPLICATION.getAssetImportManager().getDefaultDestinationAssetPackage()->getName(), qsf::QsfAssetTypes::TEXTURE, "heightmap", fileName);
+				boost::nowide::ofstream ofs(QSF_FILE.getBaseDirectory() + "/" + IAP->getIntermediateAssetPackage()->getRelativeDirectory() + "/texture/heightmap/" + fileName + ".json");
+				qsf::FileHelper::writeJson(ofs, rootPTree);
+				if (Asset == nullptr)
+					QSF_LOG_PRINTS(INFO, "error occured " << Name << " could not create an asset")
+				else
+				{
+					auto CachedAsset = IAP->getCachedAsset(Asset->getGlobalAssetId());
+					if (CachedAsset == nullptr)
+						CachedAsset = &qsf::CachedAsset(Asset->getGlobalAssetId());
+					if (CachedAsset == nullptr)
+					{
+						QSF_LOG_PRINTS(INFO, "still a nullptr")
+					}
+					CachedAsset->setType("json");
+					//QSF_LOG_PRINTS(INFO, qsf::AssetProxy(Asset->getGlobalAssetId()).getAbsoluteCachedAssetDataFilename())
+
+					if (IAP->setAssetUploadData(Asset->getGlobalAssetId(), true, true))
+						QSF_LOG_PRINTS(INFO, "Caching asset was not succesfull")
+				}
+				TerrainMaster->SetTerrainLayerList(qsf::AssetProxy(Asset->getGlobalAssetId()));
+			}
+		}
+
 
 		void TerrainTexturingTool::ReplaceLayer(int LayerId, std::string NewMaterial)
 		{
@@ -911,7 +999,7 @@ namespace user
 			}
 
 			// Cleanup
-
+			WriteTerrainTextureJson(mAssetEditHelper.get());
 			QSF_LOG_PRINTS(INFO, "Map was saved succesfully")
 				mAssetEditHelper->submit();
 			//mAssetEditHelper->callWhenFinishedUploading(boost::bind(&TerrainEditTool::WaitForSaveTerrain, this, boost::function<void(bool)>(boost::bind(&TerrainEditTool::onWaitForSave_TerrainDone, this, _1))));

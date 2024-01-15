@@ -252,6 +252,9 @@ namespace user
 			};
 
 			void MixIntensitiesTerrain(NewMixedIntensities* NMI, int LayerId, float NewIntensity);
+
+			//saveData
+			void WriteTerrainTextureJson(qsf::editor::AssetEditHelper* IAP);
 		//[-------------------------------------------------------]
 		//[ CAMP reflection system                                ]
 		//[-------------------------------------------------------]
