@@ -400,12 +400,6 @@ namespace kc_terrain
 		qsf::AssetProxy GetNewTextureMap1_4();
 		void SetNewTextureMap5_8(qsf::AssetProxy NewAssetId);
 		qsf::AssetProxy GetNewTextureMap5_8();
-		//json file
-		qsf::AssetProxy GetLayerDescription();
-		//stores all data which are not in the 3 pics
-		//
-		void SetLayerDescription(qsf::AssetProxy AP);
-		//Set by TerrainEditTool /TerrainModdelingTool
 
 		float GetMinHeight();
 		void SetMinHeight(float a);
@@ -420,6 +414,9 @@ namespace kc_terrain
 		void SetTerrainLayerList(qsf::AssetProxy NewAssetId);
 		qsf::AssetProxy GetTerrainLayerList();
 		qsf::AssetProxy mTerrainLayerList;
+		void InformMaterialGeneratorAboutNewColorMap(uint64 GlobalAssetId);
+		void UpdatePosition(bool up);
+		bool GetUpdatePosition();
 	//[-------------------------------------------------------]
 	//[ Protected virtual qsf::Component methods              ]
 	//[-------------------------------------------------------]

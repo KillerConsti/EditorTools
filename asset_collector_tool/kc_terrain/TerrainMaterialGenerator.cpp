@@ -320,46 +320,7 @@ namespace kc_terrain
 
 	void TerrainMaterialGenerator::RefreshMaterial(const Ogre::Terrain* ogreTerrain)
 	{
-		/*QSF_LOG_PRINTS(INFO, "lolli")
-			auto oldProfil = getActiveProfile();
-		QSF_SAFE_DELETE(oldProfil);
-		QSF_LOG_PRINTS(INFO, "lolli2")
-			mProfiles.clear();
-
-			mProfiles.push_back(OGRE_NEW Profile(this, "SM2", "Profile for rendering on Shader Model 2 capable cards", mColorMap));
-			//
-			setActiveProfile("SM2");
-		QSF_LOG_PRINTS(INFO, "lolli2.3")*/
-		//QSF_APPLICATION
-		//qsf::Qsf::instance()->getFileSystem().getFileCacheManager().clearCache();
 			auto  OgreTerrain = kc_terrain::TerrainMaterialGenerator::generate(ogreTerrain);
-			//OgreTerrain->_dirtyState();
-			//QSF_LOG_PRINTS(INFO,"use count" <<OgreTerrain.useCount())
-				//QSF_LOG_PRINTS(INFO,"pointer " <<OgreTerrain.getPointer());
-		/*const Ogre::String& matName = ogreTerrain->getMaterialName();
-		//generate(ogreTerrain);
-		qsf::MaterialManager& materialManager = QSF_MATERIAL.getMaterialManager();
-		QSF_ASSERT(matName == ogreTerrain->getMaterialName(), "qsf::TerrainMaterialGenerator::Profile::createMaterial(): OGRE terrain material name mismatch", QSF_REACT_NONE);
-
-		// In case the terrain material instance is already there, just update it
-		qsf::Material* terrainMaterial = materialManager.findElement(qsf::StringHash(matName));
-		if (nullptr == terrainMaterial)
-		{
-			return;
-		}
-		QSF_LOG_PRINTS(INFO, terrainMaterial->getMaterialId().getHash());
-		//QSF_LOG_PRINTS(INFO,terrainMaterial->getMaterialId().getSourceString());
-
-
-		
-
-		/*if(Ogre::MaterialManager::getSingleton().getByName(matName).get() == nullptr)
-		{
-		QSF_LOG_PRINTS(INFO,"pointer is null")
-		return;
-		}
-		Ogre::MaterialManager::getSingleton().getByName(matName)->_dirtyState();*/
-		//static_cast<TerrainMaterialGenerator::Profile*>(getActiveProfile())->CreateEditableColorMap(ogreTerrain);
 
 	}
 

@@ -33,6 +33,7 @@
 
 #include <em5\EM5Helper.h>
 #include <em5\game\Game.h>
+#include <asset_collector_tool\kc_terrain\TerrainLoader.h>
 //[-------------------------------------------------------]
 //[ Namespace                                             ]
 //[-------------------------------------------------------]
@@ -302,8 +303,8 @@ namespace kc_terrain
 	void TerrainComponent::SetNewColorMap(qsf::AssetProxy NewAssetId)
 	{
 		mColorMap = NewAssetId;
-		if (mInitDone)
-			Relead();
+		//if (mInitDone)
+			//Relead();
 		return;
 	}
 
@@ -427,6 +428,7 @@ namespace kc_terrain
 
 			// Done
 			mInitDone = true;
+			TerrainLoader::LoadTerrain(this);
 			return true;
 		}
 		// Error!
@@ -672,6 +674,7 @@ namespace kc_terrain
 				}
 			}
 		}
+		
 	}
 
 	void TerrainComponent::removeAllOgreTerrains()
@@ -1150,15 +1153,6 @@ namespace kc_terrain
 	{
 		return mTextureMap5_8;
 	}
-
-	qsf::AssetProxy TerrainComponent::GetLayerDescription()
-	{
-		return qsf::AssetProxy();
-	}
-
-	void TerrainComponent::SetLayerDescription(qsf::AssetProxy AP)
-	{
-	}
 	float TerrainComponent::GetMinHeight()
 	{
 		return mTerrainMinHeight;
@@ -1182,6 +1176,39 @@ namespace kc_terrain
 	qsf::AssetProxy TerrainComponent::GetTerrainLayerList()
 	{
 		return mTerrainLayerList;
+	}
+	void TerrainComponent::InformMaterialGeneratorAboutNewColorMap(uint64 GlobalAssetId)
+	{
+		auto Profile = static_cast<kc_terrain::TerrainMaterialGenerator::Profile*>(mTerrainContext->GetMaterialGenerator()->getActiveProfile());
+		if (Profile != nullptr)
+		{
+			Profile->SetColorMap(GlobalAssetId);
+			QSF_LOG_PRINTS(INFO, "we have a new colormap")
+		}
+		else
+		{
+			QSF_LOG_PRINTS(INFO, "colormap couldnt be updated :(")
+		}
+	}
+	bool TerrainComponent::GetUpdatePosition()
+	{
+		return false;
+	}
+	void TerrainComponent::UpdatePosition(bool up)
+	{
+		const qsf::TransformComponent* transformComponent = getEntity().getComponent<qsf::TransformComponent>();
+		if (nullptr != transformComponent)
+		{
+			// Position
+			setPosition(transformComponent->getPosition(), mPos);
+			Ogre::TerrainGroup::TerrainIterator it = getOgreTerrainGroup2()->getTerrainIterator();
+			while (it.hasMoreElements()) // add the layer to all terrains in the terrainGroup
+			{
+				Ogre::TerrainGroup::TerrainSlot* a = it.getNext();
+				a->instance->setPosition(Ogre::Vector3(transformComponent->getPosition().x,transformComponent->getPosition().y,transformComponent->getPosition().z));
+			}
+			// Rotation and scale are not supported by the OGRE terrain
+		}
 	}
 	//[-------------------------------------------------------]
 	//[ Namespace                                             ]

@@ -190,6 +190,9 @@
     <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_OrderInfoPictureCreator.cpp">
       <Filter>GeneratedQtFiles\moc</Filter>
     </ClCompile>
+    <ClCompile Include="asset_collector_tool\kc_terrain\TerrainLoader.cpp">
+      <Filter>Source Files\kc_terrain</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="asset_collector_tool\PrecompiledHeader.h">
@@ -263,6 +266,9 @@
     </ClInclude>
     <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_TerrainTexturingToolbox.h">
       <Filter>GeneratedQtFiles\uic</Filter>
+    </ClInclude>
+    <ClInclude Include="asset_collector_tool\kc_terrain\TerrainLoader.h">
+      <Filter>Source Files\kc_terrain</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

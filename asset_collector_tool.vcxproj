@@ -135,6 +135,7 @@
     <ClCompile Include="asset_collector_tool\kc_terrain\TerrainComponent.cpp" />
     <ClCompile Include="asset_collector_tool\kc_terrain\TerrainContext.cpp" />
     <ClCompile Include="asset_collector_tool\kc_terrain\TerrainDefinition.cpp" />
+    <ClCompile Include="asset_collector_tool\kc_terrain\TerrainLoader.cpp" />
     <ClCompile Include="asset_collector_tool\kc_terrain\TerrainMaterialGenerator.cpp" />
     <ClCompile Include="asset_collector_tool\kc_terrain\TerrainMaterialGeneratorOgreMaterial.cpp" />
     <ClCompile Include="asset_collector_tool\Main.cpp" />
@@ -193,6 +194,7 @@
     <ClInclude Include="asset_collector_tool\kc_terrain\TerrainContext-inl.h" />
     <ClInclude Include="asset_collector_tool\kc_terrain\TerrainContext.h" />
     <ClInclude Include="asset_collector_tool\kc_terrain\TerrainDefinition.h" />
+    <ClInclude Include="asset_collector_tool\kc_terrain\TerrainLoader.h" />
     <ClInclude Include="asset_collector_tool\kc_terrain\TerrainMaterialGenerator.h" />
     <QtMOC Include="asset_collector_tool\view\ImageDecompiler.h" />
     <ClInclude Include="asset_collector_tool\kc_terrain\TerrainMaterialGeneratorOgreMaterial.h" />
