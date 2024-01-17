@@ -1200,13 +1200,18 @@ namespace kc_terrain
 		if (nullptr != transformComponent)
 		{
 			// Position
+			auto oe =getOgreEntity();
+			//oe->getParentNode()->setPosition(Ogre::Vector3(transformComponent->getPosition().x, transformComponent->getPosition().y, transformComponent->getPosition().z));
 			setPosition(transformComponent->getPosition(), mPos);
-			Ogre::TerrainGroup::TerrainIterator it = getOgreTerrainGroup2()->getTerrainIterator();
+			Ogre::TerrainGroup::TerrainIterator it = getOgreTerrainGroup()->getTerrainIterator();
 			while (it.hasMoreElements()) // add the layer to all terrains in the terrainGroup
 			{
 				Ogre::TerrainGroup::TerrainSlot* a = it.getNext();
 				a->instance->setPosition(Ogre::Vector3(transformComponent->getPosition().x,transformComponent->getPosition().y,transformComponent->getPosition().z));
+				a->instance->update(true);
 			}
+			mOgreTerrainGroup->setTerrainWorldSize(mOgreTerrainGroup->getTerrainWorldSize());
+
 			// Rotation and scale are not supported by the OGRE terrain
 		}
 	}

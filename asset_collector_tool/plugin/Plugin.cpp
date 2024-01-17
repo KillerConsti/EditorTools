@@ -77,7 +77,7 @@ namespace user
 					QSF_ADD_CAMP_PROPERTY(Terrain Texture Asset (2), kc_terrain::TerrainComponent::GetNewTextureMap5_8, kc_terrain::TerrainComponent::SetNewTextureMap5_8, "this points to the texture map asset. It stores the layers 5 (0 is not stored and 1-4 are stored in the entry before). Notice it may not be a dds file because ogre cannot read pixel values of this file. Use *.png or *.tif pls", 0.f).tag("AssetType", qsf::QsfAssetTypes::TEXTURE.getName())
 					QSF_ADD_CAMP_PROPERTY(Terrain Texture Layer List, kc_terrain::TerrainComponent::GetTerrainLayerList, kc_terrain::TerrainComponent::SetTerrainLayerList, "this points to the layer list asset. It stores the names of the layers in a json file", 0.f).tag("AssetType", qsf::QsfAssetTypes::TEXTURE.getName())
 					QSF_ADD_CAMP_PROPERTY(Reload, kc_terrain::TerrainComponent::GetUpdate, kc_terrain::TerrainComponent::SetUpdate, "set it directly with the tool", false).tag("Serializable", false)
-					QSF_ADD_CAMP_PROPERTY(UpdatePosition, kc_terrain::TerrainComponent::GetUpdatePosition, kc_terrain::TerrainComponent::UpdatePosition, "set it directly with the tool", false).tag("Serializable", false)
+					QSF_ADD_CAMP_PROPERTY(UpdatePosition, kc_terrain::TerrainComponent::GetUpdatePosition, kc_terrain::TerrainComponent::UpdatePosition, "set it directly with the tool ... not supported yet", false).tag("Serializable", false)
 					QSF_END_CAMP_CLASS_EXPORT
 
 					QSF_START_CAMP_CLASS_EXPORT(EditorToolsHelperComponent, "This sets global glossiness", "you may just attach it to core entity")
