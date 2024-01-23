@@ -1582,11 +1582,10 @@ namespace user
 			//TerrainMaster->setEditing(true);
 			//auto terrain = TES.at(0)->getOgreTerrain();
 			QSF_LOG_PRINTS(INFO, TerrainMaster->getTerrainWorldSize());
-			QSF_LOG_PRINTS(INFO, TerrainMaster->getHeightMapSize());
 			QSF_LOG_PRINTS(INFO, "Blendmapsize" << TerrainMaster->getBlendMapSize());
 
 			Offset = (float)(TerrainMaster->getTerrainWorldSize() / 2);
-			BlendMapSize = (float)TerrainMaster->getBlendMapSize();
+			BlendMapSize = (float)TerrainMaster->GetBlendAndHeightMapSize();
 			//Heighmapsize = (float)TerrainMaster->getBlendMapSize();
 			Ogre::TerrainGroup::TerrainIterator it = TerrainMaster->getOgreTerrainGroup()->getTerrainIterator();
 			int counter = 0; // because my ID start at 0

@@ -1259,12 +1259,12 @@ namespace user
 			}
 			//auto terrain = TES.at(0)->getOgreTerrain();
 			QSF_LOG_PRINTS(INFO, TerrainMaster->getTerrainWorldSize());
-			QSF_LOG_PRINTS(INFO, TerrainMaster->getHeightMapSize());
+			QSF_LOG_PRINTS(INFO, TerrainMaster->GetBlendAndHeightMapSize() + 1);
 			QSF_LOG_PRINTS(INFO, "partsize" << TerrainMaster->getOgreTerrainGroup()->getTerrainSize());
 
 			Offset = (float)(TerrainMaster->getTerrainWorldSize() / 2);
 			percentage = 1.f / (float)TerrainMaster->getTerrainWorldSize(); /// (float)TerrainMaster->getHeightMapSize();
-			Heighmapsize = (float)TerrainMaster->getHeightMapSize();
+			Heighmapsize = (float)TerrainMaster->GetBlendAndHeightMapSize()+1;
 			partsize = TerrainMaster->getOgreTerrainGroup()->getTerrainSize() - 1;
 
 			if (!PaintJobProxy.isValid())

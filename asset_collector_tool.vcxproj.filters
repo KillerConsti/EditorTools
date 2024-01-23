@@ -160,9 +160,6 @@
     <ClCompile Include="asset_collector_tool\kc_terrain\TerrainContext.cpp">
       <Filter>Source Files\kc_terrain</Filter>
     </ClCompile>
-    <ClCompile Include="asset_collector_tool\kc_terrain\TerrainDefinition.cpp">
-      <Filter>Source Files\kc_terrain</Filter>
-    </ClCompile>
     <ClCompile Include="asset_collector_tool\qsf_editor\tools\TerrainTexturingToolbox.cpp">
       <Filter>Source Files\terrain_assets\tools\terrain</Filter>
     </ClCompile>
@@ -244,9 +241,6 @@
       <Filter>Source Files\kc_terrain</Filter>
     </ClInclude>
     <ClInclude Include="asset_collector_tool\kc_terrain\TerrainComponent-inl.h">
-      <Filter>Source Files\kc_terrain</Filter>
-    </ClInclude>
-    <ClInclude Include="asset_collector_tool\kc_terrain\TerrainDefinition.h">
       <Filter>Source Files\kc_terrain</Filter>
     </ClInclude>
     <ClInclude Include="asset_collector_tool\kc_terrain\TerrainContext.h">

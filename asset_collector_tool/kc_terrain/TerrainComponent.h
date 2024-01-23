@@ -15,6 +15,7 @@
 #include <asset_collector_tool\kc_terrain\TerrainDefinition.h>
 #include <asset_collector_tool\kc_terrain\TerrainContext.h>
 #include <qsf/renderer/terrain/TerrainComponent.h>
+#include <ogre\Terrain\OgreTerrain.h>
 //[-------------------------------------------------------]
 //[ Forward declarations                                  ]
 //[-------------------------------------------------------]
@@ -160,7 +161,7 @@ namespace kc_terrain
 		*  @return
 		*    Terrain chunks per edge
 		*/
-		inline int getTerrainChunksPerEdge() const;
+		int kc_getTerrainChunksPerEdge();
 
 		/**
 		*  @brief
@@ -169,7 +170,7 @@ namespace kc_terrain
 		*  @param[in] terrainChunksPerEdge
 		*    Terrain chunks per edge (requirement: 2^n, tested with 1, 2, 4, 8, 16)
 		*/
-		void setTerrainChunksPerEdge(int terrainChunksPerEdge);
+		void kc_setTerrainChunksPerEdge(int terrainChunksPerEdge);
 
 		/**
 		*  @brief
@@ -270,8 +271,6 @@ namespace kc_terrain
 		inline bool getEditing() const;
 		void setEditing(bool isEditing);
 
-		kc_terrain::TerrainDefinition* getTerrainDefinition();	// If the instance doesn't exist yet because e.g. the terrain component isn't running, the instance will be created and loaded
-		inline const kc_terrain::TerrainDefinition* getTerrainDefinition() const;
 		void SetPosition(glm::vec3 newpos);
 		glm::vec3 getPosition();
 
@@ -417,6 +416,19 @@ namespace kc_terrain
 		void InformMaterialGeneratorAboutNewColorMap(uint64 GlobalAssetId);
 		void UpdatePosition(bool up);
 		bool GetUpdatePosition();
+
+		void SetDoNotLoadNextTime(bool donotload);
+		bool GetDoNotLoadNextTime();
+		bool mDoNotLoadNextTime;
+
+		void SetBlendAndHeightMapSize(int size);
+		int m_OldAttempt;
+		int GetBlendAndHeightMapSize();
+		int mBlendAndHeightMapSize;
+
+		
+
+		Ogre::Terrain::ImportData* GetOgreImportData();
 	//[-------------------------------------------------------]
 	//[ Protected virtual qsf::Component methods              ]
 	//[-------------------------------------------------------]
@@ -446,7 +458,6 @@ namespace kc_terrain
 		void onAssetsMounted(const qsf::Assets& assets);
 		void onAssetsUnmounted(const qsf::Assets& assets);
 		void onAssetChanged(const qsf::Asset& asset);
-		void loadTerrainDefinition();
 		void defineTerrain();
 		void removeAllOgreTerrains();
 		void buildHeightMap();
@@ -455,7 +466,8 @@ namespace kc_terrain
 		 void LoadHeightMap(std::vector<float> PointMap);
 		 float TerrainComponent::ReadHeightValue(glm::vec2 point);
 		 void TerrainComponent::SetHeightFromValue(glm::vec2 point,float NewHeight);
-		
+		 Ogre::Terrain::ImportData* mCustomImportData;
+		 void SetUpCustomImportData();
 	//[-------------------------------------------------------]
 	//[ Private data                                          ]
 	//[-------------------------------------------------------]
@@ -464,7 +476,8 @@ namespace kc_terrain
 		uint32						mHeightMapSize;
 		uint32						mColorMapSize;
 		uint32						mBlendMapSize;
-		int							mTerrainChunksPerEdge;			///< Size of chunks per edge. E.g. 8 means, there are 8x8 chunks
+		//int							mTerrainChunksPerEdge;			///< Size of chunks per edge. E.g. 8 means, there are 8x8 chunks
+		int							kc_mTerrainChunksPerEdge;
 		float						mTerrainWorldSize;
 		float						mSkirtSize;
 		float						mMaxPixelError;
@@ -472,11 +485,10 @@ namespace kc_terrain
 		// Internal only
 		Ogre::TerrainGlobalOptions* mOgreTerrainGlobalOptions;		///< OGRE terrain globals instance, can be a null pointer, to not destroy the instance
 		Ogre::TerrainGroup*			mOgreTerrainGroup;				///< OGRE terrain group instance, can be a null pointer
-		kc_terrain::TerrainDefinition*			mTerrainDefinition;				///< Can be a null pointer, we're responsible for destroying the instance
 		std::set<qsf::GlobalAssetId>		mGlobalTerrainAssetIds;			///< Global asset IDs that affect this component
 		bool						mIsEditing;
 		kc_terrain::TerrainContext* mTerrainContext;
-
+		bool mDelete;
 		bool Relead();
 	//[-------------------------------------------------------]
 	//[ CAMP reflection system                                ]

@@ -18,14 +18,13 @@ namespace kc_terrain
 		mHeightMapSize(1025),
 		mColorMapSize(1024),
 		mBlendMapSize(1024),
-		mTerrainChunksPerEdge(16),
+		//mTerrainChunksPerEdge(16),
 		mTerrainWorldSize(1500.0f),
 		mSkirtSize(2.0f),
 		mMaxPixelError(8.0f),
 		// Internal only
 		mOgreTerrainGlobalOptions(nullptr),
 		mOgreTerrainGroup(nullptr),
-		mTerrainDefinition(nullptr),
 		mIsEditing(false),
 		mColorMap(qsf::getUninitialized<uint64>()),
 		mPos(glm::vec3(0,0,0)),
@@ -33,7 +32,12 @@ namespace kc_terrain
 		mTerrainMinHeight(0.f),
 		mTerrainMaxHeight(0.f),
 		automaticly_created("generated when using terrain edit tools.Used for saving and loading terrains"),
-		uneditabld("------------------------------------")
+		uneditabld("------------------------------------"),
+		mDoNotLoadNextTime(false),
+		mBlendAndHeightMapSize(1024),
+		mCustomImportData(nullptr),
+		mDelete(false),
+		kc_mTerrainChunksPerEdge(16)
 	{
 		// Nothing to do in here
 	}
@@ -53,10 +57,10 @@ namespace kc_terrain
 		return mBlendMapSize;
 	}
 
-	inline int TerrainComponent::getTerrainChunksPerEdge() const
+	/*inline int TerrainComponent::getTerrainChunksPerEdge() const
 	{
 		return mTerrainChunksPerEdge;
-	}
+	}*/
 
 	inline float TerrainComponent::getTerrainWorldSize() const
 	{
@@ -98,10 +102,6 @@ namespace kc_terrain
 		return mIsEditing;
 	}
 
-	inline const kc_terrain::TerrainDefinition* TerrainComponent::getTerrainDefinition() const
-	{
-		return mTerrainDefinition;
-	}
 
 	
 

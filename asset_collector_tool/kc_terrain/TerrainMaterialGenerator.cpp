@@ -62,7 +62,8 @@ namespace
 		{
 			// TODO(co) Proper texture coordinate offset generation
 			const float globalTerrainWorldSize = terrainComponent.getTerrainWorldSize();
-			const int terrainChunksPerEdge = terrainComponent.getTerrainChunksPerEdge();
+			kc_terrain::TerrainComponent* TC = &const_cast<kc_terrain::TerrainComponent&>(terrainComponent);
+			auto terrainChunksPerEdge = TC->kc_getTerrainChunksPerEdge();
 			//(kc)no offset if entity is not in the middle
 			auto TPos = terrainComponent.getEntity().getComponent<qsf::TransformComponent>()->getPosition();
 			float xOffset = ogreTerrain.getPosition().x- TPos.x - ogreTerrain.getWorldSize() * 0.5f + globalTerrainWorldSize * 0.5f;
@@ -83,7 +84,8 @@ namespace
 		{
 			// TODO(co) Proper texture coordinate offset generation
 			const float globalTerrainWorldSize = terrainComponent.getTerrainWorldSize();
-			const int terrainChunksPerEdge = terrainComponent.getTerrainChunksPerEdge();
+			kc_terrain::TerrainComponent* TC = &const_cast<kc_terrain::TerrainComponent&>(terrainComponent);
+			auto terrainChunksPerEdge = TC->kc_getTerrainChunksPerEdge();
 			if (scale)
 			{
 				material.setPropertyById(materialPropertyId, qsf::MaterialPropertyValue::fromFloat4(0, 0, 1.0f / terrainChunksPerEdge, 1.0f / terrainChunksPerEdge));
@@ -476,7 +478,7 @@ namespace kc_terrain
 			}
 			// A global color map which spans all terrain chunks, usually only used during runtime for efficiency
 			//static const qsf::GlobalAssetId missingTextureGlobalAssetId = qsf::AssetProxy("qsf/texture/default/missing").getGlobalAssetId();
-			const kc_terrain::TerrainDefinition* terrainDefinition = terrainComponent->getTerrainDefinition();
+			//const kc_terrain::TerrainDefinition* terrainDefinition = terrainComponent->getTerrainDefinition();
 			/*qsf::GlobalAssetId globalAssetId = (nullptr != terrainDefinition && terrainDefinition->isValid()) ? terrainDefinition->getColorMap() : qsf::getUninitialized<qsf::GlobalAssetId>();
 			if (qsf::isUninitialized(globalAssetId) || nullptr == QSF_ASSET.getAssetByGlobalAssetId(globalAssetId))
 			{
@@ -494,7 +496,7 @@ namespace kc_terrain
 			::detail::setMapTransformMaterialProperty(*terrainMaterial, *terrainComponent, *ogreTerrain, "GlobalNormalMapTransform", true);
 
 			// A global normal map which spans all terrain chunks, usually only used during runtime for efficiency
-			const kc_terrain::TerrainDefinition* terrainDefinition = terrainComponent->getTerrainDefinition();
+			/*const kc_terrain::TerrainDefinition* terrainDefinition = terrainComponent->getTerrainDefinition();
 			if (nullptr != terrainDefinition && terrainDefinition->isValid())
 			{
 				// Just use the global asset ID and let our resource management do the rest...
@@ -506,7 +508,7 @@ namespace kc_terrain
 				terrainMaterial->setPropertyById("UseGlobalNormalMap", qsf::MaterialPropertyValue::fromBoolean(qsf::isInitialized(globalAssetId)));
 				terrainMaterial->setPropertyById("GlobalNormalMap", qsf::MaterialPropertyValue::fromGlobalAssetId(globalAssetId));
 			}
-			else
+			else*/
 			{
 				terrainMaterial->setPropertyById("UseGlobalNormalMap", qsf::MaterialPropertyValue::fromBoolean(false));
 				terrainMaterial->setPropertyById("GlobalNormalMap", qsf::MaterialPropertyValue::fromGlobalAssetId(qsf::getUninitialized<qsf::GlobalAssetId>()));

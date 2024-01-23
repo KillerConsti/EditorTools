@@ -34,6 +34,7 @@
 #include <em5\EM5Helper.h>
 #include <em5\game\Game.h>
 #include <asset_collector_tool\kc_terrain\TerrainLoader.h>
+#include <QtWidgets\qinputdialog.h>
 //[-------------------------------------------------------]
 //[ Namespace                                             ]
 //[-------------------------------------------------------]
@@ -61,10 +62,6 @@ namespace kc_terrain
 	//[-------------------------------------------------------]
 	TerrainComponent::~TerrainComponent()
 	{
-		if (nullptr != mTerrainDefinition)
-		{
-			delete mTerrainDefinition;
-		}
 	}
 
 	void TerrainComponent::setHeightMapSize(uint32 heightMapSize)
@@ -77,7 +74,7 @@ namespace kc_terrain
 	{
 		// TODO(co) I assume updating other data as a result is required
 		mColorMapSize = colorMapSize;
-		QSF_LOG_PRINTS(INFO,"updated colormapsize 2")
+		QSF_LOG_PRINTS(INFO, "updated colormapsize 2")
 	}
 
 	void TerrainComponent::setBlendMapSize(uint32 blendMapSize)
@@ -86,11 +83,16 @@ namespace kc_terrain
 		mBlendMapSize = blendMapSize;
 	}
 
-	void TerrainComponent::setTerrainChunksPerEdge(int terrainChunksPerEdge)
+	int TerrainComponent::kc_getTerrainChunksPerEdge()
 	{
-		// TODO(co) I assume updating other data as a result is required
-		mTerrainChunksPerEdge = terrainChunksPerEdge;
+		return kc_mTerrainChunksPerEdge;
 	}
+
+	void TerrainComponent::kc_setTerrainChunksPerEdge(int terrainChunksPerEdge)
+	{
+		kc_mTerrainChunksPerEdge = terrainChunksPerEdge;
+	}
+
 
 	void TerrainComponent::setTerrainWorldSize(float terrainWorldSize)
 	{
@@ -104,7 +106,7 @@ namespace kc_terrain
 			if (nullptr != mOgreTerrainGroup)
 			{
 				// OGRE handles the terrain world size for each single terrain inside the terrain group, for QSF in order to keep things simple for the user the terrain world size is for the whole thing
-				mOgreTerrainGroup->setTerrainWorldSize(mTerrainWorldSize / static_cast<float>(mTerrainChunksPerEdge));
+				mOgreTerrainGroup->setTerrainWorldSize(mTerrainWorldSize / static_cast<float>(kc_mTerrainChunksPerEdge));
 			}
 
 			// Promote the property change
@@ -244,7 +246,7 @@ namespace kc_terrain
 			return 0;
 		}
 
-		return (ogreTerrain->getSize() - 1) * mTerrainChunksPerEdge + 1;
+		return (ogreTerrain->getSize() - 1) * kc_mTerrainChunksPerEdge + 1;
 	}
 
 	void TerrainComponent::setTerrainAsset(const qsf::AssetProxy& assetProxy)
@@ -290,16 +292,6 @@ namespace kc_terrain
 		}
 	}
 
-	TerrainDefinition* TerrainComponent::getTerrainDefinition()
-	{
-		if (nullptr == mTerrainDefinition)
-		{
-			mTerrainDefinition = new TerrainDefinition(getEntity().getMap().getGlobalAssetId(), getEntityId());
-			loadTerrainDefinition();
-		}
-		return mTerrainDefinition;
-	}
-
 	void TerrainComponent::SetNewColorMap(qsf::AssetProxy NewAssetId)
 	{
 		mColorMap = NewAssetId;
@@ -334,7 +326,7 @@ namespace kc_terrain
 	void TerrainComponent::UseMiniColorMaps(int partsperline, int x, int y, std::string LocalAssetName)
 	{
 
-		mTerrainContext->GetMaterialGenerator()->ChangeColorMapToSmallerMap(mOgreTerrainGroup->getTerrain(x,y),LocalAssetName);
+		mTerrainContext->GetMaterialGenerator()->ChangeColorMapToSmallerMap(mOgreTerrainGroup->getTerrain(x, y), LocalAssetName);
 		//QSF_LOG_PRINTS(INFO, " x "<< x << " y "<< y <<" "<<LocalAssetName)
 
 	}
@@ -348,7 +340,7 @@ namespace kc_terrain
 	{
 	}
 
-	
+
 
 
 	//[-------------------------------------------------------]
@@ -373,6 +365,12 @@ namespace kc_terrain
 
 	bool TerrainComponent::onStartup()
 	{
+		if (mDoNotLoadNextTime )
+		{
+			mDelete = true;
+			QSF_LOG_PRINTS(INFO, "ATTENTION: Terrain was forced to not load (so you can destroy it)")
+				return true;
+		}
 		// Get the OGRE scene manager instance
 		Ogre::SceneManager* ogreSceneManager = getOgreSceneManager();
 		if (nullptr != ogreSceneManager)
@@ -388,7 +386,7 @@ namespace kc_terrain
 
 			// Create OGRE terrain group instance
 			// -> OGRE handles the terrain world size for each single terrain inside the terrain group, for QSF in order to keep things simple for the user the terrain world size is for the whole thing
-			mOgreTerrainGroup = new Ogre::TerrainGroup(ogreSceneManager, Ogre::Terrain::ALIGN_X_Z, 65, mTerrainWorldSize / static_cast<float>(mTerrainChunksPerEdge));
+			mOgreTerrainGroup = new Ogre::TerrainGroup(ogreSceneManager, Ogre::Terrain::ALIGN_X_Z, 65, mTerrainWorldSize / static_cast<float>(kc_mTerrainChunksPerEdge));
 			{
 				// mOgreTerrainGlobalOptions->setCastsDynamicShadows(true);	// TODO(co) Casting shadow looks fine on the empty map, but creates nasty artefact on other maps?
 				mOgreTerrainGlobalOptions->setSkirtSize(mSkirtSize);
@@ -411,11 +409,9 @@ namespace kc_terrain
 			QSF_ASSET.AssetsMounted.connect(boost::bind(&TerrainComponent::onAssetsMounted, this, _1));
 			QSF_ASSET.AssetsUnmounted.connect(boost::bind(&TerrainComponent::onAssetsUnmounted, this, _1));
 
-			buildHeightMap();
-
 			// Update the visibility state of the internal OGRE scene node
 			updateOgreSceneNodeVisibility();
-
+			buildHeightMap();
 			// We want to listen on component property changes inside the core entity: Get "qsf::BoostSignalComponent" instance or create it in case it does not exist, yet
 			qsf::BoostSignalComponent* boostSignalComponent = getEntity().getMap().getCoreEntity().getOrCreateComponent<qsf::BoostSignalComponent>();
 			if (nullptr != boostSignalComponent)
@@ -437,10 +433,11 @@ namespace kc_terrain
 
 	void TerrainComponent::onShutdown()
 	{
-		//mOgreTerrainGroup->setFilenamePrefix(boost::lexical_cast<std::string>(getEntityId()).c_str());
-		//mOgreTerrainGroup->saveAllTerrains(false, true);
+		if (mDoNotLoadNextTime && mDelete)
+		{
+				return;
+		}
 		QSF_SETTINGSGROUP.PropertyChanged.disconnect(boost::bind(&TerrainComponent::onSettingsPropertyChanged, this, _1, _2));
-
 		// Get the OGRE scene manager instance
 		Ogre::SceneManager* ogreSceneManager = getOgreSceneManager();
 		if (nullptr != ogreSceneManager)
@@ -453,24 +450,26 @@ namespace kc_terrain
 					boostSignalComponent->ComponentPropertyChange.disconnect(boost::bind(&TerrainComponent::onComponentPropertyChange, this, _1, _2));
 				}
 			}
-
+				mTerrainContext->TerrainContext::releaseContextReference();
 			// Disconnect our Boost slot from the Boost signal of the QSF asset system
 			QSF_ASSET.AssetsMounted.disconnect(boost::bind(&TerrainComponent::onAssetsMounted, this, _1));
 			QSF_ASSET.AssetsUnmounted.disconnect(boost::bind(&TerrainComponent::onAssetsUnmounted, this, _1));
+				mGlobalTerrainAssetIds.clear();
+				// Destroy OGRE terrain group and OGRE terrain globals instance
+				// TODO(co) Terrain shutdown can take ages. I appears that the light map generation, which runs in a separate thread continues running until it's done.
+				// See "PixelBox* Terrain::calculateLightmap(const Rect& rect, const Rect& extraTargetRect, Rect& outFinalRect)" in OGRE terrain. Can we shut down this thread early?
+				if (nullptr != ogreSceneManager)
+				{
+						removeAllOgreTerrains();
+					//delete mOgreTerrainGroup;
+					mOgreTerrainGroup = nullptr;
+					mOgreTerrainGlobalOptions = nullptr;	// Don't destroy the instance, it's managed by the terrain context
+						// Release a context reference
 
-			mGlobalTerrainAssetIds.clear();
+						//QSF_SAFE_DELETE(mTerrainContext);
+				}
 
-			// Destroy OGRE terrain group and OGRE terrain globals instance
-			// TODO(co) Terrain shutdown can take ages. I appears that the light map generation, which runs in a separate thread continues running until it's done.
-			// See "PixelBox* Terrain::calculateLightmap(const Rect& rect, const Rect& extraTargetRect, Rect& outFinalRect)" in OGRE terrain. Can we shut down this thread early?
-			removeAllOgreTerrains();
-			delete mOgreTerrainGroup;
-			mOgreTerrainGroup = nullptr;
-			mOgreTerrainGlobalOptions = nullptr;	// Don't destroy the instance, it's managed by the terrain context
 
-			// Release a context reference
-			mTerrainContext->TerrainContext::releaseContextReference();
-			QSF_SAFE_DELETE(mTerrainContext);
 		}
 	}
 
@@ -559,7 +558,7 @@ namespace kc_terrain
 			mTerrainAsset = qsf::AssetProxy(mTerrainAsset.getGlobalAssetId());
 			buildHeightMap();
 		}
-		else if (!mIsEditing)
+		/*else if (!mIsEditing)
 		{
 			// We only care for ogre terrain chunks here since all other dependencies are textures, which are already covered by our general delayed loading support
 			if (asset.getTypeId() == qsf::QsfAssetTypes::OGRE_TERRAIN)
@@ -598,43 +597,25 @@ namespace kc_terrain
 					}
 				}
 			}
-		}
+		}*/
 	}
 
-	void TerrainComponent::loadTerrainDefinition()
-	{
-		if (mTerrainAsset.isValid())
-		{
-			mGlobalTerrainAssetIds.clear();
-			mGlobalTerrainAssetIds.insert(mTerrainAsset.getGlobalAssetId());
 
-			if (!mTerrainAsset.getCachedAssetDataFilename().empty() && mTerrainDefinition->loadFromAsset(mTerrainAsset.getGlobalAssetId()))
-			{
-				std::vector<qsf::GlobalAssetId> globalDerivedAssetIds;
-				mTerrainDefinition->getDerivedGlobalAssetIds(globalDerivedAssetIds);
-				mGlobalTerrainAssetIds.insert(globalDerivedAssetIds.begin(), globalDerivedAssetIds.end());
-			}
-			else
-			{
-				mTerrainDefinition->clear();
-			}
-		}
-	}
 
 	void TerrainComponent::defineTerrain()
 	{
 		if (nullptr != mOgreTerrainGroup)
 		{
 			{
-				const int size = mColorMapSize / mTerrainChunksPerEdge;
+				const int size = mColorMapSize / kc_mTerrainChunksPerEdge;
 				mOgreTerrainGlobalOptions->setLightMapSize(size);
 				mOgreTerrainGlobalOptions->setDefaultGlobalColourMapSize(size);
-				mOgreTerrainGlobalOptions->setLayerBlendMapSize(mBlendMapSize / mTerrainChunksPerEdge);
+				mOgreTerrainGlobalOptions->setLayerBlendMapSize(mBlendAndHeightMapSize / kc_mTerrainChunksPerEdge);
 			}
 
 			Ogre::Terrain::ImportData& ogreTerrainImportData = mOgreTerrainGroup->getDefaultImportSettings();
 			{
-				ogreTerrainImportData.terrainSize = (mHeightMapSize / mTerrainChunksPerEdge) + 1;
+				ogreTerrainImportData.terrainSize = (mBlendAndHeightMapSize / kc_mTerrainChunksPerEdge) + 1;
 				ogreTerrainImportData.worldSize = mTerrainWorldSize;
 				ogreTerrainImportData.inputScale = 1.0f;
 				ogreTerrainImportData.minBatchSize = (ogreTerrainImportData.minBatchSize > ogreTerrainImportData.terrainSize) ? ogreTerrainImportData.terrainSize : 65;
@@ -653,34 +634,22 @@ namespace kc_terrain
 			// But why does this different methods have an impact on the visual aspect of the terrain?
 			// Does loading the terrain data from an file sets some data different then defining the terrain from an import data definition?
 			mOgreTerrainGroup->setTerrainSize(ogreTerrainImportData.terrainSize);
-			if (mTerrainDefinition->isValid())
+
+			for (int x = 0; x < kc_mTerrainChunksPerEdge; ++x)
 			{
-				for (int x = 0; x < mTerrainChunksPerEdge; ++x)
+				for (int y = 0; y < kc_mTerrainChunksPerEdge; ++y)
 				{
-					for (int y = 0; y < mTerrainChunksPerEdge; ++y)
-					{
-						mOgreTerrainGroup->defineTerrain(x, y, qsf::AssetProxy(mTerrainDefinition->getOgreTerrainChunk(x, y)).getCachedAssetDataFilename());
-					}
-				}
-			}
-			else
-			{
-				for (int x = 0; x < mTerrainChunksPerEdge; ++x)
-				{
-					for (int y = 0; y < mTerrainChunksPerEdge; ++y)
-					{
-						mOgreTerrainGroup->defineTerrain(x, y, 1.0f);
-					}
+					mOgreTerrainGroup->defineTerrain(x, y, 1.0f);
 				}
 			}
 		}
-		
+
 	}
 
 	void TerrainComponent::removeAllOgreTerrains()
 	{
-		// Optimization: To avoid constant allocations/deallocations, use a static instance (not multi-threading safe, of course)
-		static std::vector<qsf::MaterialId> materialIds;
+			// Optimization: To avoid constant allocations/deallocations, use a static instance (not multi-threading safe, of course)
+			std::vector<qsf::MaterialId> materialIds;
 		materialIds.clear();
 
 		{ // The OGRE terrain is pretty out-of-date and has been poorly migrated over the years from one OGRE version to another. Ensure that the referenced materials are gone.
@@ -696,12 +665,10 @@ namespace kc_terrain
 				}
 			}
 		}
-
-		// Tell the OGRE terrain group to kill'em all
-		mOgreTerrainGroup->removeAllTerrains();
-
-		// Destroy no longer required materials
-		static qsf::MaterialManager& materialManager = QSF_MATERIAL.getMaterialManager();
+			// Tell the OGRE terrain group to kill'em all
+			mOgreTerrainGroup->removeAllTerrains();
+			// Destroy no longer required materials
+			qsf::MaterialManager& materialManager = QSF_MATERIAL.getMaterialManager();
 		for (qsf::MaterialId materialId : materialIds)
 		{
 			materialManager.destroyElement(materialId);
@@ -717,56 +684,18 @@ namespace kc_terrain
 				removeAllOgreTerrains();
 			}
 
-			if (nullptr != mTerrainDefinition && (mTerrainDefinition->getGlobalMapAssetId() != getEntity().getMap().getGlobalAssetId() || mTerrainDefinition->getEntityId() != getEntityId()))
+			defineTerrain();
+			try
 			{
-				delete mTerrainDefinition;
-				mTerrainDefinition = nullptr;
+				// TODO(co) Don't asynchronously load the OGRE terrain, when using OGRE 1.9 there are certain hang issues
+				mOgreTerrainGroup->loadAllTerrains(true);
 			}
-			if (nullptr != mTerrainDefinition)
+			catch (const std::exception& e)
 			{
-				loadTerrainDefinition();
-			}
-			else
-			{
-				mTerrainDefinition = getTerrainDefinition();
+				QSF_ERROR("QSF failed to load the terrain. Exception caught: " << e.what(), QSF_REACT_NONE);
 			}
 
-			if (!mIsEditing)
-			{
-				// Load terrain
-				defineTerrain();
-				try
-				{
-					// TODO(co) Don't asynchronously load the OGRE terrain, when using OGRE 1.9 there are certain hang issues
-					mOgreTerrainGroup->loadAllTerrains(true);
-				}
-				catch (const std::exception& e)
-				{
-					QSF_ERROR("QSF failed to load the terrain. Exception caught: " << e.what(), QSF_REACT_NONE);
-				}
-
-				mOgreTerrainGroup->freeTemporaryResources();
-
-				// TODO(co) The OGRE default stuff eats up our valuable CPU performance
-				/*
-				// The default OGRE terrain behaviour is horrible. Each and every terrain instance will register itself as
-				// frame listener and will perform some CPU heavy work inside "Ogre::Terrain::preFindVisibleObjects()" - especially
-				// the "Ogre::TerrainQuadTreeNode::calculateCurrentLod()" call is evil. This method does CPU work for each and
-				// every terrain instance, the early-out for not visible terrains was commented by someone with
-				// "disable this, could cause 'jumps' in LOD as children go out of frustum".
-				// -> So, remove the terrain instance at once as frame listener to get rid of this performance killing insanity.
-				// -> Not critical, because we're going to destroy the terrain instance before we destroy the OGRE scene manger instance.
-				Ogre::TerrainGroup::TerrainIterator terrainIterator = mOgreTerrainGroup->getTerrainIterator();
-				while (terrainIterator.hasMoreElements())
-				{
-					Ogre::Terrain* ogreTerrain = terrainIterator.getNext()->instance;
-					if (nullptr != ogreTerrain)
-					{
-						ogreTerrain->_getRootSceneNode()->getCreator()->removeListener(ogreTerrain);
-					}
-				}
-				*/
-			}
+			mOgreTerrainGroup->freeTemporaryResources();
 		}
 	}
 
@@ -774,7 +703,7 @@ namespace kc_terrain
 	{
 		if (nullptr != mOgreTerrainGroup)
 		{
-			const float offset = (mTerrainChunksPerEdge - 1) / 2.0f * static_cast<float>(mTerrainWorldSize) / mTerrainChunksPerEdge;
+			const float offset = (kc_mTerrainChunksPerEdge - 1) / 2.0f * static_cast<float>(mTerrainWorldSize) / kc_mTerrainChunksPerEdge;
 			Ogre::Vector3 ogrePosition(qsf::Convert::getOgreVector3(position));
 			ogrePosition.x -= offset;
 			//nasty position hack
@@ -921,24 +850,15 @@ namespace kc_terrain
 		Terrain->setHeightAtPoint(xRemaining, yRemaining, NewHeight);//TerrainEditGUI->GetHeight());
 	}
 
+	void TerrainComponent::SetUpCustomImportData()
+	{
+		mCustomImportData= new Ogre::Terrain::ImportData;
+		*mCustomImportData = mOgreTerrainGroup->getDefaultImportSettings();
+
+	}
+
 	bool TerrainComponent::Relead()
 	{
-		std::vector<std::vector<std::string>> ReadBlendMaps;
-		Ogre::TerrainGroup::TerrainIterator it2 = getOgreTerrainGroup2()->getTerrainIterator();
-		int id = 1; // because my ID start at 0
-		bool BlendDatafound;
-		while (it2.hasMoreElements()) // add the layer to all terrains in the terrainGroup
-		{
-			Ogre::TerrainGroup::TerrainSlot* a = it2.getNext();
-			std::vector<std::string> Layers;
-			for (size_t t = 0; t < a->instance->getLayerCount(); t++)
-			{
-				Layers.push_back(a->instance->getLayerTextureName((uint8)t, 0));
-				BlendDatafound = true;
-			}
-			ReadBlendMaps.push_back(Layers);
-
-		}
 		Ogre::SceneManager* ogreSceneManager = getOgreSceneManager();
 		std::vector<float> Heightmapdata;
 		if (nullptr != ogreSceneManager)
@@ -984,7 +904,7 @@ namespace kc_terrain
 			QSF_ASSERT(nullptr != mOgreTerrainGlobalOptions, "QSF failed to obtain an global OGRE terrain options instance", QSF_REACT_NONE);
 			// Create OGRE terrain group instance
 			// -> OGRE handles the terrain world size for each single terrain inside the terrain group, for QSF in order to keep things simple for the user the terrain world size is for the whole thing
-			mOgreTerrainGroup = new Ogre::TerrainGroup(ogreSceneManager, Ogre::Terrain::ALIGN_X_Z, 65, mTerrainWorldSize / static_cast<float>(mTerrainChunksPerEdge));
+			mOgreTerrainGroup = new Ogre::TerrainGroup(ogreSceneManager, Ogre::Terrain::ALIGN_X_Z, 65, mTerrainWorldSize / static_cast<float>(kc_mTerrainChunksPerEdge));
 			{
 				// mOgreTerrainGlobalOptions->setCastsDynamicShadows(true);	// TODO(co) Casting shadow looks fine on the empty map, but creates nasty artefact on other maps?
 				mOgreTerrainGlobalOptions->setSkirtSize(mSkirtSize);
@@ -1010,88 +930,9 @@ namespace kc_terrain
 
 			// Update the visibility state of the internal OGRE scene node
 			updateOgreSceneNodeVisibility();
-			LoadHeightMap(Heightmapdata);
-			//auto BlendTextureCount = getOgreTerrain()->getBlendTextureCount();
-			//QSF_LOG_PRINTS(INFO,"mTerrainContext->addContextReference(ColorMap); "<< BlendTextureCount)
+			TerrainLoader::LoadTerrain(this);
 
-
-			// We want to listen on component property changes inside the core entity: Get "qsf::BoostSignalComponent" instance or create it in case it does not exist, yet
-			if (ReadBlendMaps.empty() && ReadBlendMaps.at(0).empty())
-			{
-				//store layer-texture data :)
-				QSF_LOG_PRINTS(INFO, "a1")
-					Ogre::StringVector Textures;
-				Ogre::StringVector Textures2;
-				Ogre::StringVector Textures3;
-				Ogre::StringVector Textures4;
-				Ogre::StringVector Textures5;
-				/*
-						Textures.push_back("em5/material/terrain_layer/terrain_nature_grass01");
-			Textures.push_back("em5/material/terrain_layer/terrain_urban_medieval_cobbles");
-			Textures.push_back("em5/material/terrain_layer/terrain_nature_dirt01_fine");
-			Textures.push_back("em5/material/terrain_layer/terrain_nature_sand01");
-			Textures.push_back("em5/material/terrain_layer/terrain_urban_herringbone01");
-			Textures.push_back("em5/material/terrain_layer/terrain_urban_herringbone01");
-			Textures.push_back("em5/material/terrain_layer/terrain_urban_herringbone01");
-			Textures.push_back("em5/material/terrain_layer/terrain_urban_herringbone01");
-			Textures.push_back("em5/material/terrain_layer/terrain_urban_herringbone01");
-			Textures.push_back("em5/material/terrain_layer/terrain_urban_herringbone01");
-				*/
-				Textures.push_back("em5/material/terrain_layer/terrain_nature_grass01");
-				Textures2.push_back("em5/material/terrain_layer/terrain_urban_medieval_cobbles");
-
-				Textures3.push_back("em5/material/terrain_layer/terrain_nature_dirt01_fine");
-				Textures4.push_back("em5/material/terrain_layer/terrain_nature_sand01");
-				Textures5.push_back("em5/material/terrain_layer/terrain_urban_herringbone01");
-				QSF_LOG_PRINTS(INFO, "a2")
-
-					Ogre::TerrainGroup::TerrainIterator it = getOgreTerrainGroup2()->getTerrainIterator();
-				int id = 1; // because my ID start at 0
-				while (it.hasMoreElements()) // add the layer to all terrains in the terrainGroup
-				{
-					id++;
-					Ogre::TerrainGroup::TerrainSlot* a = it.getNext();
-					a->instance->addLayer(0.0f, &Textures);
-					a->instance->addLayer(0.0f, &Textures2);
-					a->instance->addLayer(0.0f, &Textures3);
-					a->instance->addLayer(0.0f, &Textures4);
-
-					a->instance->addLayer(0.0f, &Textures5);
-					a->instance->addLayer(0.0f, &Textures5);
-					a->instance->addLayer(0.0f, &Textures5);
-					a->instance->addLayer(0.0f, &Textures5);
-					a->instance->addLayer(0.0f, &Textures5);
-					a->instance->addLayer(0.0f, &Textures5);
-					a->instance->addLayer(0.0f, &Textures5);
-					/*QSF_LOG_PRINTS(INFO,(int32)a->instance->getBlendTextureCount())
-						for (size_t t = 1; t <= a->instance->getBlendTextureCount(); t++)
-						{
-							QSF_LOG_PRINTS(INFO,a->instance->getBlendTextureName((uint8)t));
-						}*/
-					mTerrainContext->GetMaterialGenerator()->RefreshMaterial(mOgreTerrainGroup->getTerrain(a->x, a->y));
-					//mTerrainContext->GetMaterialGenerator()->_markChanged();
-					//a->instance->dirty();
-				}
-			}
-			else
-			{
-				Ogre::TerrainGroup::TerrainIterator it3 = getOgreTerrainGroup2()->getTerrainIterator();
-				while (it3.hasMoreElements()) // add the layer to all terrains in the terrainGroup
-				{
-					Ogre::TerrainGroup::TerrainSlot* a = it3.getNext();
-					if (ReadBlendMaps.empty())
-						break;
-					for (size_t t1 = 0; t1 < ReadBlendMaps.at(0).size(); t1++)
-					{
-						Ogre::StringVector Textures;
-						Textures.push_back(ReadBlendMaps.at(0).at(t1).c_str());
-						a->instance->addLayer(0.0f, &Textures);
-					}
-					ReadBlendMaps.erase(ReadBlendMaps.begin());
-					mTerrainContext->GetMaterialGenerator()->RefreshMaterial(a->instance);
-				}
-
-			}
+			
 
 			//mOgreTerrainGroup->update(false);
 			return true;
@@ -1194,20 +1035,102 @@ namespace kc_terrain
 	{
 		return false;
 	}
+	void TerrainComponent::SetDoNotLoadNextTime(bool donotload)
+	{
+		mDoNotLoadNextTime = donotload;
+	}
+	bool TerrainComponent::GetDoNotLoadNextTime()
+	{
+		return mDoNotLoadNextTime;
+	}
+	void TerrainComponent::SetBlendAndHeightMapSize(int size)
+	{
+		mBlendAndHeightMapSize = size;
+		float i = log2(mBlendAndHeightMapSize);
+
+		// check if n is a power of 2
+		if (ceil(i) != floor(i))
+		{
+			QSF_LOG_PRINTS(INFO,"your value is not a power of 2	... pls fix it "<< size)
+		}
+		else
+		{
+			QSF_LOG_PRINTS(INFO, "your value IS a power of 2")
+		}
+		return;
+	}
+		//dialog does crash because it's called mutlitple times
+		/*if (size == m_OldAttempt)
+		{
+			return;
+		}
+		m_OldAttempt = size;
+		QSF_LOG_PRINTS(INFO,size)
+		int n = size;
+		// calculate log2() of n
+		float i = log2(n);
+
+		// check if n is a power of 2
+		if (ceil(i) == floor(i)) {
+			mBlendAndHeightMapSize = n;
+		}
+		else
+		{
+			//create a dialog
+			if (EM5_GAME.getInstance() != nullptr)
+				return;
+			QInputDialog *dialog = new QInputDialog();
+			dialog->setInputMode(QInputDialog::InputMode::IntInput);
+			dialog->setWindowTitle("Set Blend and Heightmapsize");
+			dialog->setLabelText("Please enter a number (n) of power of 2 like 1024 or 2048. The Heightmapsize will be n+1");
+			dialog->setTextValue(boost::lexical_cast<std::string>(GetBlendAndHeightMapSize()).c_str());
+			int ret = dialog->exec();
+			QString text = dialog->textValue();
+			if (ret == QDialog::Accepted && !text.isEmpty()) {
+				try
+				{
+					if (n <= 0)
+						return;
+					n = boost::lexical_cast<int>(text.toStdString());
+					i = log2(n);
+
+					// check if n is a power of 2
+					QSF_LOG_PRINTS(INFO, ceil(i) << " "<< floor(i))
+					if (ceil(i) == floor(i))
+						mBlendAndHeightMapSize = n;
+				}
+				catch (const std::exception&)
+				{
+					return;
+
+				}
+
+			}
+		}
+
+	}*/
+	int TerrainComponent::GetBlendAndHeightMapSize()
+	{
+		return mBlendAndHeightMapSize;
+	}
+	Ogre::Terrain::ImportData * TerrainComponent::GetOgreImportData()
+	{
+		return mCustomImportData;
+	}
 	void TerrainComponent::UpdatePosition(bool up)
 	{
 		const qsf::TransformComponent* transformComponent = getEntity().getComponent<qsf::TransformComponent>();
 		if (nullptr != transformComponent)
 		{
 			// Position
-			auto oe =getOgreEntity();
+			auto oe = getOgreEntity();
 			//oe->getParentNode()->setPosition(Ogre::Vector3(transformComponent->getPosition().x, transformComponent->getPosition().y, transformComponent->getPosition().z));
 			setPosition(transformComponent->getPosition(), mPos);
 			Ogre::TerrainGroup::TerrainIterator it = getOgreTerrainGroup()->getTerrainIterator();
 			while (it.hasMoreElements()) // add the layer to all terrains in the terrainGroup
 			{
 				Ogre::TerrainGroup::TerrainSlot* a = it.getNext();
-				a->instance->setPosition(Ogre::Vector3(transformComponent->getPosition().x,transformComponent->getPosition().y,transformComponent->getPosition().z));
+				a->instance->setPosition(Ogre::Vector3(transformComponent->getPosition().x, transformComponent->getPosition().y, transformComponent->getPosition().z));
 				a->instance->update(true);
 			}
 			mOgreTerrainGroup->setTerrainWorldSize(mOgreTerrainGroup->getTerrainWorldSize());

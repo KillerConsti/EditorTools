@@ -605,7 +605,6 @@ namespace kc_terrain
 			}
 			// A global color map which spans all terrain chunks, usually only used during runtime for efficiency
 			//static const qsf::GlobalAssetId missingTextureGlobalAssetId = qsf::AssetProxy("qsf/texture/default/missing").getGlobalAssetId();
-			const kc_terrain::TerrainDefinition* terrainDefinition = terrainComponent->getTerrainDefinition();
 			/*qsf::GlobalAssetId globalAssetId = (nullptr != terrainDefinition && terrainDefinition->isValid()) ? terrainDefinition->getColorMap() : qsf::getUninitialized<qsf::GlobalAssetId>();
 			if (qsf::isUninitialized(globalAssetId) || nullptr == QSF_ASSET.getAssetByGlobalAssetId(globalAssetId))
 			{
@@ -622,7 +621,7 @@ namespace kc_terrain
 			::detail::setMapTransformMaterialProperty(*terrainMaterial, *terrainComponent, *ogreTerrain, "GlobalNormalMapTransform", true);
 
 			// A global normal map which spans all terrain chunks, usually only used during runtime for efficiency
-			const kc_terrain::TerrainDefinition* terrainDefinition = terrainComponent->getTerrainDefinition();
+			/*const kc_terrain::TerrainDefinition* terrainDefinition = terrainComponent->getTerrainDefinition();
 			if (nullptr != terrainDefinition && terrainDefinition->isValid())
 			{
 				// Just use the global asset ID and let our resource management do the rest...
@@ -634,7 +633,7 @@ namespace kc_terrain
 				terrainMaterial->setPropertyById("UseGlobalNormalMap", qsf::MaterialPropertyValue::fromBoolean(qsf::isInitialized(globalAssetId)));
 				terrainMaterial->setPropertyById("GlobalNormalMap", qsf::MaterialPropertyValue::fromGlobalAssetId(globalAssetId));
 			}
-			else
+			else*/
 			{
 				terrainMaterial->setPropertyById("UseGlobalNormalMap", qsf::MaterialPropertyValue::fromBoolean(false));
 				terrainMaterial->setPropertyById("GlobalNormalMap", qsf::MaterialPropertyValue::fromGlobalAssetId(qsf::getUninitialized<qsf::GlobalAssetId>()));

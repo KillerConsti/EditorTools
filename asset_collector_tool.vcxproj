@@ -63,7 +63,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;GLM_FORCE_RADIANS;QSF_X64;BOOST_AUTO_LINK_TAGGED;BOOST_FILESYSTEM_NO_DEPRECATED;BOOST_THREAD_VERSION=4;BOOST_ENABLE_ASSERT_HANDLER;NDEBUG;_WINDOWS;_USRDLL;QT_NO_KEYWORDS;EDITORPLUGIN_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(QsfDir)external\ogre\include\ogre;$(QsfDir)external\ogre\include;.;..\game_plugin;$(EM5SdkDir)em5;$(QtUicOutput);$(QsfDir)qsf;$(QsfDir)qsf_logic;$(QsfDir)qsf_ai;$(QsfDir)qsf_compositing;D:\SteamLibrary\steamapps\common\EMERGENCY 20\sdk\plugin_api\qsf;$(QsfDir)qsf_game;$(QsfDir)qsf_editor_base;$(QsfDir)qsf_editor;$(QsfDir)external\tbb\include;$(QsfDir)external\vld\include;$(QsfDir)external\boost\include;$(QsfDir)external\camp\include;$(QsfDir)external\glm\include;$(QsfDir)external\bullet\include\bullet;$(QsfDir)external\qt\include;H:\sdk\sample_plugins\asset_collector_tool\asset_collector_tool\extern\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(QsfDir)external\ogre\include\ogre;$(QsfDir)external\ogre\include;$(EM5SdkDir)em5;$(QtUicOutput);$(QsfDir)qsf;$(QsfDir)qsf_logic;$(QsfDir)qsf_ai;$(QsfDir)qsf_compositing;$(QsfDir)qsf_game;$(QsfDir)qsf_editor_base;$(QsfDir)qsf_editor;$(QsfDir)external\tbb\include;$(QsfDir)external\vld\include;$(QsfDir)external\boost\include;$(QsfDir)external\camp\include;$(QsfDir)external\glm\include;$(QsfDir)external\bullet\include\bullet;$(QsfDir)external\qt\include;.\asset_collector_tool\extern\include;..\..\..\..\asset_collector_tool;..\asset_collector_tool;..\game_plugin;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <TreatWarningAsError>true</TreatWarningAsError>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -75,7 +75,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>false</EnableCOMDATFolding>
       <OptimizeReferences>false</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(QsfDir)external\_windows_$(PlatformTarget)\vld\lib;$(QsfDir)external\_windows_$(PlatformTarget)\boost\lib;$(QsfDir)external\_windows_$(PlatformTarget)\camp\lib;$(QsfDir)external\_windows_$(PlatformTarget)\qt\lib;$(QsfDir)external\_windows_$(PlatformTarget)\tbb\lib;$(QsfDir)lib\$(PlatformTarget)r;$(EM5SdkDir)lib\$(PlatformTarget)r;..\lib\$(PlatformTarget);D:\SteamLibrary\steamapps\common\EMERGENCY 20\sdk\plugin_api\external\_windows_x64\ogre\lib\RelWithDebInfo;H:\sdk\sample_plugins\asset_collector_tool\asset_collector_tool\extern;..\..\data\asset_collector_tool_for_editor\x64\externals</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(QsfDir)external\_windows_$(PlatformTarget)\vld\lib;$(QsfDir)external\_windows_$(PlatformTarget)\boost\lib;$(QsfDir)external\_windows_$(PlatformTarget)\camp\lib;$(QsfDir)external\_windows_$(PlatformTarget)\qt\lib;$(QsfDir)external\_windows_$(PlatformTarget)\tbb\lib;$(QsfDir)lib\$(PlatformTarget)r;$(EM5SdkDir)lib\$(PlatformTarget)r;..\lib\$(PlatformTarget);$(QsfDir)external\_windows_$(PlatformTarget)\ogre\lib\RelWithDebInfo;asset_collector_tool\extern;..\..\data\asset_collector_tool_for_editor\x64\externals</AdditionalLibraryDirectories>
       <AdditionalDependencies>camp.lib;Qt5Core.lib;Qt5Gui.lib;Qt5Widgets.lib;qsf.lib;qsf_ai.lib;qsf_editor_base.lib;qsf_editor.lib;qsf_compositing.lib;em5_editor.lib;qsf_game.lib;em5.lib;OgreMain.lib;OgreTerrain.lib;CORE_RL_MagickCore_.lib;CORE_RL_Magick++_.lib;CORE_RL_MagickWand_.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>..\lib\$(PlatformTarget)$(CfgExtension)\$(TargetName).lib</ImportLibrary>
     </Link>
@@ -134,7 +134,6 @@
     <ClCompile Include="asset_collector_tool\component\EditorToolsHelperComponent.cpp" />
     <ClCompile Include="asset_collector_tool\kc_terrain\TerrainComponent.cpp" />
     <ClCompile Include="asset_collector_tool\kc_terrain\TerrainContext.cpp" />
-    <ClCompile Include="asset_collector_tool\kc_terrain\TerrainDefinition.cpp" />
     <ClCompile Include="asset_collector_tool\kc_terrain\TerrainLoader.cpp" />
     <ClCompile Include="asset_collector_tool\kc_terrain\TerrainMaterialGenerator.cpp" />
     <ClCompile Include="asset_collector_tool\kc_terrain\TerrainMaterialGeneratorOgreMaterial.cpp" />
@@ -193,7 +192,6 @@
     <ClInclude Include="asset_collector_tool\kc_terrain\TerrainComponent.h" />
     <ClInclude Include="asset_collector_tool\kc_terrain\TerrainContext-inl.h" />
     <ClInclude Include="asset_collector_tool\kc_terrain\TerrainContext.h" />
-    <ClInclude Include="asset_collector_tool\kc_terrain\TerrainDefinition.h" />
     <ClInclude Include="asset_collector_tool\kc_terrain\TerrainLoader.h" />
     <ClInclude Include="asset_collector_tool\kc_terrain\TerrainMaterialGenerator.h" />
     <QtMOC Include="asset_collector_tool\view\ImageDecompiler.h" />

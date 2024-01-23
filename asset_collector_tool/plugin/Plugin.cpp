@@ -78,6 +78,9 @@ namespace user
 					QSF_ADD_CAMP_PROPERTY(Terrain Texture Layer List, kc_terrain::TerrainComponent::GetTerrainLayerList, kc_terrain::TerrainComponent::SetTerrainLayerList, "this points to the layer list asset. It stores the names of the layers in a json file", 0.f).tag("AssetType", qsf::QsfAssetTypes::TEXTURE.getName())
 					QSF_ADD_CAMP_PROPERTY(Reload, kc_terrain::TerrainComponent::GetUpdate, kc_terrain::TerrainComponent::SetUpdate, "set it directly with the tool", false).tag("Serializable", false)
 					QSF_ADD_CAMP_PROPERTY(UpdatePosition, kc_terrain::TerrainComponent::GetUpdatePosition, kc_terrain::TerrainComponent::UpdatePosition, "set it directly with the tool ... not supported yet", false).tag("Serializable", false)
+					QSF_ADD_CAMP_PROPERTY(Do Not Load, kc_terrain::TerrainComponent::GetDoNotLoadNextTime, kc_terrain::TerrainComponent::SetDoNotLoadNextTime, "you may force the terrain to not load so you can destroy this object without crash", false)
+					QSF_ADD_CAMP_PROPERTY(Blend And Heightmapsize , kc_terrain::TerrainComponent::GetBlendAndHeightMapSize, kc_terrain::TerrainComponent::SetBlendAndHeightMapSize, "you can adjust the size of the heightmap here. Must be power of 2 like 2048", 1024)
+					QSF_ADD_CAMP_PROPERTY(KC Chunks per Edge, kc_terrain::TerrainComponent::kc_getTerrainChunksPerEdge,kc_terrain::TerrainComponent::kc_setTerrainChunksPerEdge,"number of chunks per edge e.g. 8 or 16 or 32. Must be lower as height and blendmapsize",16)
 					QSF_END_CAMP_CLASS_EXPORT
 
 					QSF_START_CAMP_CLASS_EXPORT(EditorToolsHelperComponent, "This sets global glossiness", "you may just attach it to core entity")
