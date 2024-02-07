@@ -114,10 +114,12 @@
   <ItemGroup>
     <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_AssetCollectorTool.cpp" />
     <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_DebugUnitView.cpp" />
+    <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_EditorTerrainManager.cpp" />
     <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_GuiManager.cpp" />
     <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_ImageDecompiler.cpp" />
     <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_KC_AbstractView.cpp" />
     <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_OrderInfoPictureCreator.cpp" />
+    <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_PlaceUnitEditMode.cpp" />
     <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_ScenarioScriptTool.cpp" />
     <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_TerrainEditColorMapToolbox.cpp" />
     <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_TerrainEditmodeColorMap.cpp" />
@@ -132,11 +134,13 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="asset_collector_tool\component\EditorToolsHelperComponent.cpp" />
+    <ClCompile Include="asset_collector_tool\editmode\PlaceUnitEditMode.cpp" />
     <ClCompile Include="asset_collector_tool\kc_terrain\TerrainComponent.cpp" />
     <ClCompile Include="asset_collector_tool\kc_terrain\TerrainContext.cpp" />
     <ClCompile Include="asset_collector_tool\kc_terrain\TerrainLoader.cpp" />
     <ClCompile Include="asset_collector_tool\kc_terrain\TerrainMaterialGenerator.cpp" />
     <ClCompile Include="asset_collector_tool\kc_terrain\TerrainMaterialGeneratorOgreMaterial.cpp" />
+    <ClCompile Include="asset_collector_tool\kc_terrain\TerrainScaler.cpp" />
     <ClCompile Include="asset_collector_tool\Main.cpp" />
     <ClCompile Include="asset_collector_tool\Manager\GuiManager.cpp" />
     <ClCompile Include="asset_collector_tool\plugin\Plugin.cpp" />
@@ -159,11 +163,13 @@
     <ClCompile Include="asset_collector_tool\view\indicator\UnitPlacerView.cpp" />
     <ClCompile Include="asset_collector_tool\view\KC_AbstractView.cpp" />
     <ClCompile Include="asset_collector_tool\view\OrderInfoPictureCreator.cpp" />
+    <ClCompile Include="asset_collector_tool\view\EditorTerrainManager.cpp" />
     <ClCompile Include="asset_collector_tool\view\UnitViewer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_AssetCollectorTool.h" />
     <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_DebugUnitView.h" />
+    <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_EditorTerrainManager.h" />
     <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_ImageDecompiler.h" />
     <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_KC_AbstractView.h" />
     <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_OrderInfoPictureCreator.h" />
@@ -176,7 +182,9 @@
     <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_UnitPlacerView.h" />
     <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_UnitViewer.h" />
     <ClInclude Include="asset_collector_tool\component\EditorToolsHelperComponent.h" />
+    <QtMOC Include="asset_collector_tool\editmode\PlaceUnitEditMode.h" />
     <ClInclude Include="asset_collector_tool\Export.h" />
+    <QtMOC Include="asset_collector_tool\view\EditorTerrainManager.h" />
     <QtMOC Include="asset_collector_tool\view\OrderInfoPictureCreator.h" />
     <QtMOC Include="asset_collector_tool\view\KC_AbstractView.h" />
     <QtMOC Include="asset_collector_tool\view\UnitViewer.h" />
@@ -196,6 +204,7 @@
     <ClInclude Include="asset_collector_tool\kc_terrain\TerrainMaterialGenerator.h" />
     <QtMOC Include="asset_collector_tool\view\ImageDecompiler.h" />
     <ClInclude Include="asset_collector_tool\kc_terrain\TerrainMaterialGeneratorOgreMaterial.h" />
+    <ClInclude Include="asset_collector_tool\kc_terrain\TerrainScaler.h" />
     <ClInclude Include="asset_collector_tool\view\indicator\ScenarioScriptTool.h" />
     <QtMOC Include="asset_collector_tool\view\indicator\TerrainEditTool.h" />
     <QtMOC Include="asset_collector_tool\view\indicator\AssetCollectorTool.h" />
@@ -204,6 +213,9 @@
     <ClInclude Include="asset_collector_tool\PrecompiledHeader.h" />
   </ItemGroup>
   <ItemGroup>
+    <QtUI Include="asset_collector_tool\view\EditorTerrainManager.ui">
+      <FileType>Document</FileType>
+    </QtUI>
     <QtUI Include="asset_collector_tool\view\indicator\AssetCollectorTool.ui">
       <FileType>Document</FileType>
     </QtUI>

@@ -1585,7 +1585,7 @@ namespace user
 			QSF_LOG_PRINTS(INFO, "Blendmapsize" << TerrainMaster->getBlendMapSize());
 
 			Offset = (float)(TerrainMaster->getTerrainWorldSize() / 2);
-			BlendMapSize = (float)TerrainMaster->GetBlendAndHeightMapSize();
+			BlendMapSize = (float)TerrainMaster->GetBlendtMapSize();
 			//Heighmapsize = (float)TerrainMaster->getBlendMapSize();
 			Ogre::TerrainGroup::TerrainIterator it = TerrainMaster->getOgreTerrainGroup()->getTerrainIterator();
 			int counter = 0; // because my ID start at 0

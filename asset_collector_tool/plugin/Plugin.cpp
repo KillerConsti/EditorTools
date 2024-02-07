@@ -24,7 +24,7 @@
 #include <asset_collector_tool\view\DebugUnitView.h>
 #include <asset_collector_tool\view\UnitViewer.h>
 #include <asset_collector_tool\\Manager\GuiManager.h>
-
+#include <asset_collector_tool\view\EditorTerrainManager.h>
 #include <qsf_editor/EditorHelper.h>
 #include <asset_collector_tool\component\EditorToolsHelperComponent.h>
 #include <asset_collector_tool\view\KC_AbstractView.h>
@@ -34,6 +34,7 @@
 #include <asset_collector_tool\view\OrderInfoPictureCreator.h>
 #include <fstream>
 #include <filesystem>
+#include <asset_collector_tool\editmode\PlaceUnitEditMode.h>
 //[-------------------------------------------------------]
 //[ Namespace                                             ]
 //[-------------------------------------------------------]
@@ -79,7 +80,8 @@ namespace user
 					QSF_ADD_CAMP_PROPERTY(Reload, kc_terrain::TerrainComponent::GetUpdate, kc_terrain::TerrainComponent::SetUpdate, "set it directly with the tool", false).tag("Serializable", false)
 					QSF_ADD_CAMP_PROPERTY(UpdatePosition, kc_terrain::TerrainComponent::GetUpdatePosition, kc_terrain::TerrainComponent::UpdatePosition, "set it directly with the tool ... not supported yet", false).tag("Serializable", false)
 					QSF_ADD_CAMP_PROPERTY(Do Not Load, kc_terrain::TerrainComponent::GetDoNotLoadNextTime, kc_terrain::TerrainComponent::SetDoNotLoadNextTime, "you may force the terrain to not load so you can destroy this object without crash", false)
-					QSF_ADD_CAMP_PROPERTY(Blend And Heightmapsize , kc_terrain::TerrainComponent::GetBlendAndHeightMapSize, kc_terrain::TerrainComponent::SetBlendAndHeightMapSize, "you can adjust the size of the heightmap here. Must be power of 2 like 2048", 1024)
+					QSF_ADD_CAMP_PROPERTY(Blendmapsize , kc_terrain::TerrainComponent::GetBlendtMapSize, kc_terrain::TerrainComponent::SetBlendMapSize, "you can adjust the size of the blendmap here. Must be power of 2 like 2048", 1024)
+					QSF_ADD_CAMP_PROPERTY(HeightMapSize, kc_terrain::TerrainComponent::GetHeightMapSize, kc_terrain::TerrainComponent::SetHeightMapSize, "you can adjust the size of the heightmap here. Must be power of 2+1 like 2049", 1025)
 					QSF_ADD_CAMP_PROPERTY(KC Chunks per Edge, kc_terrain::TerrainComponent::kc_getTerrainChunksPerEdge,kc_terrain::TerrainComponent::kc_setTerrainChunksPerEdge,"number of chunks per edge e.g. 8 or 16 or 32. Must be lower as height and blendmapsize",16)
 					QSF_END_CAMP_CLASS_EXPORT
 
@@ -157,6 +159,16 @@ namespace user
 				);
 
 
+				addCampClass(
+					camp::Class::declare<PlaceUnitEditMode>()
+					.tag("Name", QT_TR_NOOP("ID_EM5EDITOR_EDITMODE_FIRECOMPONENT_NAME21"))			// Text: "Fire entity"
+					.tag("Description", QT_TR_NOOP("ID_EM5EDITOR_EDITMODE_FIRECOMPONENT_DESCRIPTION21"))	// Text: "Fire entity edit mode"
+					.base<qsf::editor::EditMode>()
+					.constructor1<qsf::editor::EditModeManager*>()
+					.getClass()
+				);
+
+
 
 #define FinalBuild
 #ifdef FinalBuild
@@ -217,6 +229,15 @@ namespace user
 				addCampClass(
 					camp::Class::declare<UnitViewer>()
 					.tag("Name", QT_TR_NOOP("[KC] Unit Viewer"))			// Text: "Fire entity"
+					.tag("Description", QT_TR_NOOP("ID_EM5EDITOR_EDITMODE_FIRECOMPONENT_DESCRIPTION21"))	// Text: "Fire entity edit mode"
+					.base<qsf::editor::View>()
+					.constructor2<qsf::editor::ViewManager*, QWidget*>()
+					.getClass()
+				);
+
+				addCampClass(
+					camp::Class::declare<kc_terrain::EditorTerrainManager>()
+					.tag("Name", QT_TR_NOOP("[KC] EditorTerrainManager"))			// Text: "Fire entity"
 					.tag("Description", QT_TR_NOOP("ID_EM5EDITOR_EDITMODE_FIRECOMPONENT_DESCRIPTION21"))	// Text: "Fire entity edit mode"
 					.base<qsf::editor::View>()
 					.constructor2<qsf::editor::ViewManager*, QWidget*>()

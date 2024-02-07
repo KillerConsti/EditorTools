@@ -190,6 +190,21 @@
     <ClCompile Include="asset_collector_tool\kc_terrain\TerrainLoader.cpp">
       <Filter>Source Files\kc_terrain</Filter>
     </ClCompile>
+    <ClCompile Include="asset_collector_tool\view\EditorTerrainManager.cpp">
+      <Filter>Source Files\Manager</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_EditorTerrainManager.cpp">
+      <Filter>GeneratedQtFiles\moc</Filter>
+    </ClCompile>
+    <ClCompile Include="asset_collector_tool\kc_terrain\TerrainScaler.cpp">
+      <Filter>Source Files\kc_terrain</Filter>
+    </ClCompile>
+    <ClCompile Include="asset_collector_tool\editmode\PlaceUnitEditMode.cpp">
+      <Filter>Source Files\terrain_assets\editmodes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_PlaceUnitEditMode.cpp">
+      <Filter>GeneratedQtFiles\moc</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="asset_collector_tool\PrecompiledHeader.h">
@@ -264,6 +279,12 @@
     <ClInclude Include="asset_collector_tool\kc_terrain\TerrainLoader.h">
       <Filter>Source Files\kc_terrain</Filter>
     </ClInclude>
+    <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_EditorTerrainManager.h">
+      <Filter>GeneratedQtFiles\uic</Filter>
+    </ClInclude>
+    <ClInclude Include="asset_collector_tool\kc_terrain\TerrainScaler.h">
+      <Filter>Source Files\kc_terrain</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="asset_collector_tool.pro" />
@@ -320,6 +341,12 @@
     <QtMOC Include="asset_collector_tool\view\OrderInfoPictureCreator.h">
       <Filter>Source Files\view\AssetCollectorTool</Filter>
     </QtMOC>
+    <QtMOC Include="asset_collector_tool\view\EditorTerrainManager.h">
+      <Filter>Source Files\Manager</Filter>
+    </QtMOC>
+    <QtMOC Include="asset_collector_tool\editmode\PlaceUnitEditMode.h">
+      <Filter>Source Files\terrain_assets\editmodes</Filter>
+    </QtMOC>
   </ItemGroup>
   <ItemGroup>
     <QtRCC Include="asset_collector_tool\ressources\ressources.qrc">
@@ -359,6 +386,9 @@
     </QtUI>
     <QtUI Include="asset_collector_tool\view\indicator\AssetCollectorTool.ui">
       <Filter>Source Files\view\AssetCollectorTool</Filter>
+    </QtUI>
+    <QtUI Include="asset_collector_tool\view\EditorTerrainManager.ui">
+      <Filter>Source Files\Manager</Filter>
     </QtUI>
   </ItemGroup>
 </Project>

@@ -46,10 +46,6 @@ namespace kc_terrain
 	//[ Public definitions                                    ]
 	//[-------------------------------------------------------]
 	const uint32 TerrainComponent::COMPONENT_ID = qsf::StringHash("kc_terrain::TerrainComponent");
-	const uint32 TerrainComponent::HEIGHT_MAP_SIZE = qsf::StringHash("HeightMapSize");
-	const uint32 TerrainComponent::COLOR_MAP_SIZE = qsf::StringHash("ColorMapSize");
-	const uint32 TerrainComponent::BLEND_MAP_SIZE = qsf::StringHash("BlendMapSize");
-	const uint32 TerrainComponent::TERRAIN_CHUNKS_PER_EDGE = qsf::StringHash("TerrainChunksPerEdge");
 	const uint32 TerrainComponent::TERRAIN_WORLD_SIZE = qsf::StringHash("TerrainWorldSize");
 	const uint32 TerrainComponent::SKIRT_SIZE = qsf::StringHash("SkirtSize");
 	const uint32 TerrainComponent::MAX_PIXEL_ERROR = qsf::StringHash("MaxPixelError");
@@ -64,24 +60,7 @@ namespace kc_terrain
 	{
 	}
 
-	void TerrainComponent::setHeightMapSize(uint32 heightMapSize)
-	{
-		// TODO(co) I assume updating other data as a result is required
-		mHeightMapSize = heightMapSize;
-	}
-
-	void TerrainComponent::setColorMapSize(uint32 colorMapSize)
-	{
-		// TODO(co) I assume updating other data as a result is required
-		mColorMapSize = colorMapSize;
-		QSF_LOG_PRINTS(INFO, "updated colormapsize 2")
-	}
-
-	void TerrainComponent::setBlendMapSize(uint32 blendMapSize)
-	{
-		// TODO(co) I assume updating other data as a result is required
-		mBlendMapSize = blendMapSize;
-	}
+	
 
 	int TerrainComponent::kc_getTerrainChunksPerEdge()
 	{
@@ -139,7 +118,7 @@ namespace kc_terrain
 			if (nullptr != mOgreTerrainGlobalOptions)
 			{
 				mOgreTerrainGlobalOptions->setSkirtSize(mSkirtSize);
-				buildHeightMap();
+				buildMap();
 			}
 
 			// Promote the property change
@@ -260,35 +239,11 @@ namespace kc_terrain
 			// Redirect the request to the OGRE terrain
 			if (nullptr != mOgreTerrainGroup)
 			{
-				buildHeightMap();
+				buildMap();
 			}
 
 			// Promote the property change
 			promotePropertyChange(TERRAIN_ASSET);
-		}
-	}
-
-	void TerrainComponent::setEditing(bool isEditing)
-	{
-		mIsEditing = isEditing;
-
-		if (nullptr != mOgreTerrainGroup)
-		{
-			removeAllOgreTerrains();
-
-			// Load terrain
-			defineTerrain();
-			try
-			{
-				// TODO(co) Don't asynchronously load the OGRE terrain, when using OGRE 1.9 there are certain hang issues
-				mOgreTerrainGroup->loadAllTerrains(true);
-			}
-			catch (const std::exception& e)
-			{
-				QSF_ERROR("QSF failed to load the terrain. Exception caught: " << e.what(), QSF_REACT_NONE);
-			}
-
-			mOgreTerrainGroup->freeTemporaryResources();
 		}
 	}
 
@@ -411,7 +366,7 @@ namespace kc_terrain
 
 			// Update the visibility state of the internal OGRE scene node
 			updateOgreSceneNodeVisibility();
-			buildHeightMap();
+			buildMap();
 			// We want to listen on component property changes inside the core entity: Get "qsf::BoostSignalComponent" instance or create it in case it does not exist, yet
 			qsf::BoostSignalComponent* boostSignalComponent = getEntity().getMap().getCoreEntity().getOrCreateComponent<qsf::BoostSignalComponent>();
 			if (nullptr != boostSignalComponent)
@@ -556,7 +511,7 @@ namespace kc_terrain
 		{
 			// Create a fresh asset proxy, since the old one might have cached some no longer valid data...
 			mTerrainAsset = qsf::AssetProxy(mTerrainAsset.getGlobalAssetId());
-			buildHeightMap();
+			buildMap();
 		}
 		/*else if (!mIsEditing)
 		{
@@ -610,12 +565,12 @@ namespace kc_terrain
 				const int size = mColorMapSize / kc_mTerrainChunksPerEdge;
 				mOgreTerrainGlobalOptions->setLightMapSize(size);
 				mOgreTerrainGlobalOptions->setDefaultGlobalColourMapSize(size);
-				mOgreTerrainGlobalOptions->setLayerBlendMapSize(mBlendAndHeightMapSize / kc_mTerrainChunksPerEdge);
+				mOgreTerrainGlobalOptions->setLayerBlendMapSize(mBlendMapSize / kc_mTerrainChunksPerEdge);
 			}
 
 			Ogre::Terrain::ImportData& ogreTerrainImportData = mOgreTerrainGroup->getDefaultImportSettings();
 			{
-				ogreTerrainImportData.terrainSize = (mBlendAndHeightMapSize / kc_mTerrainChunksPerEdge) + 1;
+				ogreTerrainImportData.terrainSize = (mHeightMapSize / kc_mTerrainChunksPerEdge) + 1;
 				ogreTerrainImportData.worldSize = mTerrainWorldSize;
 				ogreTerrainImportData.inputScale = 1.0f;
 				ogreTerrainImportData.minBatchSize = (ogreTerrainImportData.minBatchSize > ogreTerrainImportData.terrainSize) ? ogreTerrainImportData.terrainSize : 65;
@@ -675,14 +630,12 @@ namespace kc_terrain
 		}
 	}
 
-	void TerrainComponent::buildHeightMap()
+	void TerrainComponent::buildMap()
 	{
 		if (nullptr != mOgreTerrainGroup)
 		{
-			if (!mIsEditing)
-			{
+
 				removeAllOgreTerrains();
-			}
 
 			defineTerrain();
 			try
@@ -714,157 +667,16 @@ namespace kc_terrain
 		//getOgreEntity()->getParentSceneNode()->setPosition(Ogre::Vector3(Offset.x,Offset.y,Offset.z));
 	}
 
-	std::vector<float> TerrainComponent::SaveHeightMap()
-	{
-		int partsize = getOgreTerrainGroup()->getTerrainSize() + 1;
-		int partsize2 = getOgreTerrainGroup()->getTerrain(0, 1)->getSize();
-		QSF_LOG_PRINTS(INFO, "partsize" << partsize)
-			QSF_LOG_PRINTS(INFO, "partsize2" << partsize2)
-			//scalemap
-			std::vector<float> HeightMap;
-		for (size_t t = 0; t < getHeightMapSize() - 1; t++)
-		{
-			for (size_t j = 0; j < getHeightMapSize() - 1; j++)
-			{
-				HeightMap.push_back(ReadHeightValue(glm::vec2(t, j)));
 
-			}
-		}
-		return HeightMap;
-	}
 
-	float TerrainComponent::ReadHeightValue(glm::vec2 point)
-	{
-		int xTerrain = 0;
-		int xRemaining = (int)point.x;
-		int yTerrain = 0;
-		int yRemaining = (int)point.y;
-		int partsize = getOgreTerrainGroup()->getTerrainSize();
-
-		//QSF_LOG_PRINTS(INFO,point.x << " " << point.y);
-		//we have a pattern like 4x4 (so in total 16 Terrains ... now find the correct one)
-		//remaining is the point on the selected Terrain
-		while (true)
-		{
-			if ((xRemaining - partsize) >= 0)
-			{
-				xTerrain++;
-				xRemaining = xRemaining - partsize;
-			}
-			else
-				break;
-		}
-		while (true)
-		{
-			if ((yRemaining - partsize) >= 0)
-			{
-				yTerrain++;
-				yRemaining = yRemaining - partsize;
-			}
-			else
-				break;
-		}
-		//QSF_LOG_PRINTS(INFO, xTerrain << " " << yTerrain << " " << xRemaining << " " << yRemaining)
-		auto Terrain = getOgreTerrainGroup()->getTerrain(xTerrain, yTerrain);
-		if (Terrain == nullptr)
-		{
-
-			QSF_LOG_PRINTS(INFO, "Terrain is a nullptr" << xTerrain << " " << yTerrain)
-				return 0.f;
-		}
-		return Terrain->getHeightAtPoint(xRemaining, yRemaining);//TerrainEditGUI->GetHeight());
-	}
-	void TerrainComponent::LoadHeightMap(std::vector<float> PointMap)
-	{
-		int index = 0;
-		for (size_t t = 0; t < getHeightMapSize() - 1; t++)
-		{
-			for (size_t j = 0; j < getHeightMapSize() - 1; j++)
-			{
-				SetHeightFromValue(glm::vec2(t, j), PointMap.at(index));
-				index++;
-			}
-		}
-		int mParts = 0;
-		for (size_t t = 0; t < 20; t++)
-		{
-			if (getOgreTerrainGroup()->getTerrain((long)t, (long)t) == nullptr)
-			{
-				mParts = (int)t + 1;
-				break;
-			}
-		}
-		for (long t = 0; t <= (mParts - 1); t++)
-		{
-			for (long i = 0; i <= (mParts - 1); i++)
-			{
-				//QSF_LOG_PRINTS(INFO, " t " << t << " i " << i)
-				if (getOgreTerrainGroup()->getTerrain(t, i) != nullptr)
-				{
-					getOgreTerrainGroup()->getTerrain(t, i)->update(true);
-				}
-
-			}
-
-		}
-	}
-
-	void TerrainComponent::SetHeightFromValue(glm::vec2 point, float NewHeight)
-	{
-		int xTerrain = 0;
-		int xRemaining = (int)point.x;
-		int yTerrain = 0;
-		int yRemaining = (int)point.y;
-		int partsize = getOgreTerrainGroup()->getTerrainSize();
-		//QSF_LOG_PRINTS(INFO,point.x << " " << point.y);
-		//we have a pattern like 4x4 (so in total 16 Terrains ... now find the correct one)
-		//remaining is the point on the selected Terrain
-		while (true)
-		{
-			if ((xRemaining - partsize) >= 0)
-			{
-				xTerrain++;
-				xRemaining = xRemaining - partsize;
-			}
-			else
-				break;
-		}
-		while (true)
-		{
-			if ((yRemaining - partsize) >= 0)
-			{
-				yTerrain++;
-				yRemaining = yRemaining - partsize;
-			}
-			else
-				break;
-		}
-		//QSF_LOG_PRINTS(INFO, xTerrain << " " << yTerrain << " " << xRemaining << " " << yRemaining)
-		auto Terrain = getOgreTerrainGroup()->getTerrain(xTerrain, yTerrain);
-		if (Terrain == nullptr)
-		{
-			QSF_LOG_PRINTS(INFO, "Terrain is a nullptr")
-				return;
-		}
-
-		Terrain->setHeightAtPoint(xRemaining, yRemaining, NewHeight);//TerrainEditGUI->GetHeight());
-	}
-
-	void TerrainComponent::SetUpCustomImportData()
-	{
-		mCustomImportData= new Ogre::Terrain::ImportData;
-		*mCustomImportData = mOgreTerrainGroup->getDefaultImportSettings();
-
-	}
+	
 
 	bool TerrainComponent::Relead()
 	{
 		Ogre::SceneManager* ogreSceneManager = getOgreSceneManager();
-		std::vector<float> Heightmapdata;
 		if (nullptr != ogreSceneManager)
 		{
 			// Disconnect our Boost slot from the Boost signal of the QSF asset system
-			Heightmapdata = SaveHeightMap();
 			mGlobalTerrainAssetIds.clear();
 
 			// Destroy OGRE terrain group and OGRE terrain globals instance
@@ -926,7 +738,7 @@ namespace kc_terrain
 					// Rotation and scale are not supported by the OGRE terrain
 				}
 			}
-			buildHeightMap();
+			buildMap();
 
 			// Update the visibility state of the internal OGRE scene node
 			updateOgreSceneNodeVisibility();
@@ -944,23 +756,7 @@ namespace kc_terrain
 
 	/* New Camp methods for kc terrain mostly about saving,loading and resizing*/
 
-	void TerrainComponent::kc_SetTerrainSize(int Size)
-	{
-	}
 
-	int TerrainComponent::kc_GetTerrainSize()
-	{
-		return 0;
-	}
-
-	void TerrainComponent::kc_SetPixelsPerChunk()
-	{
-	}
-
-	int TerrainComponent::kc_GetPixelsPerChunk()
-	{
-		return 0;
-	}
 
 	void TerrainComponent::SetNewHeightMap(qsf::AssetProxy NewAssetId)
 	{
@@ -1043,10 +839,10 @@ namespace kc_terrain
 	{
 		return mDoNotLoadNextTime;
 	}
-	void TerrainComponent::SetBlendAndHeightMapSize(int size)
+	void TerrainComponent::SetBlendMapSize(int size)
 	{
-		mBlendAndHeightMapSize = size;
-		float i = log2(mBlendAndHeightMapSize);
+		mBlendMapSize = size;
+		float i = log2(mBlendMapSize);
 
 		// check if n is a power of 2
 		if (ceil(i) != floor(i))
@@ -1109,13 +905,30 @@ namespace kc_terrain
 		}
 
 	}*/
-	int TerrainComponent::GetBlendAndHeightMapSize()
+	int TerrainComponent::GetBlendtMapSize()
 	{
-		return mBlendAndHeightMapSize;
+		return mBlendMapSize;
+
 	}
-	Ogre::Terrain::ImportData * TerrainComponent::GetOgreImportData()
+	void TerrainComponent::SetHeightMapSize(int size)
 	{
-		return mCustomImportData;
+		mHeightMapSize = size;
+		float i = log2(mHeightMapSize-1);
+
+		// check if n is a power of 2
+		if (ceil(i) != floor(i))
+		{
+			QSF_LOG_PRINTS(INFO, "your value is not a power of 2 + 1	... (like 1025 or 2049) pls fix it " << size)
+		}
+		else
+		{
+			QSF_LOG_PRINTS(INFO, "your value IS a power of 2 +1 (like 1025 or 2049)")
+		}
+		return;
+	}
+	int TerrainComponent::GetHeightMapSize()
+	{
+		return mHeightMapSize;
 	}
 	void TerrainComponent::UpdatePosition(bool up)
 	{

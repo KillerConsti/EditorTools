@@ -14,18 +14,12 @@ namespace kc_terrain
 	//[-------------------------------------------------------]
 	inline TerrainComponent::TerrainComponent(qsf::Prototype* prototype) :
 		qsf::TerrainComponent(prototype),
-		// Connected to the CAMP reflection system
-		mHeightMapSize(1025),
-		mColorMapSize(1024),
-		mBlendMapSize(1024),
-		//mTerrainChunksPerEdge(16),
 		mTerrainWorldSize(1500.0f),
 		mSkirtSize(2.0f),
 		mMaxPixelError(8.0f),
 		// Internal only
 		mOgreTerrainGlobalOptions(nullptr),
 		mOgreTerrainGroup(nullptr),
-		mIsEditing(false),
 		mColorMap(qsf::getUninitialized<uint64>()),
 		mPos(glm::vec3(0,0,0)),
 		mInitDone(false),
@@ -34,28 +28,15 @@ namespace kc_terrain
 		automaticly_created("generated when using terrain edit tools.Used for saving and loading terrains"),
 		uneditabld("------------------------------------"),
 		mDoNotLoadNextTime(false),
-		mBlendAndHeightMapSize(1024),
-		mCustomImportData(nullptr),
+		mBlendMapSize(1024),
+		mHeightMapSize(1025),
 		mDelete(false),
 		kc_mTerrainChunksPerEdge(16)
 	{
 		// Nothing to do in here
 	}
 
-	inline uint32 TerrainComponent::getHeightMapSize() const
-	{
-		return mHeightMapSize;
-	}
 
-	inline uint32 TerrainComponent::getColorMapSize() const
-	{
-		return mColorMapSize;
-	}
-
-	inline uint32 TerrainComponent::getBlendMapSize() const
-	{
-		return mBlendMapSize;
-	}
 
 	/*inline int TerrainComponent::getTerrainChunksPerEdge() const
 	{
@@ -97,10 +78,6 @@ namespace kc_terrain
 		return mTerrainAsset;
 	}
 
-	inline bool TerrainComponent::getEditing() const
-	{
-		return mIsEditing;
-	}
 
 
 	

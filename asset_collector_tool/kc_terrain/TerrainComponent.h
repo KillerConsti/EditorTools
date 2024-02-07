@@ -70,13 +70,9 @@ namespace kc_terrain
 	//[-------------------------------------------------------]
 	public:
 		static const uint32 COMPONENT_ID;				///< "qsf::TerrainComponent" unique component ID
-		static const uint32 HEIGHT_MAP_SIZE;			///< "HeightMapSize" unique class property ID inside the class
-		static const uint32 COLOR_MAP_SIZE;				///< "ColorMapSize" unique class property ID inside the class
-		static const uint32 BLEND_MAP_SIZE;				///< "BlendMapSize" unique class property ID inside the class
 		static const uint32 TERRAIN_WORLD_SIZE;			///< "TerrainWorldSize" unique class property ID inside the class
 		static const uint32 SKIRT_SIZE;					///< "SkirtSize" unique class property ID inside the class
 		static const uint32 MAX_PIXEL_ERROR;			///< "MaxPixelError" unique class property ID inside the class
-		static const uint32 TERRAIN_CHUNKS_PER_EDGE;	///< "TerrainChunksPerEdge" unique class property ID inside the class
 		static const uint32 TERRAIN_ASSET;				///< "TerrainAsset" unique class property ID inside the class
 		static const uint8  RENDER_QUEUE_GROUP_ID;
 
@@ -100,67 +96,6 @@ namespace kc_terrain
 		*/
 		virtual ~TerrainComponent();
 
-		/**
-		*  @brief
-		*    Get the height map size of terrain
-		*
-		*  @return
-		*    Height map size
-		*/
-		inline uint32 getHeightMapSize() const;
-
-		/**
-		*  @brief
-		*    Set the height map size of terrain
-		*
-		*  @param[in] heightMapSize
-		*    Height map size (requirement: 2^n + 1)
-		*/
-		void setHeightMapSize(uint32 heightMapSize);
-
-		/**
-		*  @brief
-		*    Get the color map size of terrain
-		*
-		*  @return
-		*    Color map size
-		*/
-		inline uint32 getColorMapSize() const;
-
-		/**
-		*  @brief
-		*    Set the color map size of terrain
-		*
-		*  @param[in] colorMapSize
-		*    Color map size (requirement: 2^n)
-		*/
-		void setColorMapSize(uint32 colorMapSize);
-
-		/**
-		*  @brief
-		*    Get the blend map size of terrain
-		*
-		*  @return
-		*    Blend map size
-		*/
-		inline uint32 getBlendMapSize() const;
-
-		/**
-		*  @brief
-		*    Set the blend map size of terrain
-		*
-		*  @param[in] blendMapSize
-		*    Blend map size (requirement: 2^n)
-		*/
-		void setBlendMapSize(uint32 blendMapSize);
-
-		/**
-		*  @brief
-		*    Get the terrain chunks per edge
-		*
-		*  @return
-		*    Terrain chunks per edge
-		*/
 		int kc_getTerrainChunksPerEdge();
 
 		/**
@@ -268,8 +203,6 @@ namespace kc_terrain
 		inline const qsf::AssetProxy& getTerrainAsset() const;
 		void setTerrainAsset(const qsf::AssetProxy& assetProxy);
 
-		inline bool getEditing() const;
-		void setEditing(bool isEditing);
 
 		void SetPosition(glm::vec3 newpos);
 		glm::vec3 getPosition();
@@ -377,12 +310,10 @@ namespace kc_terrain
 		void SaveTerrain();
 
 		//kc Camp Properties 
-		void kc_SetTerrainSize(int Size);
-		int kc_GetTerrainSize();
+		//void kc_SetTerrainSize(int Size);
+		//int kc_GetTerrainSize();
 		int kc_TerrainSize;
 		int kc_RealBlendMapSize;
-		void kc_SetPixelsPerChunk();
-		int kc_GetPixelsPerChunk();
 
 		qsf::AssetProxy mHeightmap;
 		qsf::AssetProxy mTexturesMap1_4;
@@ -421,14 +352,12 @@ namespace kc_terrain
 		bool GetDoNotLoadNextTime();
 		bool mDoNotLoadNextTime;
 
-		void SetBlendAndHeightMapSize(int size);
-		int m_OldAttempt;
-		int GetBlendAndHeightMapSize();
-		int mBlendAndHeightMapSize;
+		//must be with capitalized letters else you 'll use wrong one
+		void SetBlendMapSize(int size);
+		int GetBlendtMapSize();
 
-		
-
-		Ogre::Terrain::ImportData* GetOgreImportData();
+		void SetHeightMapSize(int size);
+		int GetHeightMapSize();
 	//[-------------------------------------------------------]
 	//[ Protected virtual qsf::Component methods              ]
 	//[-------------------------------------------------------]
@@ -460,22 +389,13 @@ namespace kc_terrain
 		void onAssetChanged(const qsf::Asset& asset);
 		void defineTerrain();
 		void removeAllOgreTerrains();
-		void buildHeightMap();
+		void buildMap();
 		void setPosition(const glm::vec3& position,glm::vec3 Offset);
-		std::vector<float> SaveHeightMap();
-		 void LoadHeightMap(std::vector<float> PointMap);
-		 float TerrainComponent::ReadHeightValue(glm::vec2 point);
-		 void TerrainComponent::SetHeightFromValue(glm::vec2 point,float NewHeight);
-		 Ogre::Terrain::ImportData* mCustomImportData;
-		 void SetUpCustomImportData();
 	//[-------------------------------------------------------]
 	//[ Private data                                          ]
 	//[-------------------------------------------------------]
 	private:
 		// Connected to the CAMP reflection system
-		uint32						mHeightMapSize;
-		uint32						mColorMapSize;
-		uint32						mBlendMapSize;
 		//int							mTerrainChunksPerEdge;			///< Size of chunks per edge. E.g. 8 means, there are 8x8 chunks
 		int							kc_mTerrainChunksPerEdge;
 		float						mTerrainWorldSize;
@@ -486,10 +406,13 @@ namespace kc_terrain
 		Ogre::TerrainGlobalOptions* mOgreTerrainGlobalOptions;		///< OGRE terrain globals instance, can be a null pointer, to not destroy the instance
 		Ogre::TerrainGroup*			mOgreTerrainGroup;				///< OGRE terrain group instance, can be a null pointer
 		std::set<qsf::GlobalAssetId>		mGlobalTerrainAssetIds;			///< Global asset IDs that affect this component
-		bool						mIsEditing;
 		kc_terrain::TerrainContext* mTerrainContext;
 		bool mDelete;
 		bool Relead();
+		int m_OldAttempt;
+		int mBlendMapSize;
+		int mHeightMapSize;
+		int mColorMapSize;
 	//[-------------------------------------------------------]
 	//[ CAMP reflection system                                ]
 	//[-------------------------------------------------------]

@@ -29,7 +29,7 @@ namespace kc_terrain
 	a helper class to load our own terrain 
 	so we might make it more readable :D
 	*/
-	class TerrainLoader : public qsf::TerrainComponent
+	class TerrainLoader
 	{
 	public:
 	static int LoadTerrain(kc_terrain::TerrainComponent* TC);
