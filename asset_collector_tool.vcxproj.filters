@@ -205,6 +205,12 @@
     <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_PlaceUnitEditMode.cpp">
       <Filter>GeneratedQtFiles\moc</Filter>
     </ClCompile>
+    <ClCompile Include="asset_collector_tool\view\UnoImageWriter.cpp">
+      <Filter>Source Files\view</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_UnoImageWriter.cpp">
+      <Filter>GeneratedQtFiles\moc</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="asset_collector_tool\PrecompiledHeader.h">
@@ -285,6 +291,9 @@
     <ClInclude Include="asset_collector_tool\kc_terrain\TerrainScaler.h">
       <Filter>Source Files\kc_terrain</Filter>
     </ClInclude>
+    <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_UnoImageWriter.h">
+      <Filter>GeneratedQtFiles\uic</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="asset_collector_tool.pro" />
@@ -347,6 +356,9 @@
     <QtMOC Include="asset_collector_tool\editmode\PlaceUnitEditMode.h">
       <Filter>Source Files\terrain_assets\editmodes</Filter>
     </QtMOC>
+    <QtMOC Include="asset_collector_tool\view\UnoImageWriter.h">
+      <Filter>Source Files\view</Filter>
+    </QtMOC>
   </ItemGroup>
   <ItemGroup>
     <QtRCC Include="asset_collector_tool\ressources\ressources.qrc">
@@ -389,6 +401,9 @@
     </QtUI>
     <QtUI Include="asset_collector_tool\view\EditorTerrainManager.ui">
       <Filter>Source Files\Manager</Filter>
+    </QtUI>
+    <QtUI Include="asset_collector_tool\view\UnoImageWriter.ui">
+      <Filter>Source Files\view</Filter>
     </QtUI>
   </ItemGroup>
 </Project>

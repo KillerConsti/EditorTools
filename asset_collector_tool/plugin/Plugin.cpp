@@ -35,6 +35,7 @@
 #include <fstream>
 #include <filesystem>
 #include <asset_collector_tool\editmode\PlaceUnitEditMode.h>
+#include <asset_collector_tool\view\UnoImageWriter.h>
 //[-------------------------------------------------------]
 //[ Namespace                                             ]
 //[-------------------------------------------------------]
@@ -243,6 +244,16 @@ namespace user
 					.constructor2<qsf::editor::ViewManager*, QWidget*>()
 					.getClass()
 				);
+
+				addCampClass(
+					camp::Class::declare<user::editor::UnoImageWriter>()
+					.tag("Name", QT_TR_NOOP("[KC] UnoImageWriter"))			// Text: "Fire entity"
+					.tag("Description", QT_TR_NOOP("ID_EM5EDITOR_EDITMODE_FIRECOMPONENT_DESCRIPTION21"))	// Text: "Fire entity edit mode"
+					.base<qsf::editor::View>()
+					.constructor2<qsf::editor::ViewManager*, QWidget*>()
+					.getClass()
+				);
+
 
 
 				//we dont want a log message here because we see this window pretty easy in the editor (or not?)

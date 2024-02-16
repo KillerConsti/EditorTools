@@ -130,6 +130,7 @@
     <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_TrainTrackTool.cpp" />
     <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_UnitPlacerView.cpp" />
     <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_UnitViewer.cpp" />
+    <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_UnoImageWriter.cpp" />
     <ClCompile Include="..\tmp\qt\rcc\asset_collector_tool\res_ressources.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
@@ -165,6 +166,7 @@
     <ClCompile Include="asset_collector_tool\view\OrderInfoPictureCreator.cpp" />
     <ClCompile Include="asset_collector_tool\view\EditorTerrainManager.cpp" />
     <ClCompile Include="asset_collector_tool\view\UnitViewer.cpp" />
+    <ClCompile Include="asset_collector_tool\view\UnoImageWriter.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_AssetCollectorTool.h" />
@@ -181,7 +183,9 @@
     <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_TrainTrackTool.h" />
     <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_UnitPlacerView.h" />
     <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_UnitViewer.h" />
+    <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_UnoImageWriter.h" />
     <ClInclude Include="asset_collector_tool\component\EditorToolsHelperComponent.h" />
+    <QtMOC Include="asset_collector_tool\view\UnoImageWriter.h" />
     <QtMOC Include="asset_collector_tool\editmode\PlaceUnitEditMode.h" />
     <ClInclude Include="asset_collector_tool\Export.h" />
     <QtMOC Include="asset_collector_tool\view\EditorTerrainManager.h" />
@@ -213,6 +217,9 @@
     <ClInclude Include="asset_collector_tool\PrecompiledHeader.h" />
   </ItemGroup>
   <ItemGroup>
+    <QtUI Include="asset_collector_tool\view\UnoImageWriter.ui">
+      <FileType>Document</FileType>
+    </QtUI>
     <QtUI Include="asset_collector_tool\view\EditorTerrainManager.ui">
       <FileType>Document</FileType>
     </QtUI>
