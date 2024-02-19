@@ -16,7 +16,14 @@
 </head>
 <body>
     <div class="topnav">
-        <h1>ESP32 Web BLE Application</h1>
+        <!--<h1>ESP32 Web BLE Application</h1>-->
+		<h2 style ="color: white;">ESP32 Web</h1>
+		<span id="dot1" class="dot"></span>
+		<button id="buttonRadio1" style="background-color:rgb(11,210,140);">Radio 1</button>
+		<button id="buttonRadio2" style="background-color:rgb(210,11,140);">Radio 2</button>
+		<button id="buttonRadio3" style="background-color:rgb(11,11,210);">Radio 3</button>
+		<span  id="dot2" class="dot"></span>
+</div>
     </div>
     <div class="content">
         <div class="card-grid">
@@ -40,22 +47,27 @@
 	
 
 				<p class="reading"><span id="value_scores">NaN</span></p>
-				<p>edit</p>
-				<input type="number" id="myNumber" value="2">
-				<input type="number" id="t2" value="10">
+				<div style ="left:10px;">
+				<input type="number" style ="max-width: 50px;" id="myNumber" value="2">
+				<input type="number" id="t2" style ="max-width: 50px;" value="10">
+				
+				</div>
+				<div style ="right:10px;">
 				<button id="onButton" class="onButton">ON</button>
                 <button id="offButton" class="offButton">OFF</button>
+				</div>
             </div>
 			<div class="card">
                 <h2>Satzverhältnis</h2>
 				<p class="reading"><span id="value_sets">NaN</span></p>
-				<p>edit</p>
-
-				
-				<input type="number" id="s1" value="2">
-				<input type="number" id="s2" value="10">
+				<div style ="left:10px;">
+				<input type="number" id="s1" style ="max-width: 50px;" value="2">
+				<input type="number" id="s2" style ="max-width: 50px;" value="10">
+				</div>
+				<div style ="right:10px;">
 				 <button id="on2Button" class="onButton">ON</button>
                 <button id="off2Button" class="offButton">OFF</button>
+				</div>
             </div>
 						<div class="card">
 				 <button id="SoftReset" class="onButton">Soft Reset</button>
@@ -64,10 +76,10 @@
             </div>
         </div>
     </div>
-    <div class="footer">
+    <!--<div class="footer">
         <p><a href="https://randomnerdtutorials.com/">Created by RandomNerdTutorials.com</a></p>
         <p><a href="https://RandomNerdTutorials.com/esp32-web-bluetooth/">Read the full project here.</a></p>
-    </div>
+    </div>-->
 </body>
 <script>
     // DOM Elements
@@ -76,7 +88,11 @@
     const onButton = document.getElementById('onButton');
 	const offButton = document.getElementById('offButton');
     const off2Button = document.getElementById('off2Button');
-	
+	const buttonRadio1 = document.getElementById('buttonRadio1');
+	const buttonRadio2 = document.getElementById('buttonRadio2');
+	const buttonRadio3 = document.getElementById('buttonRadio3');
+	const dot1 = document.getElementById('dot1');
+	const dot2 = document.getElementById('dot2');
 	    const on2Button = document.getElementById('on2Button');
     
 	const SoftReset = document.getElementById('SoftReset');
@@ -114,7 +130,7 @@
             connectToDevice();
         }
     });
-
+	var mRadio = 1;
     // Disconnect Button
     disconnectButton.addEventListener('click', disconnectDevice);
 
@@ -126,8 +142,47 @@
 	SoftReset.addEventListener('click', () => writeCMD(0));
 	HardReset.addEventListener('click', () => writeCMD(1));
 	PartyMode.addEventListener('click', () => writeCMD(2));
-	console.log("My num");
-	console.log(document.getElementById('myNumber').valueAsNumber);
+	buttonRadio1.addEventListener('click',() => SetRadio(1));
+	buttonRadio2.addEventListener('click',() => SetRadio(2));
+	buttonRadio3.addEventListener('click',() => SetRadio(3));
+	
+	function SetRadio(NewRadioID)
+	{
+		if(NewRadioID == mRadio)
+		return;
+		mRadio = NewRadioID;
+		switch(mRadio)
+		{
+		case 1:
+		{
+		dot1.style.backgroundColor = "rgb(11,210,140)";
+		dot2.style.backgroundColor = "rgb(11,210,140)";
+		writeCMD(3);
+		console.log("pressed 1");
+		//ask BT for update
+		return;
+		}
+		case 2:
+		{
+			dot1.style.backgroundColor = "rgb(210,11,140)";
+			dot2.style.backgroundColor = "rgb(210,11,140)";
+			console.log("pressed 2");
+			writeCMD(4);
+		//ask BT for update
+		return;
+		}
+		case 3:
+		{
+			dot1.style.backgroundColor = "rgb(11,11,210)";
+			dot2.style.backgroundColor = "rgb(11,11,210)";
+			console.log("pressed 3");
+			writeCMD(5);
+		//ask BT for update
+		return;
+		}
+		}
+		
+	}
     // Check if BLE is available in your Browser
     function isWebBluetoothEnabled() {
         if (!navigator.bluetooth) {
