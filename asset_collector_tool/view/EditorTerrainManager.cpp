@@ -457,6 +457,8 @@ namespace kc_terrain
 
 	void EditorTerrainManager::ReplaceEditMode(bool IsGood)
 	{
+		if(mUiEditorTerrainManager == nullptr || mUiEditorTerrainManager->editmodeindicator == nullptr)
+		return;
 		QPalette pal = mUiEditorTerrainManager->editmodeindicator->palette();
 		mUiEditorTerrainManager->editmodeindicator->setAutoFillBackground(true);
 		if(IsGood)
