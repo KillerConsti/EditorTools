@@ -1,6 +1,6 @@
 // Copyright (C) 2012-2017 Promotion Software GmbH
 
-
+//#define FinalBuild
 // This here should recognize when you try to include multiple precompiled headers.
 // Use this block without modification of "_QSF_BASED_PROJECT_PRECOMPILED_HEADER_INCLUDED_"
 // in all precompiled headers of your project.

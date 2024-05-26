@@ -159,7 +159,7 @@ namespace user
 					.getClass()
 				);
 
-
+#ifdef FinalBuild
 				addCampClass(
 					camp::Class::declare<PlaceUnitEditMode>()
 					.tag("Name", QT_TR_NOOP("ID_EM5EDITOR_EDITMODE_FIRECOMPONENT_NAME21"))			// Text: "Fire entity"
@@ -171,8 +171,7 @@ namespace user
 
 
 
-#define FinalBuild
-#ifdef FinalBuild
+
 				addCampClass(
 					camp::Class::declare<TerrainEditToolbox>()
 					.tag("Name", QT_TR_NOOP("[KC] Terrain Modelling Tool"))			// Text: "Fire entity"
@@ -199,6 +198,16 @@ namespace user
 					.constructor1<qsf::editor::ToolManager*>()
 					.getClass()
 				);
+
+				addCampClass(
+					camp::Class::declare<kc_terrain::EditorTerrainManager>()
+					.tag("Name", QT_TR_NOOP("[KC] EditorTerrainManager"))			// Text: "Fire entity"
+					.tag("Description", QT_TR_NOOP("ID_EM5EDITOR_EDITMODE_FIRECOMPONENT_DESCRIPTION21"))	// Text: "Fire entity edit mode"
+					.base<qsf::editor::View>()
+					.constructor2<qsf::editor::ViewManager*, QWidget*>()
+					.getClass()
+				);
+
 #endif // !FinalBuild
 				addCampClass(
 					camp::Class::declare<TrainTrackTool>()
@@ -236,14 +245,6 @@ namespace user
 					.getClass()
 				);
 
-				addCampClass(
-					camp::Class::declare<kc_terrain::EditorTerrainManager>()
-					.tag("Name", QT_TR_NOOP("[KC] EditorTerrainManager"))			// Text: "Fire entity"
-					.tag("Description", QT_TR_NOOP("ID_EM5EDITOR_EDITMODE_FIRECOMPONENT_DESCRIPTION21"))	// Text: "Fire entity edit mode"
-					.base<qsf::editor::View>()
-					.constructor2<qsf::editor::ViewManager*, QWidget*>()
-					.getClass()
-				);
 
 				addCampClass(
 					camp::Class::declare<user::editor::UnoImageWriter>()

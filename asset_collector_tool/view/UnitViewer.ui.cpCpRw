@@ -300,7 +300,7 @@
           <rect>
            <x>20</x>
            <y>230</y>
-           <width>191</width>
+           <width>75</width>
            <height>23</height>
           </rect>
          </property>
@@ -308,12 +308,25 @@
           <string>Analyse Mesh</string>
          </property>
         </widget>
+        <widget class="QPushButton" name="GenerateSkinnableMeshArrayButton">
+         <property name="geometry">
+          <rect>
+           <x>100</x>
+           <y>230</y>
+           <width>181</width>
+           <height>23</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Generate Skinnable Mesh Array</string>
+         </property>
+        </widget>
         <widget class="QLineEdit" name="SkinnableMeshArrayLineEdit">
          <property name="geometry">
           <rect>
            <x>20</x>
            <y>260</y>
-           <width>381</width>
+           <width>301</width>
            <height>20</height>
           </rect>
          </property>

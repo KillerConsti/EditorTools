@@ -246,9 +246,6 @@
     <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_DebugUnitView.h">
       <Filter>GeneratedQtFiles\uic</Filter>
     </ClInclude>
-    <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_UnitViewer.h">
-      <Filter>GeneratedQtFiles\uic</Filter>
-    </ClInclude>
     <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_KC_AbstractView.h">
       <Filter>GeneratedQtFiles\uic</Filter>
     </ClInclude>
@@ -292,6 +289,9 @@
       <Filter>Source Files\kc_terrain</Filter>
     </ClInclude>
     <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_UnoImageWriter.h">
+      <Filter>GeneratedQtFiles\uic</Filter>
+    </ClInclude>
+    <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_UnitViewer.h">
       <Filter>GeneratedQtFiles\uic</Filter>
     </ClInclude>
   </ItemGroup>

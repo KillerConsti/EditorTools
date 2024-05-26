@@ -164,7 +164,9 @@ namespace kc_terrain
 	{
 		// Add the created Qt dock widget to the given Qt main window and tabify it for better usability
 		addViewAndTabify(reinterpret_cast<QMainWindow&>(*qWidgetParent), Qt::RightDockWidgetArea);
+#ifdef FinalBuild
 		mWaitUntilIsInEditMode.registerAt(em5::Jobs::ANIMATION_VEHICLE, boost::bind(&EditorTerrainManager::WaitUntilIsInEditMode, this, _1));
+#endif
 	}
 
 	EditorTerrainManager::~EditorTerrainManager()
@@ -270,6 +272,7 @@ namespace kc_terrain
 	//we could also just store a list of old entites
 	void EditorTerrainManager::onSelectionChanged(uint64 Id)
 	{
+#ifndef FinalBuild
 		if (Id == qsf::getUninitialized<uint64>())
 			return;
 		auto sel = QSF_EDITOR_EDITMODE_MANAGER.getSelectedEditMode();
@@ -283,6 +286,7 @@ namespace kc_terrain
 		QSF_LOG_PRINTS(INFO, "we selected a new unit (at least we guess so)")
 			if (PushObjectOnTopmostTerrain(Id))
 				QSF_LOG_PRINTS(INFO, "new pos")
+#endif
 	}
 
 	bool EditorTerrainManager::PushObjectOnTopmostTerrain(uint64 id)

@@ -151,6 +151,8 @@ namespace user
 			void onPushtinteriorbutton(const bool pressed);
 			void onPushenviromentbutton(const bool pressed);
 
+			void onPush_AnalyseMeshButton(const bool pressed);
+
 		private:
 			Ui::UnitViewer*	mUiUnitViewer;	///< UI view instance, can be a null pointer, we have to destroy the instance in case we no longer need it
 		std::vector<qsf::Entity*> GetSelectedEntity();			
@@ -168,6 +170,19 @@ namespace user
 			bool IsEntityAllreadySelected(uint64 Target,std::vector<uint64> CompareList);
 			void UpdateStreetDebugNodes();
 			void OnSelectionChange_SetAdditionalLightButtons(QPushButton* Buttonname,std::string Lightdescription);
+
+			struct MaterialAssets
+			{
+				int LineItAppears =-1;
+				int GID = qsf::getUninitialized<uint64>();
+				std::string Name ="";
+				bool operator<(const MaterialAssets& a) const
+				{
+					if (LineItAppears < a.LineItAppears)
+						return true;
+					return false;
+				}
+			};
 		//[-------------------------------------------------------]
 		//[ CAMP reflection system                                ]
 		//[-------------------------------------------------------]

@@ -74,7 +74,8 @@
 #include <qsf/debug/request/CircleDebugDrawRequest.h>
 #include <em5\map\EntityHelper.h>
 #include <qsf/component/base/TransformComponent.h>
-
+#include <fstream>
+#include <ogre\Ogre.h>
 //[-------------------------------------------------------]
 //[ Namespace                                             ]
 //[-------------------------------------------------------]
@@ -102,7 +103,7 @@ namespace user
 			// Add the created Qt dock widget to the given Qt main window and tabify it for better usability
 			addViewAndTabify(reinterpret_cast<QMainWindow&>(*qWidgetParent), Qt::RightDockWidgetArea);
 
-			
+
 			//trial and error
 			//
 		}
@@ -169,7 +170,7 @@ namespace user
 				connect(mUiUnitViewer->PushAddDebugCircles, SIGNAL(clicked(bool)), this, SLOT(onPushAddDebugCircles(bool)));
 				connect(mUiUnitViewer->PushRemoveDebugCirecles, SIGNAL(clicked(bool)), this, SLOT(onPushRemoveDebugCircles(bool)));
 				connect(mUiUnitViewer->PushUpdateNodes, SIGNAL(clicked(bool)), this, SLOT(onPushUpdateNodes(bool)));
-				connect(mUiUnitViewer->pushAddAllNodes, SIGNAL(clicked(bool)), this,  SLOT(onpushAddAllNodes(bool)));
+				connect(mUiUnitViewer->pushAddAllNodes, SIGNAL(clicked(bool)), this, SLOT(onpushAddAllNodes(bool)));
 				//connect(mUiUnitViewer->setsimulting, SIGNAL(clicked(bool)), this, SLOT(OnPushSetSimulating(bool)));
 				//connect(mUITrainTrackTool->pushButton_fill_tree_view, SIGNAL(clicked(bool)), this, SLOT(CreatePathEntities(bool)));
 				/*connect(mUiUnitViewer->pushCheckUnit, SIGNAL(clicked(bool)), this, SLOT(onPushSelectButton(bool)));
@@ -178,6 +179,8 @@ namespace user
 				connect(mUiUnitViewer->export_2, SIGNAL(clicked(bool)), this, SLOT(OnSaveLogFile(bool)));*/
 
 				//connect(mUiUnitViewer->comboBoxType, SIGNAL(currentIndexChanged(int)), this, SLOT(onCurrentIndexChanged(int)));
+
+				connect(mUiUnitViewer->AnalyseMeshButton, SIGNAL(clicked(bool)), this, SLOT(onPush_AnalyseMeshButton(bool)));
 				qsf::editor::EntitySelectionManager& entitySelectionManager = QSF_EDITOR_SELECTION_SYSTEM.getSafe<qsf::editor::EntitySelectionManager>();
 				auto con2 = &entitySelectionManager.Selected.connect(boost::bind(&UnitViewer::onSelectionChanged, this, _1), boost::signals2::at_back);
 				if (con2 == nullptr)
@@ -337,7 +340,7 @@ namespace user
 			mUiUnitViewer->bluelight->setChecked(BL);
 			mUiUnitViewer->headlight->setChecked(HL);
 			mUiUnitViewer->blinker->setChecked(Blinker);
-			OnSelectionChange_SetAdditionalLightButtons(mUiUnitViewer->enviromentbutton,"umfeld");
+			OnSelectionChange_SetAdditionalLightButtons(mUiUnitViewer->enviromentbutton, "umfeld");
 			OnSelectionChange_SetAdditionalLightButtons(mUiUnitViewer->interiorbutton, "interior");
 			OnSelectionChange_SetAdditionalLightButtons(mUiUnitViewer->reverseButton, "reverse");
 			OnSelectionChange_SetAdditionalLightButtons(mUiUnitViewer->trafficwarnerbutton, "traffic");
@@ -493,7 +496,7 @@ namespace user
 			qsf::editor::EntitySelectionManager& entitySelectionManager = QSF_EDITOR_SELECTION_SYSTEM.getSafe<qsf::editor::EntitySelectionManager>();
 			for (auto a : entitySelectionManager.getSelectedIdSet())
 			{
-				if (IsEntityAllreadySelected(a,DebugEntities))
+				if (IsEntityAllreadySelected(a, DebugEntities))
 					continue;
 				auto ent = QSF_MAINMAP.getEntityById(a);
 				if (ent == nullptr)
@@ -501,7 +504,7 @@ namespace user
 				auto SCC = ent->getComponent<qsf::StreetCrossingComponent>();
 				if (SCC == nullptr)
 					continue;
-					DebugEntities.push_back(a);
+				DebugEntities.push_back(a);
 			}
 			UpdateStreetDebugNodes();
 		}
@@ -555,7 +558,7 @@ namespace user
 					{
 						for (auto LB : RoV->getVehicleLightIdsByType(qsf::game::LightControllerComponent::LIGHTPOSITION_BRAKE))
 						{
-							if(QSF_MAINMAP.getEntityById(LB) == nullptr) continue;
+							if (QSF_MAINMAP.getEntityById(LB) == nullptr) continue;
 							QSF_MAINMAP.getEntityById(LB)->getComponent<qsf::game::LightControllerComponent>()->setActive(NewWantedState);
 						}
 						AnythingDone = true;
@@ -564,7 +567,7 @@ namespace user
 			}
 			if (AnythingDone)
 				mUiUnitViewer->brakeButton->setChecked(NewWantedState);
-			
+
 		}
 
 		void UnitViewer::onPushtrafficwarnerbutton(const bool pressed)
@@ -691,6 +694,117 @@ namespace user
 				mUiUnitViewer->enviromentbutton->setChecked(NewWantedState);
 		}
 
+		void UnitViewer::onPush_AnalyseMeshButton(const bool pressed)
+		{
+			QSF_LOG_PRINTS(INFO, "[UnitViewer]Analys Mesh Button pressed")
+				std::string TextbrowserText = "";
+			std::string ArrayText = "";
+			bool found = false;
+			for (auto a : GetSelectedEntity())
+			{
+				found = true;
+				auto MC = a->getComponent<qsf::MeshComponent>();
+				if (MC == nullptr)
+				{
+					TextbrowserText = "[UnitViewer]Selected Entity has no Mesh Component (base/tintable/skinnable)";
+					break;
+				}
+				QSF_LOG_PRINTS(INFO, "[UnitViewer]we have a mesh component");
+				//we can analyse mesh
+				if (MC->getMesh().getAsset() == nullptr)
+				{
+					QSF_LOG_PRINTS(INFO, "[UnitViewer]error no mesh was set");
+					found = false;
+					break;
+				}
+				auto GID = MC->getMesh().getGlobalAssetId();
+				auto AbsoluteFilename = qsf::AssetProxy(MC->getMesh().getGlobalAssetId()).getAbsoluteCachedAssetDataFilename();
+				auto ADC = qsf::AssetDependencyCollector(GID);
+				std::vector<uint64> EntityList;
+				ADC.collectUniqueRecursiveAssetDependencies(EntityList);
+				if (MC->getOgreEntity() == nullptr)
+				{
+					QSF_LOG_PRINTS(INFO, "Ogre entity is a nullptr")
+					return;
+				}
+				auto nMaxSubMesh = MC->getOgreEntity()->getNumSubEntities();
+				for (int nSubMesh = 0; nSubMesh<nMaxSubMesh; nSubMesh++)
+				{
+					if (MC->getOgreEntity()->getSubEntity(nSubMesh) == nullptr || MC->getOgreEntity()->getSubEntity(nSubMesh)->getSubMesh() == nullptr)
+
+					{
+						QSF_LOG_PRINTS(INFO, "Submesh is not defined "<< nSubMesh)
+							continue;
+					}
+					//QSF_LOG_PRINTS(INFO,MC->getOgreEntity()->getSubEntity(nSubMesh)->getSubMesh()->getMaterialName().c_str());
+					auto Mat = qsf::AssetProxy(boost::lexical_cast<uint64>(MC->getOgreEntity()->getSubEntity(nSubMesh)->getSubMesh()->getMaterialName().c_str()));
+					if (Mat.getAsset() == nullptr)
+					{
+						QSF_LOG_PRINTS(INFO,"there was a undefined material for Submesh: "<< nSubMesh)
+							continue;
+					}
+					TextbrowserText += "[" + boost::lexical_cast<std::string>(nSubMesh) + "] " + Mat.getLocalAssetName() + " (" + boost::lexical_cast<std::string>(Mat.getGlobalAssetId()) + ")\n";
+					ArrayText += "[" + boost::lexical_cast<std::string>(Mat.getGlobalAssetId()) + "]";
+					
+				}
+				
+				//ADC.collectAllDerivedAssets(EntityList);
+				/*std::vector<MaterialAssets> Mats;
+				for (auto entry : EntityList)
+				{
+					auto AssetProx = qsf::AssetProxy(entry);
+					if (AssetProx.getCachedAssetType() != "material")
+						continue;
+					MaterialAssets* NewMat = new MaterialAssets();
+					NewMat->GID = AssetProx.getGlobalAssetId();
+					NewMat->Name = qsf::AssetProxy(entry).getLocalAssetName();
+					std::fstream newfile;
+					QSF_LOG_PRINTS(INFO, "reading " << AbsoluteFilename << " ...")
+						newfile.open(AbsoluteFilename, std::ios::in); //open a file to perform read operation using file object
+					if (newfile.is_open()) {   //checking whether the file is open
+						std::string tp;
+						int linecount = 0;
+						while (getline(newfile, tp)) { //read data from file object and put it into string.
+							{
+								if (tp.find(boost::lexical_cast<std::string>(NewMat->GID)) != std::string::npos)
+								{
+									NewMat->LineItAppears = linecount++;
+								}
+								linecount++;
+							}
+							QSF_LOG_PRINTS(INFO,linecount)
+							
+						}
+					}
+					else
+					{
+						QSF_LOG_PRINTS(INFO, "couldnt open file");
+					}
+					newfile.close(); //close the file object.
+					Mats.push_back(*NewMat);
+				}
+
+
+				//output
+				std::sort(Mats.begin(), Mats.end());
+				int i = 0;
+				for (auto Material : Mats)
+				{
+					TextbrowserText += "["+boost::lexical_cast<std::string>(i) + "] "+ Material.Name + " (" + boost::lexical_cast<std::string>(Material.GID)+") {" +boost::lexical_cast<std::string>(Material.LineItAppears)+"} \n";
+					ArrayText += "[" + boost::lexical_cast<std::string>(Material.GID) +"]";
+					i++;
+				}*/
+				//now sort
+				QSF_LOG_PRINTS(INFO, "[UnitViewer]we are done");
+				break;
+			}
+			if (!found)
+				TextbrowserText = "[UnitViewer]No Entity selected";
+			mUiUnitViewer->SkinnableMeshArrayLineEdit->setText(ArrayText.c_str());
+			mUiUnitViewer->textBrowser->setText(TextbrowserText.c_str());
+		}
+
+
 		bool UnitViewer::IsEntityAllreadySelected(uint64 Target, std::vector<uint64> CompareList)
 		{
 			for (auto a : CompareList)
@@ -703,8 +817,8 @@ namespace user
 
 		void UnitViewer::UpdateStreetDebugNodes()
 		{
-				if (QSF_DEBUGDRAW.isRequestIdValid(mSelectedNodeDebug))
-					QSF_DEBUGDRAW.cancelRequest(mSelectedNodeDebug);
+			if (QSF_DEBUGDRAW.isRequestIdValid(mSelectedNodeDebug))
+				QSF_DEBUGDRAW.cancelRequest(mSelectedNodeDebug);
 			SelectedNodeDebug.mCircles.clear();
 
 			for (auto a : DebugEntities)
@@ -767,10 +881,10 @@ namespace user
 					SelectedNodeDebug.mCircles.push_back(qsf::CircleDebugDrawRequest(nodepos + entity_pos, qsf::CoordinateSystem::getUp(), 0.1f, qsf::Color4::BLUE, true));
 				}
 
-				
+
 			}
 			mSelectedNodeDebug = QSF_DEBUGDRAW.requestDraw(SelectedNodeDebug);
-			}
+		}
 
 		void UnitViewer::OnSelectionChange_SetAdditionalLightButtons(QPushButton * Buttonname, std::string Lightdescription)
 		{
@@ -791,151 +905,151 @@ namespace user
 							auto ent = QSF_MAINMAP.getEntityById(LB);
 							if (ent == nullptr || ent->getComponent<qsf::MetadataComponent>() == nullptr || ent->getComponent<qsf::MetadataComponent>()->getDescription() != Lightdescription)
 								continue;
-								Buttonname->setChecked(QSF_MAINMAP.getEntityById(LB)->getComponent<qsf::game::LightControllerComponent>()->isActive());
-								return;
+							Buttonname->setChecked(QSF_MAINMAP.getEntityById(LB)->getComponent<qsf::game::LightControllerComponent>()->isActive());
+							return;
 						}
 					}
 				}
 			}
-				Buttonname->setChecked(false);
+			Buttonname->setChecked(false);
 		}
 
 
 
-			void UnitViewer::TireJob(const qsf::JobArguments & jobArguments)
+		void UnitViewer::TireJob(const qsf::JobArguments & jobArguments)
+		{
+			for (auto a : AffectedByTire)
 			{
-				for (auto a : AffectedByTire)
+				if (a == nullptr)
+					continue;
+				auto RC = a->getComponent<em5::RoadVehicleComponent>();
+				if (RC == nullptr)
+					continue;
+				for (size_t t = 0; t < RC->VehicleWheelsArray.size(); t++)
 				{
-					if (a == nullptr)
+					qsf::Entity* tire = QSF_MAINMAP.getEntityById(RC->VehicleWheelsArray.get(t));
+					if (tire == nullptr)
 						continue;
-					auto RC = a->getComponent<em5::RoadVehicleComponent>();
-					if (RC == nullptr)
+					auto WC = tire->getComponent<em5::WheelComponent>();
+					if (WC == nullptr)
 						continue;
-					for (size_t t = 0; t < RC->VehicleWheelsArray.size(); t++)
+					const float moveDistance = 3.f * jobArguments.getTimePassed().getSeconds();
+					float Val = -1.f*mUiUnitViewer->horizontalSlider->value();
+					if (WC->getWheelType() == WC->WHEELTYPE_FRONT_LEFT || WC->getWheelType() == WC->WHEELTYPE_FRONT_RIGHT)
 					{
-						qsf::Entity* tire = QSF_MAINMAP.getEntityById(RC->VehicleWheelsArray.get(t));
-						if (tire == nullptr)
-							continue;
-						auto WC = tire->getComponent<em5::WheelComponent>();
-						if (WC == nullptr)
-							continue;
-						const float moveDistance = 3.f * jobArguments.getTimePassed().getSeconds();
-						float Val = -1.f*mUiUnitViewer->horizontalSlider->value();
-						if (WC->getWheelType() == WC->WHEELTYPE_FRONT_LEFT || WC->getWheelType() == WC->WHEELTYPE_FRONT_RIGHT)
-						{
-							WC->updateWheel(moveDistance, Val);
-						}
-						else //no support for chains
-						{
-							WC->updateWheel(moveDistance, 0);
-						}
+						WC->updateWheel(moveDistance, Val);
+					}
+					else //no support for chains
+					{
+						WC->updateWheel(moveDistance, 0);
 					}
 				}
 			}
+		}
 
-			void UnitViewer::ResetWheelsAfterDeselection()
+		void UnitViewer::ResetWheelsAfterDeselection()
+		{
+			mTireJob.unregister();
+			for (auto a : AffectedByTire)
 			{
-				mTireJob.unregister();
-				for (auto a : AffectedByTire)
+				if (a == nullptr)
+					continue;
+				auto RC = a->getComponent<em5::RoadVehicleComponent>();
+				if (RC == nullptr)
+					continue;
+				for (size_t t = 0; t < RC->VehicleWheelsArray.size(); t++)
 				{
-					if (a == nullptr)
+					qsf::Entity* tire = QSF_MAINMAP.getEntityById(RC->VehicleWheelsArray.get(t));
+					if (tire == nullptr)
 						continue;
-					auto RC = a->getComponent<em5::RoadVehicleComponent>();
-					if (RC == nullptr)
+					auto WC = tire->getComponent<em5::WheelComponent>();
+					if (WC == nullptr)
 						continue;
-					for (size_t t = 0; t < RC->VehicleWheelsArray.size(); t++)
-					{
-						qsf::Entity* tire = QSF_MAINMAP.getEntityById(RC->VehicleWheelsArray.get(t));
-						if (tire == nullptr)
-							continue;
-						auto WC = tire->getComponent<em5::WheelComponent>();
-						if (WC == nullptr)
-							continue;
-						if (WC->getEntity().getComponent<qsf::LinkComponent>() == nullptr)
-							continue;
-						WC->getEntity().getComponent<qsf::LinkComponent>()->setLocalRotation(WC->getOriginalLocalRotation());
-					}
+					if (WC->getEntity().getComponent<qsf::LinkComponent>() == nullptr)
+						continue;
+					WC->getEntity().getComponent<qsf::LinkComponent>()->setLocalRotation(WC->getOriginalLocalRotation());
 				}
-				mUiUnitViewer->rotatetires->setChecked(false);
-				mUiUnitViewer->horizontalSlider->setValue(0);
 			}
+			mUiUnitViewer->rotatetires->setChecked(false);
+			mUiUnitViewer->horizontalSlider->setValue(0);
+		}
 
-			glm::vec3 UnitViewer::ApplyMasterTransformToNode(qsf::Transform* Transform, glm::vec3 NodePos)
-			{
+		glm::vec3 UnitViewer::ApplyMasterTransformToNode(qsf::Transform* Transform, glm::vec3 NodePos)
+		{
 
-				/*
-				Vector3 P1, P2; //your points
+			/*
+			Vector3 P1, P2; //your points
 	Quaternion rot; //the rotation
 
 	var v = P1 - P2; //the relative vector from P2 to P1.
 	v = rot * v; //rotatate
 	v = P2 + v; //bring back to world space
 				*/
-				NodePos.x = NodePos.x*Transform->getScale().x;
-				NodePos.y = NodePos.y*Transform->getScale().y;
-				NodePos.z = NodePos.z*Transform->getScale().z;
-				NodePos = Transform->getRotation()*NodePos;
-				return NodePos;
-			}
+			NodePos.x = NodePos.x*Transform->getScale().x;
+			NodePos.y = NodePos.y*Transform->getScale().y;
+			NodePos.z = NodePos.z*Transform->getScale().z;
+			NodePos = Transform->getRotation()*NodePos;
+			return NodePos;
+		}
 
 
-			std::vector<qsf::Entity*> UnitViewer::GetSelectedEntity()
+		std::vector<qsf::Entity*> UnitViewer::GetSelectedEntity()
+		{
+			std::vector<qsf::Entity*> Entities;
+			for (auto a : QSF_EDITOR_SELECTION_SYSTEM.getSafe<qsf::editor::EntitySelectionManager>().getSelectedIdSet())
 			{
-				std::vector<qsf::Entity*> Entities;
-				for (auto a : QSF_EDITOR_SELECTION_SYSTEM.getSafe<qsf::editor::EntitySelectionManager>().getSelectedIdSet())
-				{
-					auto ent = QSF_MAINMAP.getEntityById(a);
-					if (ent == nullptr)
-						continue;
-					Entities.push_back(ent);
-
-				}
-				return Entities;
-			}
-
-
-
-
-
-
-			//[-------------------------------------------------------]
-			//[ Protected virtual QWidget methods                     ]
-			//[-------------------------------------------------------]
-			void UnitViewer::showEvent(QShowEvent* qShowEvent)
-			{
-				// Call the base implementation
-				View::showEvent(qShowEvent);
-
-				// Perform a GUI rebuild to ensure the GUI content is up-to-date
-				rebuildGui();
-				//boost::signals2::signal<void(const LogMessage&)> NewMessage;
-
-				// Connect Qt signals/slots
-				//connect(&QSF_EDITOR_OPERATION, &qsf::editor::OperationManager::undoOperationExecuted, this, &UnitViewer::onUndoOperationExecuted);
-				//connect(&QSF_EDITOR_OPERATION, &qsf::editor::OperationManager::redoOperationExecuted, this, &UnitViewer::onRedoOperationExecuted);
-			}
-
-			void UnitViewer::hideEvent(QHideEvent* qHideEvent)
-			{
-				if (QSF_DEBUGDRAW.isRequestIdValid(mSelectedNodeDebug))
-					QSF_DEBUGDRAW.cancelRequest(mSelectedNodeDebug);
-				mTireJob.unregister();
-				// Call the base implementation
-				View::hideEvent(qHideEvent);
-				// Disconnect Qt signals/slots
-				//disconnect(&QSF_EDITOR_OPERATION, &qsf::editor::OperationManager::undoOperationExecuted, this, &UnitViewer::onUndoOperationExecuted);
-				//disconnect(&QSF_EDITOR_OPERATION, &qsf::editor::OperationManager::redoOperationExecuted, this, &UnitViewer::onRedoOperationExecuted);
-			}
-
-
-			//[-------------------------------------------------------]
-			//[ Private Qt slots (MOC)                                ]
-			//[-------------------------------------------------------]
-			void UnitViewer::onPushSelectButton(const bool pressed)
-			{
-
+				auto ent = QSF_MAINMAP.getEntityById(a);
+				if (ent == nullptr)
+					continue;
+				Entities.push_back(ent);
 
 			}
+			return Entities;
+		}
+
+
+
+
+
+
+		//[-------------------------------------------------------]
+		//[ Protected virtual QWidget methods                     ]
+		//[-------------------------------------------------------]
+		void UnitViewer::showEvent(QShowEvent* qShowEvent)
+		{
+			// Call the base implementation
+			View::showEvent(qShowEvent);
+
+			// Perform a GUI rebuild to ensure the GUI content is up-to-date
+			rebuildGui();
+			//boost::signals2::signal<void(const LogMessage&)> NewMessage;
+
+			// Connect Qt signals/slots
+			//connect(&QSF_EDITOR_OPERATION, &qsf::editor::OperationManager::undoOperationExecuted, this, &UnitViewer::onUndoOperationExecuted);
+			//connect(&QSF_EDITOR_OPERATION, &qsf::editor::OperationManager::redoOperationExecuted, this, &UnitViewer::onRedoOperationExecuted);
+		}
+
+		void UnitViewer::hideEvent(QHideEvent* qHideEvent)
+		{
+			if (QSF_DEBUGDRAW.isRequestIdValid(mSelectedNodeDebug))
+				QSF_DEBUGDRAW.cancelRequest(mSelectedNodeDebug);
+			mTireJob.unregister();
+			// Call the base implementation
+			View::hideEvent(qHideEvent);
+			// Disconnect Qt signals/slots
+			//disconnect(&QSF_EDITOR_OPERATION, &qsf::editor::OperationManager::undoOperationExecuted, this, &UnitViewer::onUndoOperationExecuted);
+			//disconnect(&QSF_EDITOR_OPERATION, &qsf::editor::OperationManager::redoOperationExecuted, this, &UnitViewer::onRedoOperationExecuted);
+		}
+
+
+		//[-------------------------------------------------------]
+		//[ Private Qt slots (MOC)                                ]
+		//[-------------------------------------------------------]
+		void UnitViewer::onPushSelectButton(const bool pressed)
+		{
+
+
+		}
 
 
 
@@ -944,8 +1058,8 @@ namespace user
 
 
 
-			//[-------------------------------------------------------]
-			//[ Namespace                                             ]
-			//[-------------------------------------------------------]
-		} // editor
-	} // user
+		//[-------------------------------------------------------]
+		//[ Namespace                                             ]
+		//[-------------------------------------------------------]
+	} // editor
+} // user

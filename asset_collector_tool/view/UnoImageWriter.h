@@ -131,16 +131,11 @@ namespace user
 			void onPushDecompileButton(const bool pressed);
 
 			void OnPushLoadMaterial_or_texture(const bool pressed);
-			void onSetSaveDirectory(const bool pressed);
-			void onopenloc(const bool pressed);
 
 		private:
 			bool DecompileImage(std::string TextureName,std::string MaterialName);
 			
 			Ui::UnoImageWriter*	mUiUnoImageWriter;	///< UI view instance, can be a null pointer, we have to destroy the instance in case we no longer need it
-			std::string GetSavePath();
-			std::string InitSavePath();
-			std::string mSavepath;
 			std::string path;
 
 			uint16_t color565(uint8_t r, uint8_t g, uint8_t b);

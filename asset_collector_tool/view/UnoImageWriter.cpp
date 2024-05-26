@@ -128,8 +128,7 @@ namespace user
 		UnoImageWriter::UnoImageWriter(qsf::editor::ViewManager* viewManager, QWidget* qWidgetParent) :
 			qsf::editor::View(viewManager, qWidgetParent),
 			//View(viewManager, qWidgetParent),
-			mUiUnoImageWriter(nullptr),
-			mSavepath("")
+			mUiUnoImageWriter(nullptr)
 		{
 			// Add the created Qt dock widget to the given Qt main window and tabify it for better usability
 			addViewAndTabify(reinterpret_cast<QMainWindow&>(*qWidgetParent), Qt::RightDockWidgetArea);
@@ -175,9 +174,6 @@ namespace user
 				// Connect Qt signals/slots
 				connect(mUiUnoImageWriter->openpicturebutton, SIGNAL(clicked(bool)), this, SLOT(OnPushLoadMaterial_or_texture(bool)));
 				connect(mUiUnoImageWriter->decompilebutton, SIGNAL(clicked(bool)), this, SLOT(onPushDecompileButton(bool)));
-				connect(mUiUnoImageWriter->SetSaveLocationButton, SIGNAL(clicked(bool)), this, SLOT(onSetSaveDirectory(bool)));
-				connect(mUiUnoImageWriter->openloc, SIGNAL(clicked(bool)), this, SLOT(onopenloc(bool)));
-				InitSavePath();
 			}
 			else if (!visible && nullptr == mUiUnoImageWriter)
 			{
@@ -230,11 +226,12 @@ namespace user
 
 		bool UnoImageWriter::DecompileImage(std::string TextureName, std::string MaterialName)
 		{
+			std::string Filepath = mUiUnoImageWriter->line_edit_searchprototype->text().toStdString();
 			try
 			{
 
 
-				std::string Filepath = mUiUnoImageWriter->line_edit_searchprototype->text().toStdString();
+				
 				Magick::Image image(Filepath);
 				int w = (int)image.columns();
 				int h = (int)image.rows();
@@ -279,78 +276,12 @@ namespace user
 				QSF_LOG_PRINTS(INFO, e.what())
 					return false;
 			}
+			QSF_LOG_PRINTS(INFO,"Wrote image to "<< Filepath << ".h")
 			return true;
 
 
 
 
-		}
-
-		void UnoImageWriter::onSetSaveDirectory(const bool pressed)
-		{
-			QString Path = GetSavePath().c_str();
-			QWidget* qtw = new QWidget();
-			auto fileName = QFileDialog::getExistingDirectory(qtw,
-				tr("Set Save Directory"), Path);
-			if (fileName == "")
-				return;
-			QSF_LOG_PRINTS(INFO, fileName.toStdString() + "/")
-				mSavepath = fileName.toStdString() + "//";
-
-			std::ofstream ofs(path + "image_decompiler.txt", std::ofstream::trunc);
-
-			ofs << mSavepath;
-
-			ofs.close();
-
-		}
-
-		void UnoImageWriter::onopenloc(const bool pressed)
-		{
-			QDesktopServices::openUrl(QUrl::fromLocalFile(GetSavePath().c_str()));
-		}
-
-
-		std::string UnoImageWriter::GetSavePath()
-		{
-			return mSavepath;
-		}
-
-		std::string UnoImageWriter::InitSavePath()
-		{
-			for (auto a : QSF_PLUGIN.getPlugins())
-			{
-				if (a->getFilename().find("asset_collector_tool.dll") != std::string::npos)
-				{
-					path = a->getFilename();
-					path.erase(path.end() - 24, path.end());
-
-
-				}
-			}
-			std::ifstream myfile(path + "image_decompiler.txt");
-			std::string line;
-			if (myfile.is_open())
-			{
-				while (std::getline(myfile, line))
-				{
-					mSavepath = line;
-					QSF_LOG_PRINTS(INFO, "Savepath is" << mSavepath)
-						break;
-
-				}
-				myfile.close();
-			}
-			else
-			{
-				std::ofstream myfile(path + "image_decompiler.txt");
-				if (myfile.is_open())
-				{
-					myfile << path;
-					myfile.close();
-				}
-			}
-			return std::string();
 		}
 		uint16_t UnoImageWriter::color565(uint8_t r, uint8_t g, uint8_t b)
 		{
