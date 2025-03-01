@@ -52,7 +52,7 @@
         </size>
        </property>
        <property name="currentIndex">
-        <number>1</number>
+        <number>2</number>
        </property>
        <property name="tabBarAutoHide">
         <bool>false</bool>
@@ -290,51 +290,6 @@
           </item>
          </layout>
         </widget>
-        <widget class="QPushButton" name="BritifyCrossing">
-         <property name="geometry">
-          <rect>
-           <x>20</x>
-           <y>270</y>
-           <width>111</width>
-           <height>23</height>
-          </rect>
-         </property>
-         <property name="toolTip">
-          <string>mirror crossing to make it left hand driven</string>
-         </property>
-         <property name="text">
-          <string>Britify Crossing</string>
-         </property>
-        </widget>
-        <widget class="QWidget" name="horizontalLayoutWidget_2">
-         <property name="geometry">
-          <rect>
-           <x>20</x>
-           <y>230</y>
-           <width>371</width>
-           <height>31</height>
-          </rect>
-         </property>
-         <layout class="QHBoxLayout" name="horizontalLayout">
-          <item>
-           <widget class="QPushButton" name="BritifyMap">
-            <property name="enabled">
-             <bool>false</bool>
-            </property>
-            <property name="text">
-             <string>Britify Map (Mirror)</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QProgressBar" name="progressBar">
-            <property name="value">
-             <number>0</number>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
        </widget>
        <widget class="QWidget" name="Materials">
         <attribute name="title">
@@ -421,7 +376,7 @@
           </size>
          </property>
          <property name="text">
-          <string>Materialpath</string>
+          <string>TextLabel</string>
          </property>
         </widget>
         <widget class="QLabel" name="coordinates">
@@ -440,7 +395,7 @@
           </size>
          </property>
          <property name="text">
-          <string>UV Coordinates</string>
+          <string>TextLabel</string>
          </property>
         </widget>
         <widget class="QLabel" name="label_4">

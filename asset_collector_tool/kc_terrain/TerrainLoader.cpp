@@ -242,25 +242,19 @@ namespace kc_terrain
 		auto width = OI_HeightMap.getHeight();
 		auto height = OI_HeightMap.getWidth();
 		OI_HeightMap.flipAroundX();
-		Ogre::TerrainGroup::TerrainIterator terrainIterator2 = TC->getOgreTerrainGroup()->getTerrainIterator();
-		int counter = 0;
-		while (terrainIterator2.hasMoreElements()) // add the layer to all terrains in the terrainGroup
-		{
-
-			Ogre::TerrainGroup::TerrainSlot* a = terrainIterator2.getNext();
-			counter++;
-		}
-		int parts_one_axis = (int)glm::round(glm::sqrt(counter));
-		//shouldnt do that... better use Terrain->getsize
 		int partsize = TC->getOgreTerrainGroup()->getTerrain(0, 0)->getSize();
-		//QSF_LOG_PRINTS(INFO, "Partsize " << partsize << " parts_one_axis " << parts_one_axis)
-			Ogre::TerrainGroup::TerrainIterator terrainIterator = TC->getOgreTerrainGroup()->getTerrainIterator();
+		Ogre::TerrainGroup::TerrainIterator terrainIterator3 = TC->getOgreTerrainGroup()->getTerrainIterator();
 
 		/* notice that partsize is handled different as pixels are used on borders share same px on image*/
-		while (terrainIterator.hasMoreElements()) // add the layer to all terrains in the terrainGroup
+		int it = 0;
+		int HeightmapSize = (int)TC->GetHeightMapSize();
+		while (terrainIterator3.hasMoreElements()) // add the layer to all terrains in the terrainGroup
 		{
+			it++;
 
-			Ogre::TerrainGroup::TerrainSlot* a = terrainIterator.getNext();
+			Ogre::TerrainGroup::TerrainSlot* a = terrainIterator3.getNext();
+			if(a == nullptr)
+			continue;
 			auto Terrain = a->instance;
 			int OffsetX = (partsize - 1)*a->x;
 			int OffsetY = (partsize - 1)*a->y;
@@ -268,7 +262,11 @@ namespace kc_terrain
 			{
 				for (long y = 0; y <= partsize; y++)
 				{
-					float HeightVal = Min + (Max - Min)*OI_HeightMap.getColourAt(OffsetX + x, OffsetY + y, 0).r;
+					int xclamp = glm::clamp((int)OffsetX+ (int)x,0, HeightmapSize);
+					int yclamp = glm::clamp(OffsetY + (int)y, 0, HeightmapSize);
+					if(xclamp >= 2015 && yclamp == 2049) //There is a read error on (2015 -2049) X 2049 Y
+					continue;
+					float HeightVal = Min + (Max - Min)*OI_HeightMap.getColourAt(xclamp, yclamp, 0).r;
 					Terrain->setHeightAtPoint(x, y, HeightVal);
 				}
 			}

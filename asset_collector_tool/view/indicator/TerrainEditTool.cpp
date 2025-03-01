@@ -505,7 +505,7 @@ namespace user
 			So there are 16 parts with 65 polys but since they overlap each other you get 1024 + 1 at the end (or beginning) which is not overlapping. Notice if you are at index x= 64 y = 64 you have 4 chunks to feed in all other cases its just 1 or 2
 			*/
 
-			
+
 			std::vector<glm::vec2> xPairs;
 			std::vector<glm::vec2> yPairs;
 			while (true)
@@ -515,11 +515,11 @@ namespace user
 					xTerrain++;
 					xRemaining = xRemaining - official_partsize;
 				}
-				else if(xRemaining - official_partsize == 0)
+				else if (xRemaining - official_partsize == 0)
 				{
 					//we need to edit both terrains
-					xPairs.push_back(glm::vec2(xTerrain,xRemaining));
-					xPairs.push_back(glm::vec2(xTerrain+1,0));
+					xPairs.push_back(glm::vec2(xTerrain, xRemaining));
+					xPairs.push_back(glm::vec2(xTerrain + 1, 0));
 					break;
 				}
 				else
@@ -536,33 +536,33 @@ namespace user
 				else if (yRemaining - official_partsize == 0)
 				{
 					//we need to edit both terrains
-					yPairs.push_back(glm::vec2(yTerrain,yRemaining));
-					yPairs.push_back(glm::vec2( yTerrain + 1,0));
+					yPairs.push_back(glm::vec2(yTerrain, yRemaining));
+					yPairs.push_back(glm::vec2(yTerrain + 1, 0));
 					break;
 				}
 				else
 					break;
 			}
-			if(xPairs.empty() && yPairs.empty())
+			if (xPairs.empty() && yPairs.empty())
 			{
-			//QSF_LOG_PRINTS(INFO, xTerrain << " " << yTerrain << " " << xRemaining << " " << yRemaining)
-			auto Terrain = TerrainMaster->getOgreTerrainGroup()->getTerrain(xTerrain, yTerrain);
-			if (Terrain == nullptr)
-			{
-				QSF_LOG_PRINTS(INFO, "Terrain is a nullptr" << xTerrain <<" " << yTerrain<< "Remaining x and y "<< xRemaining <<" "<< yRemaining<< " orig point "<< point.x << " " << point.y)
-					return;
-			}
+				//QSF_LOG_PRINTS(INFO, xTerrain << " " << yTerrain << " " << xRemaining << " " << yRemaining)
+				auto Terrain = TerrainMaster->getOgreTerrainGroup()->getTerrain(xTerrain, yTerrain);
+				if (Terrain == nullptr)
+				{
+					QSF_LOG_PRINTS(INFO, "Terrain is a nullptr" << xTerrain << " " << yTerrain << "Remaining x and y " << xRemaining << " " << yRemaining << " orig point " << point.x << " " << point.y)
+						return;
+				}
 
-			Terrain->setHeightAtPoint(xRemaining, yRemaining, NewHeight);//TerrainEditGUI->GetHeight());
+				Terrain->setHeightAtPoint(xRemaining, yRemaining, NewHeight);//TerrainEditGUI->GetHeight());
 			}
-			else if(yPairs.empty())
+			else if (yPairs.empty())
 			{
 				for (auto a : xPairs)
 				{
 					auto Terrain = TerrainMaster->getOgreTerrainGroup()->getTerrain((int)a.x, yTerrain);
 					if (Terrain == nullptr)
 					{
-						
+
 						QSF_LOG_PRINTS(INFO, "Terrain is a nullptr [mode 1]" << a.x << " " << yTerrain << "Remaining x and y " << a.y << " " << yRemaining << " orig point " << point.x << " " << point.y)
 							continue;
 					}
@@ -573,10 +573,10 @@ namespace user
 			{
 				for (auto a : yPairs)
 				{
-					auto Terrain = TerrainMaster->getOgreTerrainGroup()->getTerrain(xTerrain,(int)a.x);
+					auto Terrain = TerrainMaster->getOgreTerrainGroup()->getTerrain(xTerrain, (int)a.x);
 					if (Terrain == nullptr)
 					{
-						
+
 						QSF_LOG_PRINTS(INFO, "Terrain is a nullptr [mode 2]" << xTerrain << " " << a.x << "Remaining x and y " << xRemaining << " " << a.y << " orig point " << point.x << " " << point.y)
 							continue;
 					}
@@ -740,50 +740,60 @@ namespace user
 			MagImage->magick("TIF");
 			MagImage->type(Magick::ImageType::GrayscaleType);
 
+			auto it_target = TerrainMaster->getOgreTerrainGroup()->getTerrainIterator();
 			float lowestpoint = 99999.f;
 			float highestpoint = -999999.f;
-			for (size_t t = 0; t < Heighmapsize - 1; t++)
+			while (it_target.hasMoreElements()) // add the layer to all terrains in the terrainGroup
 			{
-				for (size_t j = 0; j < Heighmapsize - 1; j++)
+				Ogre::TerrainGroup::TerrainSlot* TS_target = it_target.getNext();
+				for (long t = 0; t < partsize; t++)
 				{
-					auto val = ReadValue(glm::vec2(t, j));
-					if (lowestpoint > val)
-						lowestpoint = val;
-					if (highestpoint < val)
-						highestpoint = val;
+					for (long j = 0; j < partsize; j++)
+					{
+						auto val = TS_target->instance->getHeightAtPoint(t, j);
+						if (lowestpoint > val)
+						{
+							lowestpoint = val;
+							if (val < -50.f) //this is a setter. This might ruin some stuff
+								lowestpoint = -50.f;
+						}
+						if (highestpoint < val)
+							highestpoint = val;
+					}
 				}
+
 			}
 			std::string low = boost::lexical_cast<std::string>(lowestpoint);
 			std::string height = boost::lexical_cast<std::string>(highestpoint);
-			//highestpoint = highestpoint - lowestpoint;
+			QSF_LOG_PRINTS(INFO, "lowestpoint  " << lowestpoint)
+				//highestpoint = highestpoint - lowestpoint;
 
-			/*uint8* buffer = new uint8[Heighmapsize * Heighmapsize * 8];
-			Ogre::Image ogreImage;
-			ogreImage.loadDynamicImage(buffer, Heighmapsize, Heighmapsize, Ogre::PixelFormat::PF_FLOAT32_GR);
-			for (size_t t = 0; t < Heighmapsize - 1; t++)
-			{
-				for (size_t j = 0; j < Heighmapsize - 1; j++)
+				/*uint8* buffer = new uint8[Heighmapsize * Heighmapsize * 8];
+				Ogre::Image ogreImage;
+				ogreImage.loadDynamicImage(buffer, Heighmapsize, Heighmapsize, Ogre::PixelFormat::PF_FLOAT32_GR);
+				for (size_t t = 0; t < Heighmapsize - 1; t++)
 				{
-					float value = (ReadValue(glm::vec2(t, j)) - lowestpoint) / (highestpoint-lowestpoint);
-					//QSF_LOG_PRINTS(INFO,"value" << value << " high " )
-					const Ogre::ColourValue ogreColorValue = Ogre::ColourValue(value, value, value);
-					ogreImage.setColourAt(ogreColorValue, t, j, 0);
-					//float = (Richtiger Punkt - nP) / (hP - np)
-					//120 (bei 180 und 90 als Okt)
-					//120-90 = 30
-					// 30 / (180-90) =1/3
+					for (size_t j = 0; j < Heighmapsize - 1; j++)
+					{
+						float value = (ReadValue(glm::vec2(t, j)) - lowestpoint) / (highestpoint-lowestpoint);
+						//QSF_LOG_PRINTS(INFO,"value" << value << " high " )
+						const Ogre::ColourValue ogreColorValue = Ogre::ColourValue(value, value, value);
+						ogreImage.setColourAt(ogreColorValue, t, j, 0);
+						//float = (Richtiger Punkt - nP) / (hP - np)
+						//120 (bei 180 und 90 als Okt)
+						//120-90 = 30
+						// 30 / (180-90) =1/3
+					}
+					//ogreImage.setColourAt()
 				}
-				//ogreImage.setColourAt()
-			}
-			ogreImage.flipAroundX();*/
-			QSF_LOG_PRINTS(INFO, "Heightmap channelcount" << MagImage->channels() << Heighmapsize);
-			MagickCore::Quantum*  Pixels = MagImage->getPixels(0, 0, Heighmapsize, Heighmapsize);
+				ogreImage.flipAroundX();*/
+				MagickCore::Quantum*  Pixels = MagImage->getPixels(0, 0, Heighmapsize, Heighmapsize);
 			for (size_t x = 0; x < Heighmapsize; x++)
 			{
 				for (size_t y = 0; y < Heighmapsize; y++)
 				{
 					float value = (ReadValue(glm::vec2(x, y)) - lowestpoint) / (highestpoint - lowestpoint);
-					uint64 offset = (y* Heighmapsize + x) * MagImage->channels(); //4 is because we use 4 channels
+					uint64 offset = y* Heighmapsize + x; //4 is because we use 4 channels
 					*(Pixels + offset) = value * 65535.f;
 				}
 			}
@@ -909,7 +919,6 @@ namespace user
 
 		void TerrainEditTool::CopyFromQSFMap(const qsf::MessageParameters & parameters)
 		{
-
 			QSF_LOG_PRINTS(INFO, "Copy QSF Terrain started")
 				//get old qsf terrain
 				qsf::TerrainComponent* CopyFromTerrain = nullptr;
@@ -928,17 +937,11 @@ namespace user
 					return;
 			}
 			int CopyFromHeightMapSize = CopyFromTerrain->getHeightMapSize();
-			if (CopyFromHeightMapSize != TerrainMaster->getHeightMapSize())
+			if (CopyFromHeightMapSize != TerrainMaster->GetHeightMapSize())
 			{
-				QSF_LOG_PRINTS(INFO, "Cant do that partsize does not match. Source has " << CopyFromHeightMapSize << " and Target has " << TerrainMaster->getHeightMapSize())
+				QSF_LOG_PRINTS(INFO, "Cant do that partsize does not match. Source has " << CopyFromHeightMapSize << " and Target has " << TerrainMaster->GetHeightMapSize())
+					QSF_LOG_PRINTS(INFO, "However QSF often lies about this. Try to set the heightmapsize to 2049 (qsf::terrain and kc_terrain")
 					return;
-			}
-			auto it = CopyFromTerrain->getOgreTerrainGroup()->getTerrainIterator();
-			int counter = 0; // because my ID start at 0
-			while (it.hasMoreElements()) // add the layer to all terrains in the terrainGroup
-			{
-				Ogre::TerrainGroup::TerrainSlot* a = it.getNext();
-				counter++;
 			}
 			int CopyFromParts = CopyFromTerrain->getOgreTerrainGroup()->getTerrainSize();
 			int OrigParts = CopyFromTerrain->getOgreTerrainGroup()->getTerrainSize();
@@ -947,23 +950,84 @@ namespace user
 				QSF_LOG_PRINTS(INFO, "Cant do that number of parts not matching. Source has " << CopyFromParts << " and Target has " << OrigParts)
 					return;
 			}
-			auto it_source = CopyFromTerrain->getOgreTerrainGroup()->getTerrainIterator();
-			auto it_target = TerrainMaster->getOgreTerrainGroup()->getTerrainIterator();
+			int OffsetX = TerrainEditGUI->GetMirrorX() ? partsize : 0;
+			int OffsetY = TerrainEditGUI->GetMirrorY() ? partsize : 0;
+			int PageOffsetX = TerrainEditGUI->GetMirrorPageX() ? mParts - 1 : 0;
+			int PageOffsetY = TerrainEditGUI->GetMirrorPageY() ? mParts - 1 : 0;
 
-			while (it_source.hasMoreElements()) // add the layer to all terrains in the terrainGroup
+
+			auto it_target = CopyFromTerrain->getOgreTerrainGroup()->getTerrainIterator();
+			float lowestpoint = 99999.f;
+			float highestpoint = -999999.f;
+			while (it_target.hasMoreElements()) // add the layer to all terrains in the terrainGroup
 			{
-				Ogre::TerrainGroup::TerrainSlot* TS_source = it_source.getNext();
 				Ogre::TerrainGroup::TerrainSlot* TS_target = it_target.getNext();
-
-				for (size_t x = 0; x < partsize; x++)
+				for (long t = 0; t < partsize; t++)
 				{
-					for (size_t y = 0; y < partsize; y++)
+					for (long j = 0; j < partsize; j++)
 					{
-						TS_target->instance->setHeightAtPoint((long)x, (long)y, TS_source->instance->getHeightAtPoint((long)x, (long)y));
+						auto val = TS_target->instance->getHeightAtPoint(t, j);
+						if (lowestpoint > val)
+						{
+							lowestpoint = val;
+							if (val < -50.f) //this is a setter. This might ruin some stuff
+								lowestpoint = -50.f;
+						}
+						if (highestpoint < val)
+							highestpoint = val;
 					}
 				}
-				TS_target->instance->update();
+
 			}
+
+				//try to print direct map
+				std::string widthandheight = boost::lexical_cast<std::string>(Heighmapsize) + "x" + boost::lexical_cast<std::string>(Heighmapsize);
+				Magick::Image* MagImage = new Magick::Image();
+				MagImage->size(widthandheight);
+				MagImage->magick("TIF");
+
+				MagImage->type(Magick::ImageType::GrayscaleType);
+				MagickCore::Quantum*  Pixels = MagImage->getPixels(0, 0, Heighmapsize, Heighmapsize);
+				QSF_LOG_PRINTS(INFO, "partsize ps " << partsize << " terraincount per site " << mParts)
+					QSF_LOG_PRINTS(INFO, "lowestpoint " << lowestpoint << " highestpoint " << highestpoint)
+					for (int mparts_y = 0; mparts_y < mParts; mparts_y++)
+					{
+						for (int mparts_x = 0; mparts_x < mParts; mparts_x++)
+						{
+							auto Target = TerrainMaster->getOgreTerrainGroup()->getTerrain(mparts_x, mparts_y);
+							if (Target == nullptr)
+							{
+								QSF_LOG_PRINTS(INFO, glm::abs(PageOffsetX - mparts_x) << " : " << " | " << glm::abs(PageOffsetY - mparts_y) << " : " << "is invalid")
+									continue;
+							}
+							auto CopyFromSubTerrain = CopyFromTerrain->getOgreTerrainGroup()->getTerrain(glm::abs(PageOffsetX - mparts_x), glm::abs(PageOffsetY - mparts_y));
+							if (CopyFromSubTerrain == nullptr)
+							{
+								QSF_LOG_PRINTS(INFO, "subterrain " << mparts_x << " : " << " | " << mparts_y << " : " << "is invalid")
+									continue;
+							}
+							for (int y = 0; y < partsize; y++)
+							{
+								for (int x = 0; x < partsize; x++)
+								{
+									//QSF_LOG_PRINTS(INFO, "copy val " << glm::abs(OffsetX - x) << "  " << glm::abs(OffsetY - y));
+									float val_raw = CopyFromSubTerrain->getHeightAtPoint(glm::abs(OffsetX - x), glm::abs(OffsetY - y));
+									//tryout
+									Target->setHeightAtPoint((long)x, (long)y, val_raw);
+									//img
+									int x_img = glm::clamp(x + mparts_x*(int)partsize - 1, 0, (int)Heighmapsize);
+									int y_img = glm::clamp(y + mparts_y*(int)partsize - 1, 0, (int)Heighmapsize);
+									float value_normalized = (val_raw - lowestpoint) / (highestpoint - lowestpoint);
+									uint64 offset = y_img* Heighmapsize + x_img;
+									*(Pixels + offset) = value_normalized * 65535.f;
+								}
+							}
+							Target->update();
+						}
+					}
+				MagImage->flip();
+				MagImage->syncPixels();
+				MagImage->write("D:\\SteamLibrary\\steamapps\\common\\EMERGENCY 20\\data\\berlin_mirrored\\content\\texture\\proto_heightmap.tif");
 
 		}
 
@@ -1024,8 +1088,8 @@ namespace user
 				}
 				if (lowestpoint >= highestpoint)
 				{
-					QSF_LOG_PRINTS(INFO,"error lowestpoint and highestpoint are same level")
-					return;
+					QSF_LOG_PRINTS(INFO, "error lowestpoint and highestpoint are same level")
+						return;
 				}
 			}
 			if (lowestpoint == 0 && highestpoint == 0)
@@ -1076,8 +1140,8 @@ namespace user
 					//Richtiger Punkkt = Punktval *(hP-nP)+nP
 					float RealPointHeight = val * (highestpoint - lowestpoint) + lowestpoint;
 					IncreaseHeight(glm::vec2(t, j), RealPointHeight);
-					if(RealPointHeight < 20)
-					QSF_LOG_PRINTS(INFO,t << " j "<< j << " "<< RealPointHeight)
+					if (RealPointHeight < 20)
+						QSF_LOG_PRINTS(INFO, t << " j " << j << " " << RealPointHeight)
 				}
 				//ogreImage.setColourAt()
 			}
@@ -1125,12 +1189,34 @@ namespace user
 				else
 					break;
 			}
+			//how to remove black border?
+			if (xTerrain == mParts && xRemaining == 1)
+			{
+				xTerrain = xTerrain - 1;
+				xRemaining = xRemaining + partsize + 1;
+			}
+			if (xTerrain == mParts && xRemaining == 0)
+			{
+				xTerrain = xTerrain - 1;
+				xRemaining = xRemaining + partsize + 0;
+			}
+			if (yTerrain == mParts && yRemaining == 1)
+			{
+				yTerrain = yTerrain - 1;
+				yRemaining = yRemaining + partsize + 1;
+			}
+			if (yTerrain == mParts && yRemaining == 0)
+			{
+				yTerrain = yTerrain - 1;
+				yRemaining = yRemaining + partsize + 0;
+			}
 			//QSF_LOG_PRINTS(INFO, xTerrain << " " << yTerrain << " " << xRemaining << " " << yRemaining)
 			auto Terrain = TerrainMaster->getOgreTerrainGroup()->getTerrain(xTerrain, yTerrain);
 			if (Terrain == nullptr)
 			{
 
-				QSF_LOG_PRINTS(INFO, "Terrain is a nullptr" << xTerrain << " " << yTerrain)
+				QSF_LOG_PRINTS(INFO, "Terrain is a nullptr" << xTerrain << "  " << xRemaining << " | " << yTerrain << " " << yRemaining)
+					QSF_LOG_PRINTS(INFO, mParts << " " << partsize)
 					return 0.f;
 			}
 			return Terrain->getHeightAtPoint(xRemaining, yRemaining);//TerrainEditGUI->GetHeight());
@@ -1199,6 +1285,12 @@ namespace user
 				mouseisvalid = false;
 		}
 
+		float TerrainEditTool::GetTerrainHeightByRayCast(int xPos, int yPos, int xTerrain, int yTerrain)
+		{
+			//qsf::RayMapQuery::g
+			return 0.0f;
+		}
+
 		glm::vec2 TerrainEditTool::ConvertWorldPointToRelativePoint(glm::vec2 WorldPoint)
 		{
 			glm::vec2 copy = WorldPoint;
@@ -1259,12 +1351,13 @@ namespace user
 			}
 			//auto terrain = TES.at(0)->getOgreTerrain();
 			QSF_LOG_PRINTS(INFO, TerrainMaster->getTerrainWorldSize());
-			QSF_LOG_PRINTS(INFO, TerrainMaster->GetHeightMapSize() + 1);
-			QSF_LOG_PRINTS(INFO, "partsize" << TerrainMaster->getOgreTerrainGroup()->getTerrainSize());
+			QSF_LOG_PRINTS(INFO, TerrainMaster->GetHeightMapSize());
+			Heighmapsize = (float)TerrainMaster->GetHeightMapSize();
+			QSF_LOG_PRINTS(INFO, "Heightmapsize" << Heighmapsize << " partsize " << TerrainMaster->getOgreTerrainGroup()->getTerrainSize());
 
 			Offset = (float)(TerrainMaster->getTerrainWorldSize() / 2);
 			percentage = 1.f / (float)TerrainMaster->getTerrainWorldSize(); /// (float)TerrainMaster->getHeightMapSize();
-			Heighmapsize = (float)TerrainMaster->GetHeightMapSize()+1;
+		
 			partsize = TerrainMaster->getOgreTerrainGroup()->getTerrainSize() - 1;
 
 			if (!PaintJobProxy.isValid())

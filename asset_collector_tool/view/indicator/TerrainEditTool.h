@@ -30,6 +30,9 @@
 #include <qsf_editor/asset/AssetEditHelper.h>
 #include <asset_collector_tool\kc_terrain\TerrainComponent.h>
 #include <asset_collector_tool\extern\include\Magick++.h>
+
+
+#include <ogre\Terrain\OgreTerrainGroup.h>
 //[-------------------------------------------------------]
 //[ Forward declarations                                  ]
 //[-------------------------------------------------------]
@@ -146,7 +149,20 @@ namespace user
 		private:
 			bool IsActive;
 
-
+			struct CopyData
+			{
+				Ogre::TerrainGroup::TerrainSlot* TS;
+				float positionX;
+				float positionY;
+				bool operator<(const CopyData& a) const //Sort algorithm as we want to use std::unique
+				{
+					if(positionX == a.positionX)
+						return (positionY > a.positionY);
+					else 
+					return (positionX < a.positionX);
+				}
+			};
+			
 			float MoveDelta;
 			glm::vec3 OldPos;
 			glm::vec3 TerrainEditTool::getPositionUnderMouse();
@@ -160,6 +176,7 @@ namespace user
 			inline virtual void mousePressEvent(QMouseEvent& qMouseEvent) override;
 			inline virtual void mouseMoveEvent(QMouseEvent& qMouseEvent) override;
 
+			float GetTerrainHeightByRayCast(int xPos, int yPos, int xTerrain, int yTerrain);
 
 		private:
 			glm::vec3 oldmouspoint;

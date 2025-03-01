@@ -204,6 +204,8 @@ namespace user
 
 		void TerrainEditmodeColorMap::PaintJob(const qsf::JobArguments & jobArguments)
 		{
+			if(!TerrainEditGUI->IsUnlocked())
+			return;
 			if (QSF_DEBUGDRAW.isRequestIdValid(mDetailViewSingleTrack))
 				QSF_DEBUGDRAW.cancelRequest(mDetailViewSingleTrack);
 			DebugRequsts.mCircles.clear();
@@ -788,7 +790,7 @@ namespace user
 			}
 
 			mColorMapSize = (float)image->rows();
-			QSF_LOG_PRINTS(INFO, "Colormapsize " << TerrainMaster->getColorMapSize());
+			//QSF_LOG_PRINTS(INFO, "Colormapsize " << TerrainMaster->getColorMapSize());
 			QSF_LOG_PRINTS(INFO, "scale" << mColorMapSize / TerrainMaster->getTerrainWorldSize() << " units per meter");
 			mScale = mColorMapSize / TerrainMaster->getTerrainWorldSize();
 			partsize = mColorMapSize / sqrt(counter);

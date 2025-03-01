@@ -61,7 +61,7 @@ namespace kc_terrain
 	*    with an optimized cached asset global color map. For editing the terrain color map, we keep the uncompressed source asset as tif. It's the job of the editor to generate the optimized
 	*    cached asset global color map.
 	*/
-	class TerrainComponent : public qsf::TerrainComponent
+	class TerrainComponent : public qsf::RendererComponent
 	{
 
 

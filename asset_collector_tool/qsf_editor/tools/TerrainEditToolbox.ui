@@ -325,6 +325,34 @@ text-decoration: underline;</string>
      </property>
     </widget>
    </item>
+   <item>
+    <widget class="QCheckBox" name="MirrorY">
+     <property name="text">
+      <string>MirrorY</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="MirrorX">
+     <property name="text">
+      <string>MirrorX</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="MirrorPagesY">
+     <property name="text">
+      <string>MirrorPagesY</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="MirrorPagesX">
+     <property name="text">
+      <string>MirrorPagesX</string>
+     </property>
+    </widget>
+   </item>
   </layout>
  </widget>
  <resources/>

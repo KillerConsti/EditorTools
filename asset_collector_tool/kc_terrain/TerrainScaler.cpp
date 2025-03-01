@@ -376,7 +376,7 @@ namespace kc_terrain
 	bool TerrainScaler::WriteNewChunkData(std::vector<LayerData> ResultData, kc_terrain::TerrainComponent* TC, int NumberOfParts)
 	{
 		std::string widthandheight = boost::lexical_cast<std::string>(TC->GetBlendtMapSize()) + "x" + boost::lexical_cast<std::string>(TC->GetBlendtMapSize());
-		int Partsize = TC->getBlendMapSize()/NumberOfParts;
+		int Partsize = TC->GetBlendtMapSize() /NumberOfParts;
 		int BlendMapSize = TC->GetBlendtMapSize();
 		Magick::Image* MagImage_1_4 = new Magick::Image();
 		MagImage_1_4->size(widthandheight);

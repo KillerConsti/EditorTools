@@ -36,6 +36,7 @@
 #include <filesystem>
 #include <asset_collector_tool\editmode\PlaceUnitEditMode.h>
 #include <asset_collector_tool\view\UnoImageWriter.h>
+#include <qsf/renderer/component/RendererComponent.h>
 //[-------------------------------------------------------]
 //[ Namespace                                             ]
 //[-------------------------------------------------------]
@@ -65,7 +66,7 @@ namespace user
 				// Declare CAMP reflection system classes
 				// -> Use Qt's "QT_TR_NOOP()"-macro in order to enable Qt's "lupdate"-program to find the internationalization texts
 				QSF_START_CAMP_CLASS_EXPORT(kc_terrain::TerrainComponent, "KC TerrainComponent" ,"Killers first terrain")
-					QSF_CAMP_IS_COMPONENT_DERIVED(qsf::TerrainComponent)
+					QSF_CAMP_IS_COMPONENT_DERIVED(qsf::RendererComponent)
 					//QSF_ADD_CAMP_PROPERTY(New Global Glossiness, EditorToolsHelperComponent::GetGlobalGlossiness, EditorToolsHelperComponent::SetGlobalGlossiness, "set it directly with the tool", 0.75f)
 					QSF_ADD_CAMP_PROPERTY_DIRECT_ACCESS(Do Not Edit above the line,kc_terrain::TerrainComponent::uneditabld,"All values above are from old terrain","------------------------------------").tag("Serializable", false)
 					QSF_ADD_CAMP_PROPERTY(New Color Map, kc_terrain::TerrainComponent::GetColorMap, kc_terrain::TerrainComponent::SetNewColorMap, "set it directly with the tool", qsf::getUninitialized<uint64>()).tag("AssetType", qsf::QsfAssetTypes::TEXTURE.getName())
@@ -159,7 +160,6 @@ namespace user
 					.getClass()
 				);
 
-#ifdef FinalBuild
 				addCampClass(
 					camp::Class::declare<PlaceUnitEditMode>()
 					.tag("Name", QT_TR_NOOP("ID_EM5EDITOR_EDITMODE_FIRECOMPONENT_NAME21"))			// Text: "Fire entity"
@@ -208,7 +208,6 @@ namespace user
 					.getClass()
 				);
 
-#endif // !FinalBuild
 				addCampClass(
 					camp::Class::declare<TrainTrackTool>()
 					.tag("Name", QT_TR_NOOP("[KC] TrainTrackTool"))			// Text: "Fire entity"

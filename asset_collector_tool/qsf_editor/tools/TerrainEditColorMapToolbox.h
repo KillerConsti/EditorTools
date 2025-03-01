@@ -138,6 +138,7 @@ namespace user
 			void OverwriteSavePath();
 			std::string mSavepath;
 			QColor GetSelectedColor();
+			bool IsUnlocked();
 		protected:
 			virtual bool onStartup(qsf::editor::ToolboxView& toolboxView) override;
 			virtual void retranslateUi(qsf::editor::ToolboxView& toolboxView) override;
@@ -166,13 +167,18 @@ namespace user
 			//void onEditPrefab(QT::QString String);
 			void onPushSaveMap(const bool pressed);
 
+			void OnPushUnlockFullMode(const bool pressed);
 
+
+			bool CheckIfUnlocked();
+			
 			//[-------------------------------------------------------]
 			//[ Private data                                          ]
 			//[-------------------------------------------------------]
 		private:
 			boost::container::flat_set <uint64> CreatedUnits;
 			bool WasPressed;
+			bool m_unlocked;
 
 			//[-------------------------------------------------------]
 			//[ CAMP reflection system                                ]

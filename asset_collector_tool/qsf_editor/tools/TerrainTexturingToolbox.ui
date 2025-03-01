@@ -13,7 +13,7 @@
     <x>0</x>
     <y>0</y>
     <width>425</width>
-    <height>746</height>
+    <height>700</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -67,6 +67,12 @@ text-decoration: underline;</string>
    </item>
    <item>
     <widget class="QTableWidget" name="tableWidget">
+     <property name="maximumSize">
+      <size>
+       <width>16777215</width>
+       <height>300</height>
+      </size>
+     </property>
      <property name="sizeAdjustPolicy">
       <enum>QAbstractScrollArea::AdjustToContents</enum>
      </property>
@@ -125,6 +131,12 @@ text-decoration: underline;</string>
    </item>
    <item>
     <widget class="QListWidget" name="listWidget">
+     <property name="maximumSize">
+      <size>
+       <width>16777215</width>
+       <height>300</height>
+      </size>
+     </property>
      <property name="dragEnabled">
       <bool>false</bool>
      </property>
@@ -328,11 +340,33 @@ text-decoration: underline;</string>
     </layout>
    </item>
    <item>
-    <widget class="QPushButton" name="CopyFromQSFTerrain">
-     <property name="text">
-      <string>Copy From QSF Terrain</string>
-     </property>
-    </widget>
+    <layout class="QVBoxLayout" name="verticalLayout_2">
+     <item>
+      <widget class="QPushButton" name="CopyFromQSFTerrain">
+       <property name="text">
+        <string>Copy From QSF Terrain</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_6">
+       <item>
+        <widget class="QCheckBox" name="MirrorX">
+         <property name="text">
+          <string>Mirror X (copy)</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="MirrorY">
+         <property name="text">
+          <string>Mirror Y (copy)</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+    </layout>
    </item>
   </layout>
  </widget>

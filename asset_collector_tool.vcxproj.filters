@@ -366,12 +366,6 @@
     </QtRCC>
   </ItemGroup>
   <ItemGroup>
-    <QtUI Include="asset_collector_tool\view\indicator\UnitPlacerView.ui">
-      <Filter>Source Files\view\AssetCollectorTool</Filter>
-    </QtUI>
-    <QtUI Include="asset_collector_tool\qsf_editor\tools\TerrainEditColorMapToolbox.ui">
-      <Filter>Source Files\terrain_assets\tools\terrain</Filter>
-    </QtUI>
     <QtUI Include="asset_collector_tool\qsf_editor\tools\TerrainEditToolbox.ui">
       <Filter>Source Files\terrain_assets\tools\terrain</Filter>
     </QtUI>
@@ -404,6 +398,12 @@
     </QtUI>
     <QtUI Include="asset_collector_tool\view\UnoImageWriter.ui">
       <Filter>Source Files\view</Filter>
+    </QtUI>
+    <QtUI Include="asset_collector_tool\qsf_editor\tools\TerrainEditColorMapToolbox.ui">
+      <Filter>Source Files\terrain_assets\tools\terrain</Filter>
+    </QtUI>
+    <QtUI Include="asset_collector_tool\view\indicator\UnitPlacerView.ui">
+      <Filter>Source Files\view\AssetCollectorTool</Filter>
     </QtUI>
   </ItemGroup>
 </Project>

@@ -52,7 +52,7 @@
         </size>
        </property>
        <property name="currentIndex">
-        <number>1</number>
+        <number>2</number>
        </property>
        <property name="tabBarAutoHide">
         <bool>false</bool>
@@ -290,51 +290,6 @@
           </item>
          </layout>
         </widget>
-        <widget class="QPushButton" name="BritifyCrossing">
-         <property name="geometry">
-          <rect>
-           <x>20</x>
-           <y>270</y>
-           <width>111</width>
-           <height>23</height>
-          </rect>
-         </property>
-         <property name="toolTip">
-          <string>mirror crossing to make it left hand driven</string>
-         </property>
-         <property name="text">
-          <string>Britify Crossing</string>
-         </property>
-        </widget>
-        <widget class="QWidget" name="horizontalLayoutWidget_2">
-         <property name="geometry">
-          <rect>
-           <x>20</x>
-           <y>230</y>
-           <width>371</width>
-           <height>31</height>
-          </rect>
-         </property>
-         <layout class="QHBoxLayout" name="horizontalLayout">
-          <item>
-           <widget class="QPushButton" name="BritifyMap">
-            <property name="enabled">
-             <bool>false</bool>
-            </property>
-            <property name="text">
-             <string>Britify Map (Mirror)</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QProgressBar" name="progressBar">
-            <property name="value">
-             <number>0</number>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
        </widget>
        <widget class="QWidget" name="Materials">
         <attribute name="title">
@@ -344,7 +299,7 @@
          <property name="geometry">
           <rect>
            <x>20</x>
-           <y>200</y>
+           <y>230</y>
            <width>191</width>
            <height>23</height>
           </rect>
@@ -357,7 +312,7 @@
          <property name="geometry">
           <rect>
            <x>20</x>
-           <y>170</y>
+           <y>260</y>
            <width>381</width>
            <height>20</height>
           </rect>
@@ -382,21 +337,21 @@
            <x>20</x>
            <y>30</y>
            <width>381</width>
-           <height>131</height>
+           <height>192</height>
           </rect>
          </property>
         </widget>
         <widget class="QPushButton" name="pushButtonUV_coordinates">
          <property name="geometry">
           <rect>
-           <x>220</x>
-           <y>200</y>
+           <x>20</x>
+           <y>290</y>
            <width>191</width>
            <height>23</height>
           </rect>
          </property>
          <property name="text">
-          <string>Inspect UV-Coordinates (beta)</string>
+          <string>Inspect UV-Coordinates</string>
          </property>
          <property name="checkable">
           <bool>true</bool>
@@ -408,8 +363,8 @@
         <widget class="QLabel" name="MaterialName">
          <property name="geometry">
           <rect>
-           <x>20</x>
-           <y>230</y>
+           <x>230</x>
+           <y>290</y>
            <width>500</width>
            <height>20</height>
           </rect>
@@ -421,14 +376,14 @@
           </size>
          </property>
          <property name="text">
-          <string>Materialpath</string>
+          <string>TextLabel</string>
          </property>
         </widget>
         <widget class="QLabel" name="coordinates">
          <property name="geometry">
           <rect>
-           <x>20</x>
-           <y>250</y>
+           <x>230</x>
+           <y>310</y>
            <width>500</width>
            <height>16</height>
           </rect>
@@ -440,16 +395,16 @@
           </size>
          </property>
          <property name="text">
-          <string>UV Coordinates</string>
+          <string>TextLabel</string>
          </property>
         </widget>
         <widget class="QLabel" name="label_4">
          <property name="geometry">
           <rect>
-           <x>10</x>
-           <y>260</y>
-           <width>671</width>
-           <height>541</height>
+           <x>40</x>
+           <y>340</y>
+           <width>512</width>
+           <height>512</height>
           </rect>
          </property>
          <property name="minimumSize">

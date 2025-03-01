@@ -131,6 +131,27 @@ namespace user
 		{
 		}
 
+		bool TerrainEditToolbox::GetMirrorX()
+		{
+			return mUITerrainEditToolbox->MirrorX->isChecked();
+		}
+
+		bool TerrainEditToolbox::GetMirrorY()
+		{
+			return mUITerrainEditToolbox->MirrorY->isChecked();
+		}
+
+		bool TerrainEditToolbox::GetMirrorPageX()
+		{
+			return mUITerrainEditToolbox->MirrorPagesX->isChecked();
+		}
+
+		bool TerrainEditToolbox::GetMirrorPageY()
+		{
+			return mUITerrainEditToolbox->MirrorPagesY->isChecked();
+		}
+
+
 		float TerrainEditToolbox::GetBrushRadius()
 		{
 			return ((float)mUITerrainEditToolbox->horizontalSlider_2->value() /10.f);

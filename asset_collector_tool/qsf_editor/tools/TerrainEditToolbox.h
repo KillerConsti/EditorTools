@@ -105,6 +105,11 @@ namespace user
 			//[ Protected virtual qsf::editor::Tool methods           ]
 			//[-------------------------------------------------------]
 
+			bool GetMirrorX();
+			bool GetMirrorY();
+			bool GetMirrorPageX();
+			bool GetMirrorPageY();
+			float GetTerrainHeightByRayCast(int xPos,int yPos,int xTerrain,int yTerrain);
 			public: //brush settings
 
 			float GetBrushRadius();

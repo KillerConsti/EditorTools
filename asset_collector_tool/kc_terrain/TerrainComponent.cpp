@@ -35,6 +35,10 @@
 #include <em5\game\Game.h>
 #include <asset_collector_tool\kc_terrain\TerrainLoader.h>
 #include <QtWidgets\qinputdialog.h>
+
+#include <iostream>
+#include <chrono>
+#include <ctime>  
 //[-------------------------------------------------------]
 //[ Namespace                                             ]
 //[-------------------------------------------------------]
@@ -382,6 +386,7 @@ namespace kc_terrain
 			TerrainLoader::LoadTerrain(this);
 			return true;
 		}
+		//this->getOgreEntity()
 		// Error!
 		return false;
 	}

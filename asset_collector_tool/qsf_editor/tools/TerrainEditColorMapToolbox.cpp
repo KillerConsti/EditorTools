@@ -99,6 +99,7 @@
 #include <qsf/plugin/PluginSystem.h>
 
 #include <em5/plugin/Plugin.h>
+#include <QtWidgets\qinputdialog.h>
 //[-------------------------------------------------------]
 //[ Namespace                                             ]
 //[-------------------------------------------------------]
@@ -123,7 +124,8 @@ namespace user
 			mUITerrainEditColorMapToolbox(new Ui::TerrainEditColorMapToolbox()),
 			mMode(Set),
 			mSavepath(""),
-			mtoolboxView(nullptr)
+			mtoolboxView(nullptr),
+			m_unlocked(false)
 		{
 		}
 
@@ -182,6 +184,11 @@ namespace user
 			}
 		}
 
+		bool TerrainEditColorMapToolbox::IsUnlocked()
+		{
+			return m_unlocked;
+		}
+
 		bool TerrainEditColorMapToolbox::onStartup(qsf::editor::ToolboxView & toolboxView)
 		{
 			if (mUITerrainEditColorMapToolbox != nullptr)
@@ -204,8 +211,19 @@ namespace user
 
 			connect(mUITerrainEditColorMapToolbox->comboBox, SIGNAL(currentIndexChanged(int)),this, SLOT(onChangeBrushType(int)));
 			connect(mUITerrainEditColorMapToolbox->use_alpha, SIGNAL(clicked(bool)),this, SLOT(onuse_alpha(bool)));
-
 			InitSavePath();
+			if (CheckIfUnlocked())
+			{
+				m_unlocked = true;
+				mUITerrainEditColorMapToolbox->unlock_full_mode->setHidden(true);
+			}
+			else
+			{	
+				QSF_LOG_PRINTS(INFO,"full mode is not yet unlocked")
+					
+				connect(mUITerrainEditColorMapToolbox->unlock_full_mode, SIGNAL(clicked(bool)), this, SLOT(OnPushUnlockFullMode(bool)));
+			}
+			
 
 
 			QPalette pal = mUITerrainEditColorMapToolbox->label_6->palette();
@@ -243,6 +261,7 @@ namespace user
 
 			disconnect(mUITerrainEditColorMapToolbox->comboBox, SIGNAL(currentIndexChanged(int)),this, SLOT(onChangeBrushType(int)));
 			disconnect(mUITerrainEditColorMapToolbox->use_alpha, SIGNAL(clicked(bool)),this, SLOT(onuse_alpha(bool)));
+			disconnect(mUITerrainEditColorMapToolbox->unlock_full_mode, SIGNAL(clicked(bool)), this, SLOT(OnPushUnlockFullMode(bool)));
 		}
 
 
@@ -399,6 +418,47 @@ namespace user
 
 			QSF_MESSAGE.emitMessage(qsf::MessageConfiguration("kc::save_heightmap"));
 		}
+
+		void TerrainEditColorMapToolbox::OnPushUnlockFullMode(const bool pressed)
+		{
+			QInputDialog *dialog = new QInputDialog();
+			dialog->setInputMode(QInputDialog::InputMode::IntInput);
+			dialog->setWindowTitle("Unlock Full Mode");
+			dialog->setLabelText("This is hidden behind a password, because several steps are required to get it to work. You'll find out how to this at the forum. Please enter the password");
+			dialog->setTextValue("Password");
+			int ret = dialog->exec();
+			QString text = dialog->textValue();
+			if (ret == QDialog::Accepted && !text.isEmpty() && text == "KC_Terrain") 
+			{
+				m_unlocked = true;
+				std::ofstream ofs(path + "plugin_unlocked.txt", std::ofstream::trunc);
+
+				ofs << "KC_Terrain";
+
+				ofs.close();
+				mUITerrainEditColorMapToolbox->unlock_full_mode->setHidden(true);
+			}
+		}
+
+		bool TerrainEditColorMapToolbox::CheckIfUnlocked()
+		{
+			std::ifstream myfile(path + "plugin_unlocked.txt");
+			std::string line;
+			if (myfile.is_open())
+			{
+				while (std::getline(myfile, line))
+				{
+					line;
+					break;
+
+				}
+				myfile.close();
+			}
+			if(line == "KC_Terrain")
+			return true;
+			return false;
+		}
+
 
 		TerrainEditColorMapToolbox::TerrainEditMode2 TerrainEditColorMapToolbox::GetEditMode()
 		{

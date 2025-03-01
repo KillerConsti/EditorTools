@@ -94,6 +94,16 @@ namespace user
 			return mEraseMode;
 		}
 
+		bool TerrainTexturingToolbox::MirrorX()
+		{
+			return mUITerrainTexturingToolbox->MirrorX->isChecked();
+		}
+
+		bool TerrainTexturingToolbox::MirrorY()
+		{
+			return mUITerrainTexturingToolbox->MirrorY->isChecked();
+		}
+
 		bool TerrainTexturingToolbox::onStartup(qsf::editor::ToolboxView & toolboxView)
 		{
 

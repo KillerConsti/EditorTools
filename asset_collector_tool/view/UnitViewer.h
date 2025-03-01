@@ -25,6 +25,9 @@
 #include <qsf/debug/request/CompoundDebugDrawRequest.h>
 #include <qsf/job/JobProxy.h>
 #include <qsf/math/Transform.h>
+#include <asset_collector_tool\extern\include\Magick++.h>
+#include <qsf\component\base\TransformComponent.h>
+#include <chrono>
 //[-------------------------------------------------------]
 //[ Forward declarations                                  ]
 //[-------------------------------------------------------]
@@ -144,7 +147,8 @@ namespace user
 			void onPushRemoveDebugCircles(const bool pressed);
 			void onPushUpdateNodes(const bool pressed);
 			void onpushAddAllNodes(const bool pressed);
-
+			void onPushBritifyMap(const bool pressed);
+			void onPushBritifyCrossing(const bool pressed);
 			void onPushbrakeButton(const bool pressed);
 			void onPushtrafficwarnerbutton(const bool pressed);
 			void onPushreverseButtonbutton(const bool pressed);
@@ -153,10 +157,35 @@ namespace user
 
 			void onPush_AnalyseMeshButton(const bool pressed);
 
+			std::string  ReadSkeleton();
+			void OnPushStartReadMaterial(const bool pressed);
 		private:
+			Magick::Image* image;
+			QImage* mQImage;
+			uint64 mOldAssetId;
+			enum CrossState
+			{
+				Inactive,
+				Active
+			};
+			CrossState mCrossState;
+			struct CrossPixel
+			{
+				int Red;
+				int Green;
+				int Blue;
+				int Alpha;
+				int X;
+				int Y;
+			};
+			int ImageRows;
+			int Imagecolumns;
+			std::vector<CrossPixel> MyCrossPixels;
 			Ui::UnitViewer*	mUiUnitViewer;	///< UI view instance, can be a null pointer, we have to destroy the instance in case we no longer need it
 		std::vector<qsf::Entity*> GetSelectedEntity();			
 		qsf::JobProxy mTireJob;
+		qsf::JobProxy mMaterialViewerJob;
+			void MaterialViewerJob(const qsf::JobArguments& jobArguments);
 			std::vector<qsf::Entity*> AffectedByTire;
 			void TireJob(const qsf::JobArguments& jobArguments);
 			void ResetWheelsAfterDeselection();
@@ -170,7 +199,6 @@ namespace user
 			bool IsEntityAllreadySelected(uint64 Target,std::vector<uint64> CompareList);
 			void UpdateStreetDebugNodes();
 			void OnSelectionChange_SetAdditionalLightButtons(QPushButton* Buttonname,std::string Lightdescription);
-
 			struct MaterialAssets
 			{
 				int LineItAppears =-1;
@@ -183,6 +211,35 @@ namespace user
 					return false;
 				}
 			};
+			//we do not know how many childs to expect therefore uint64
+			std::vector<std::pair<qsf::Transform,qsf::Entity*>> ChildTransforms;
+			void CollectAllChildTransforms(qsf::Entity* ent);
+			void ApplyChildTransforms(uint64 index);
+			uint64 CurrentChildIndex;
+			uint64 CurrentParentIndex;
+			//we may measure time and improve timing
+			void BritifyJob(const qsf::JobArguments& jobArguments);
+			bool mBlockInput;
+			int OldProgress;
+			qsf::JobProxy mBritifyJob;
+
+			enum BritifyState
+			{
+				Start,
+				Collect_Childs,
+				Collect_Childs_Finish,
+				Apply_Transfroms_Parents,
+				Update_StreetSections,
+				Apply_Transforms_Childs,
+				Finish
+			};
+			BritifyState mBritifyState;
+			BritifyState mOldBritifyState;
+			glm::vec3 mMidpoint;
+			std::vector<qsf::TransformComponent*> mBritifyParents;
+			std::chrono::time_point<std::chrono::steady_clock> mJobStartTime;
+			void HandleStreetSection(qsf::Entity* ent);
+			void SetNewJobTiming();
 		//[-------------------------------------------------------]
 		//[ CAMP reflection system                                ]
 		//[-------------------------------------------------------]

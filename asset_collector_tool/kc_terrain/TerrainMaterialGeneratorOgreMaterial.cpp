@@ -60,7 +60,9 @@ namespace
 		{
 			// TODO(co) Proper texture coordinate offset generation
 			const float globalTerrainWorldSize = terrainComponent.getTerrainWorldSize();
-			const int terrainChunksPerEdge = terrainComponent.getTerrainChunksPerEdge();
+			auto a = const_cast<kc_terrain::TerrainComponent*>(&terrainComponent);
+			const int terrainChunksPerEdge = a->kc_getTerrainChunksPerEdge();
+
 			float xOffset = ogreTerrain.getPosition().x - ogreTerrain.getWorldSize() * 0.5f + globalTerrainWorldSize * 0.5f;
 			float yOffset = ogreTerrain.getPosition().z - ogreTerrain.getWorldSize() * 0.5f + globalTerrainWorldSize * 0.5f;
 			xOffset /= globalTerrainWorldSize;

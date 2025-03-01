@@ -122,7 +122,9 @@ namespace user
 			QSF_LOG_PRINTS(INFO,"init magick start")
 			auto path = std::experimental::filesystem::current_path();
 			std::string path_string{ path.u8string() };
+			path_string +="\\";
 			Magick::InitializeMagick(path_string.c_str());
+			QSF_LOG_PRINTS(INFO, "init at"<< path_string.c_str())
 			QSF_LOG_PRINTS(INFO, "init magick end")
 			//Magick::InitializeMagick((char *)NULL);
 			if (QSF_EDITOR_APPLICATION.getMainWindow() == nullptr)

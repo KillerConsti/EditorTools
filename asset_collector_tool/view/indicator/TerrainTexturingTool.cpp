@@ -660,6 +660,133 @@ namespace user
 
 
 			//overwritte layers
+			if(TerrainEditGUI->MirrorX() || TerrainEditGUI->MirrorY())
+			{
+				//notice that in modelling mode it may be just partsize without -1
+				long OffsetX = TerrainEditGUI->MirrorX() ? partsize-1 : 0;
+				long OffsetY = TerrainEditGUI->MirrorY() ? partsize-1 : 0;
+				long PageOffsetX = TerrainEditGUI->MirrorX() ? mParts - 1 : 0;
+				long PageOffsetY = TerrainEditGUI->MirrorY() ? mParts - 1 : 0;
+				for (long XPage = 0; XPage < mParts; XPage++)
+				{
+					for (long YPage = 0; YPage < mParts; YPage++)
+					{
+						auto TargetTerrain  = TerrainMaster->getOgreTerrainGroup()->getTerrain(XPage,YPage);
+						auto SourceTerrain = CopyFromTerrain->getOgreTerrainGroup()->getTerrain(glm::abs(PageOffsetX -XPage), glm::abs(PageOffsetY-YPage));
+						if (TargetTerrain == nullptr || SourceTerrain == nullptr)
+						{
+							QSF_LOG_PRINTS(INFO, "couldnt find terrain with index "<< XPage <<" / " << YPage << " or " <<glm::abs(PageOffsetX - XPage) << " / " << glm::abs(PageOffsetY - YPage))
+							continue;
+						}
+						QSF_LOG_PRINTS(INFO, "acees terrain " << XPage << " / " << YPage << " or " << glm::abs(PageOffsetX - XPage) << " / " << glm::abs(PageOffsetY - YPage))
+						//Copy and paste stuff
+						std::string LastLayerName = "";
+						std::vector<LayerData> DataToResort;
+						for (size_t t = 0; t < SourceTerrain->getLayerCount(); t++)
+						{
+							LayerData CurrentLayer;
+							CurrentLayer.LayerName = SourceTerrain->getLayerTextureName((uint8)t, 0);
+							CurrentLayer.OriginLayer = (int)t;
+							if (t > 0)
+							{
+								for (long j = 0; j < partsize; j++)
+								{
+									std::pair<std::string, uint16> Datapair;
+									for (long k = 0; k < partsize; k++)
+									{
+
+										auto val = SourceTerrain->getLayerBlendMap((uint8)t)->getBlendValue(j, k);
+										if (val != 0)
+											CurrentLayer.AffectedPoints++;
+										int j_mod = (int)glm::abs(OffsetX- j);
+										int k_mod = (int)glm::abs(OffsetY - k);
+										CurrentLayer.Data.push_back(glm::vec3(j_mod, k_mod, val));
+										//if(val > 0)
+										//QSF_LOG_PRINTS(INFO,val)
+
+									}
+								}
+							}
+							DataToResort.push_back(CurrentLayer);
+
+						}
+						//Layer loop ends here
+
+						//now apply data to target layer
+						for (size_t t = 0; t < DataToResort.size(); t++)
+						{
+							//in kc terrain we use local asset name
+							//in qsf terrain we use global asset id
+							//so we need to translate it
+							//QSF_LOG_PRINTS(INFO,"t is "<< t)
+							try
+							{
+								//QSF_LOG_PRINTS(INFO, "getter " << t)
+								qsf::AssetProxy Textureasset = qsf::AssetProxy(boost::lexical_cast<uint64>(DataToResort.at(t).LayerName));
+								if (Textureasset.getAsset() != nullptr)
+								{
+									std::string TextureName = Textureasset.getLocalAssetName();
+									//QSF_LOG_PRINTS(INFO, "setter " << TextureName)
+									while (TargetTerrain->getLayerCount() <= t)
+									{
+										TargetTerrain->addLayer();
+									}
+									if (TextureName != TargetTerrain->getLayerTextureName((uint8)t, 0))
+									{
+										TargetTerrain->setLayerTextureName((uint8)t, 0, TextureName.c_str());
+										//QSF_LOG_PRINTS(INFO, "set layer texture name")
+										LastLayerName = TextureName.c_str();
+									}
+
+
+								}
+							}
+							catch (const std::exception&)
+							{
+
+							}
+						}
+						//looop ended
+						//now apply blend maps
+						//after all layers are created we can assign Blend values
+						for (size_t t = 0; t < DataToResort.size(); t++)
+						{
+							auto LayerData = DataToResort.at(t).Data;
+							for (auto a : LayerData)
+							{
+								if (t > 0)
+								{
+									if (TargetTerrain->getLayerBlendMap((uint8)t) == nullptr)
+									{
+										QSF_LOG_PRINTS(INFO,"Blendmap is a nullptr")
+										continue;
+										
+									}
+									TargetTerrain->getLayerBlendMap((uint8)t)->setBlendValue(a.x,a.y,a.z);
+								}
+
+							}
+							if (t > 0)
+							{
+								if (TargetTerrain->getLayerBlendMap((uint8)t) == nullptr)
+								{
+									QSF_LOG_PRINTS(INFO, "Blendmap cant be updated... is a nullptr")
+										continue;
+
+								}
+								TargetTerrain->getLayerBlendMap((uint8)t)->dirty();
+								TargetTerrain->getLayerBlendMap((uint8)t)->update();
+							}
+
+						}
+						TerrainMaster->RefreshMaterial(TargetTerrain);
+
+					}
+				}
+
+			}
+			else //orig function
+			{
 			auto it_source = CopyFromTerrain->getOgreTerrainGroup()->getTerrainIterator();
 			auto it_target = TerrainMaster->getOgreTerrainGroup()->getTerrainIterator();
 			std::string LastLayerName = "";
@@ -759,6 +886,7 @@ namespace user
 				TerrainMaster->RefreshMaterial(TS_target->instance);
 
 
+			}
 			}
 			QSF_LOG_PRINTS(INFO, "Copy Data done. May need to update material ")
 
@@ -1071,13 +1199,13 @@ namespace user
 
 				const float worldSize = TerrainMaster->getTerrainWorldSize();
 				const float worldSizeHalf = worldSize * 0.5f;
-				const float size = worldSize * 0.5f / TerrainMaster->getTerrainChunksPerEdge();
+				const float size = worldSize * 0.5f / TerrainMaster->kc_getTerrainChunksPerEdge();
 				const glm::vec3 brushPosition = worldpos;
 
 				glm::vec3 position = transform.getPosition();
 				position.y = brushPosition.y;
 
-				const float snapSize = worldSize / static_cast<float>(TerrainMaster->getTerrainChunksPerEdge());
+				const float snapSize = worldSize / static_cast<float>(TerrainMaster->kc_getTerrainChunksPerEdge());
 				const float snapSizeHalf = snapSize * 0.5f;
 
 				position.x = snapSize*x_in + snapSizeHalf + position.x - worldSizeHalf;
@@ -1582,7 +1710,7 @@ namespace user
 			//TerrainMaster->setEditing(true);
 			//auto terrain = TES.at(0)->getOgreTerrain();
 			QSF_LOG_PRINTS(INFO, TerrainMaster->getTerrainWorldSize());
-			QSF_LOG_PRINTS(INFO, "Blendmapsize" << TerrainMaster->getBlendMapSize());
+			QSF_LOG_PRINTS(INFO, "Blendmapsize" << TerrainMaster->GetBlendtMapSize());
 
 			Offset = (float)(TerrainMaster->getTerrainWorldSize() / 2);
 			BlendMapSize = (float)TerrainMaster->GetBlendtMapSize();

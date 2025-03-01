@@ -13,7 +13,7 @@ namespace kc_terrain
 	//[ Public methods                                        ]
 	//[-------------------------------------------------------]
 	inline TerrainComponent::TerrainComponent(qsf::Prototype* prototype) :
-		qsf::TerrainComponent(prototype),
+		qsf::RendererComponent(prototype),
 		mTerrainWorldSize(1500.0f),
 		mSkirtSize(2.0f),
 		mMaxPixelError(8.0f),

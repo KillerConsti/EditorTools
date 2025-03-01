@@ -141,6 +141,8 @@ namespace user
 			//BaseName, LocalAssetName
 			std::vector<std::pair<std::string,std::string>> m_AssetList;
 			bool IsInEraseMode();
+			bool MirrorX();
+			bool MirrorY();
 		protected:
 			virtual bool onStartup(qsf::editor::ToolboxView& toolboxView) override;
 			virtual void retranslateUi(qsf::editor::ToolboxView& toolboxView) override;
