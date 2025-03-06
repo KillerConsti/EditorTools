@@ -113,7 +113,7 @@ namespace user
 		//[-------------------------------------------------------]
 		const uint32 TerrainEditColorMapToolbox::PLUGINABLE_ID = qsf::StringHash("qsf::editor::TerrainEditColorMapToolbox");
 
-
+		TerrainEditColorMapToolbox* TerrainEditColorMapToolbox::instance = nullptr;
 		//[-------------------------------------------------------]
 		//[ Public methods                                        ]
 		//[-------------------------------------------------------]
@@ -123,14 +123,16 @@ namespace user
 			qsf::editor::Tool(toolManager),
 			mUITerrainEditColorMapToolbox(new Ui::TerrainEditColorMapToolbox()),
 			mMode(Set),
-			mSavepath(""),
+			path(""),
 			mtoolboxView(nullptr),
 			m_unlocked(false)
 		{
+			instance = this;
 		}
 
 		TerrainEditColorMapToolbox::~TerrainEditColorMapToolbox()
 		{
+			instance = nullptr;
 		}
 
 		float TerrainEditColorMapToolbox::GetBrushRadius()
@@ -197,8 +199,6 @@ namespace user
 			mtoolboxView = &toolboxView;
 			if(mUITerrainEditColorMapToolbox == nullptr) //shouldnt happen
 			return false;
-			connect(mUITerrainEditColorMapToolbox->pushButton, SIGNAL(clicked(bool)), this, SLOT(onPushSaveMap(bool)));
-			connect(mUITerrainEditColorMapToolbox->pushButton_2, SIGNAL(clicked(bool)), this, SLOT(onSetSaveDirectory(bool)));
 			connect(mUITerrainEditColorMapToolbox->pushButtonSelect, SIGNAL(clicked(bool)), this, SLOT(onPushSelectButton(bool)));
 			//connect(mUITerrainEditColorMapToolbox->horizontalSlider, SIGNAL(valueChanged(int)), this, SLOT(onMinimumSliderChanged(int)));
 			connect(mUITerrainEditColorMapToolbox->horizontalSlider_2, SIGNAL(valueChanged(int)), this, SLOT(onRadiusSliderChanged(int)));
@@ -211,6 +211,8 @@ namespace user
 
 			connect(mUITerrainEditColorMapToolbox->comboBox, SIGNAL(currentIndexChanged(int)),this, SLOT(onChangeBrushType(int)));
 			connect(mUITerrainEditColorMapToolbox->use_alpha, SIGNAL(clicked(bool)),this, SLOT(onuse_alpha(bool)));
+
+			connect(mUITerrainEditColorMapToolbox->copyMap, SIGNAL(clicked(bool)), this, SLOT(onPushCopyButton(bool)));
 			InitSavePath();
 			if (CheckIfUnlocked())
 			{
@@ -240,15 +242,16 @@ namespace user
 
 		void TerrainEditColorMapToolbox::onShutdown(qsf::editor::ToolboxView & toolboxView)
 		{
-			QSF_LOG_PRINTS(INFO, "TET is shutdowned")
+			QSF_LOG_PRINTS(INFO, "TerrainEditColorMapToolbox is shutdowned")
 				qsf::editor::EditModeManager& editModeManager = QSF_EDITOR_EDITMODE_MANAGER;
-			if (editModeManager.getSelectedEditMode() == editModeManager.get<TerrainEditmodeColorMap>())
+			if (editModeManager.getSelectedEditMode()  ==  editModeManager.get<TerrainEditmodeColorMap>())
 			{
+				QSF_LOG_PRINTS(INFO, "disabled edit mode?")
+				//editModeManager.get<TerrainEditmodeColorMap>()->~TerrainEditmodeColorMap();
 				editModeManager.selectEditModeByPointer(editModeManager.getPreviousEditMode(), editModeManager.getToolWhichSelectedEditMode());
+				//hopefully we trigger shutdown
+				editModeManager.forgetAboutPreviousEditMode();
 			}
-			QSF_LOG_PRINTS(INFO, "TET is alive")
-			disconnect(mUITerrainEditColorMapToolbox->pushButton, SIGNAL(clicked(bool)), this, SLOT(onPushSaveMap(bool)));
-			disconnect(mUITerrainEditColorMapToolbox->pushButton_2, SIGNAL(clicked(bool)), this, SLOT(onSetSaveDirectory(bool)));
 			disconnect(mUITerrainEditColorMapToolbox->pushButtonSelect, SIGNAL(clicked(bool)), this, SLOT(onPushSelectButton(bool)));
 			//connect(mUITerrainEditColorMapToolbox->horizontalSlider, SIGNAL(valueChanged(int)), this, SLOT(onMinimumSliderChanged(int)));
 			disconnect(mUITerrainEditColorMapToolbox->horizontalSlider_2, SIGNAL(valueChanged(int)), this, SLOT(onRadiusSliderChanged(int)));
@@ -348,30 +351,23 @@ namespace user
 		}
 
 
-		void TerrainEditColorMapToolbox::onSetSaveDirectory(const bool pressed)
+
+		void TerrainEditColorMapToolbox::onPushCopyButton(const bool pressed)
 		{
-		
-			QWidget* qtw = new QWidget();
-			auto fileName = QFileDialog::getExistingDirectory(qtw,
-				tr("Set Save Directory"), "");
-			QSF_LOG_PRINTS(INFO, fileName.toStdString())
-				mSavepath = fileName.toStdString();
-
-			std::ofstream ofs(path + "plugin_settings.txt", std::ofstream::trunc);
-
-			ofs << fileName.toStdString();
-
-			ofs.close();
+			auto mAssetEditHelper = std::shared_ptr<qsf::editor::AssetEditHelper>(new qsf::editor::AssetEditHelper());
+			qsf::editor::EditModeManager& editModeManager = QSF_EDITOR_EDITMODE_MANAGER;
+			if (editModeManager.getSelectedEditMode() != nullptr && editModeManager.getSelectedEditMode() == editModeManager.get<TerrainEditmodeColorMap>())
+			{
+				//delegate
+				editModeManager.get<TerrainEditmodeColorMap>()-> CopyOldMap();
+				return;
+			}
+			//QSF_LOG_PRINTS(INFO,"You have to set it running first")
 
 		}
 
 
-		std::string TerrainEditColorMapToolbox::GetSavePath()
-		{
-			return mSavepath;
-		}
-
-		std::string TerrainEditColorMapToolbox::InitSavePath()
+		void TerrainEditColorMapToolbox::InitSavePath()
 		{
 			for (auto a : QSF_PLUGIN.getPlugins())
 			{
@@ -383,29 +379,7 @@ namespace user
 
 				}
 			}
-			std::ifstream myfile(path + "plugin_settings.txt");
-			std::string line;
-			if (myfile.is_open())
-			{
-				while (std::getline(myfile, line))
-				{
-					mSavepath = line;
-					QSF_LOG_PRINTS(INFO, "Savepath is" << mSavepath)
-						break;
-
-				}
-				myfile.close();
-			}
-			else
-			{
-				std::ofstream myfile(path + "plugin_settings.txt");
-				if (myfile.is_open())
-				{
-					myfile << path;
-					myfile.close();
-				}
-			}
-			return std::string();
+			return;
 		}
 
 		void TerrainEditColorMapToolbox::onChangeBrushType(const int Type)
@@ -457,6 +431,21 @@ namespace user
 			if(line == "KC_Terrain")
 			return true;
 			return false;
+		}
+
+		bool TerrainEditColorMapToolbox::GetMirrorX()
+		{
+			return mUITerrainEditColorMapToolbox->MirrorX->isChecked();
+		}
+
+		bool TerrainEditColorMapToolbox::GetMirrorY()
+		{
+		 return mUITerrainEditColorMapToolbox->MirrorY->isChecked();
+		}
+
+		TerrainEditColorMapToolbox * TerrainEditColorMapToolbox::GetInstance()
+		{
+			return instance;
 		}
 
 

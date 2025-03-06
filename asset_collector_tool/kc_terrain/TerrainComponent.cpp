@@ -39,6 +39,9 @@
 #include <iostream>
 #include <chrono>
 #include <ctime>  
+#include <qsf/map/query/ComponentMapQuery.h>
+#include <em5/plugin/jobs.h>
+#include <qsf/job/JobArguments.h>
 //[-------------------------------------------------------]
 //[ Namespace                                             ]
 //[-------------------------------------------------------]
@@ -292,6 +295,7 @@ namespace kc_terrain
 
 	void TerrainComponent::RefreshMaterial(Ogre::Terrain * Ot)
 	{
+		//duno if it works or do we need to create a new mat?
 		mTerrainContext->GetMaterialGenerator()->RefreshMaterial(Ot);
 	}
 
@@ -384,6 +388,8 @@ namespace kc_terrain
 			// Done
 			mInitDone = true;
 			TerrainLoader::LoadTerrain(this);
+			//SetEverythingVisible();
+			mVisiblityJob.registerAt(em5::Jobs::ANIMATION_VEHICLE, boost::bind(&TerrainComponent::VisiblityJob, this, _1));
 			return true;
 		}
 		//this->getOgreEntity()
@@ -393,6 +399,7 @@ namespace kc_terrain
 
 	void TerrainComponent::onShutdown()
 	{
+		mVisiblityJob.unregister();
 		if (mDoNotLoadNextTime && mDelete)
 		{
 				return;
@@ -447,7 +454,7 @@ namespace kc_terrain
 				Ogre::Terrain* ogreTerrain = terrainIterator.getNext()->instance;
 				if (nullptr != ogreTerrain)
 				{
-					ogreTerrain->_getRootSceneNode()->setVisible(visible);
+					ogreTerrain->_getRootSceneNode()->setVisible(true);
 				}
 			}
 		}
@@ -613,6 +620,10 @@ namespace kc_terrain
 		materialIds.clear();
 
 		{ // The OGRE terrain is pretty out-of-date and has been poorly migrated over the years from one OGRE version to another. Ensure that the referenced materials are gone.
+			if (mOgreTerrainGroup == nullptr)
+			{
+				QSF_LOG_PRINTS(INFO, "sth stupid happened <-> we might get a crash ... TerrainComponent::removeAllOgreTerrains because mOgreTerrainGroup == nullptr")
+			}
 			Ogre::TerrainGroup::TerrainIterator ogreTerrainIterator = mOgreTerrainGroup->getTerrainIterator();
 			while (ogreTerrainIterator.hasMoreElements())
 			{
@@ -757,6 +768,17 @@ namespace kc_terrain
 
 		// Error!
 		return false;
+	}
+
+	void TerrainComponent::VisiblityJob(const qsf::JobArguments & jobArguments)
+	{
+		minTime += jobArguments.getSecondsPassed();
+		if(minTime <=  2.f)
+		return;
+		if(mDoNotLoadNextTime || this->getOgreSceneNode() == nullptr)
+		return;
+		this->getOgreSceneNode()->setVisible(true);
+		QSF_LOG_PRINTS(INFO,this->getOgreSceneNode()->numChildren());
 	}
 
 	/* New Camp methods for kc terrain mostly about saving,loading and resizing*/
@@ -934,6 +956,46 @@ namespace kc_terrain
 	int TerrainComponent::GetHeightMapSize()
 	{
 		return mHeightMapSize;
+	}
+	bool TerrainComponent::GetEverythingVisible()
+	{
+		return false;
+	}
+	bool TerrainComponent::GetReloadAllMaterials()
+	{
+		return false;
+	}
+	void TerrainComponent::SetReloadAllMaterials(bool Set)
+	{
+		//only if changed to true
+		if(!Set)
+		return;
+		auto it = mOgreTerrainGroup->getTerrainIterator();
+		while (it.hasMoreElements())
+		{
+			auto NextElement = it.getNext()->instance;
+			RefreshMaterial(NextElement);
+		}
+
+	}
+	void TerrainComponent::SetEverythingVisible(bool setvis)
+	{
+		/*for (qsf::TerrainComponent* terrainComponent : qsf::ComponentMapQuery(QSF_MAINMAP).getAllInstances<qsf::TerrainComponent>())
+		{
+			if (terrainComponent->getOgreTerrain() == nullptr)
+			{
+				QSF_LOG_PRINTS(INFO,"1-1")
+			}
+			else if(getOgreTerrain() == nullptr)
+			{
+				QSF_LOG_PRINTS(INFO, "1-2")
+			}
+			else
+			{
+				auto flags = terrainComponent->getOgreTerrain()->getVisibilityFlags();
+				QSF_LOG_PRINTS(INFO, "flag old" << flags << " " << this->getOgreTerrain()->getVisibilityFlags())
+			}
+		}*/
 	}
 	void TerrainComponent::UpdatePosition(bool up)
 	{

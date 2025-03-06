@@ -144,6 +144,22 @@ namespace user
 
 		TerrainTexturingTool::~TerrainTexturingTool()
 		{
+			if (TerrainTexturingToolbox::GetInstance() == nullptr) //allready called
+			{
+				return;
+			}
+			if(!mSaveMapProxy.isValid())
+			return;
+			mSaveMapProxy.unregister();
+			PaintJobProxy.unregister();
+			mCopyQSFTerrain.unregister();
+			mDebugDrawProxy.unregister();
+			SaveTheFuckingMap();
+			if (qsf::isInitialized(mChunkDrawRequestId))
+			{
+				QSF_DEBUGDRAW.cancelRequest(mChunkDrawRequestId);
+			}
+			QSF_LOG_PRINTS(INFO, "TerrainTexturingTool Shutdown")
 		}
 
 
@@ -224,6 +240,12 @@ namespace user
 
 		void TerrainTexturingTool::PaintJob(const qsf::JobArguments & jobArguments)
 		{
+			if (TerrainTexturingToolbox::GetInstance() == nullptr) //call on shutdown if our gui was shutdowned
+			{
+				QSF_LOG_PRINTS(INFO,"Tool shutdown")
+				onShutdown(nullptr);
+				return;
+			}
 			if (QSF_DEBUGDRAW.isRequestIdValid(mDetailViewSingleTrack))
 				QSF_DEBUGDRAW.cancelRequest(mDetailViewSingleTrack);
 			DebugRequsts.mCircles.clear();
@@ -461,7 +483,7 @@ namespace user
 
 		void TerrainTexturingTool::WriteTerrainTextureJson(qsf::editor::AssetEditHelper* IAP)
 		{
-			QSF_LOG_PRINTS(INFO,"Write Terrain Textures 1")
+			//QSF_LOG_PRINTS(INFO,"Write Terrain Textures 1")
 			boost::property_tree::ptree rootPTree;
 			auto it = TerrainMaster->getOgreTerrainGroup()->getTerrainIterator();
 			int counter =0;
@@ -472,13 +494,13 @@ namespace user
 				for (size_t x = 0; x < a->instance->getLayerCount() && x < 6; x++)
 				{
 					layers.put("Layer"+boost::lexical_cast<std::string>(x),a->instance->getLayerTextureName((uint8)x,0).c_str());
-					QSF_LOG_PRINTS(INFO, a->instance->getLayerTextureName((uint8)x, 0).c_str())
+					//QSF_LOG_PRINTS(INFO, a->instance->getLayerTextureName((uint8)x, 0).c_str())
 				}
-				QSF_LOG_PRINTS(INFO, "Write Terrain Textures 2 "<< counter)
+				//QSF_LOG_PRINTS(INFO, "Write Terrain Textures 2 "<< counter)
 				counter++;
 				rootPTree.add_child(boost::lexical_cast<std::string>(a->x)+"_"+ boost::lexical_cast<std::string>(a->y), layers);
 			}
-			QSF_LOG_PRINTS(INFO, "Write Terrain Textures 3 " << counter)
+			//QSF_LOG_PRINTS(INFO, "Write Terrain Textures 3 " << counter)
 			//now save
 			auto AP = qsf::AssetProxy(TerrainMaster->GetTerrainLayerList());
 			std::string LocalAssetName = "";
@@ -678,7 +700,7 @@ namespace user
 							QSF_LOG_PRINTS(INFO, "couldnt find terrain with index "<< XPage <<" / " << YPage << " or " <<glm::abs(PageOffsetX - XPage) << " / " << glm::abs(PageOffsetY - YPage))
 							continue;
 						}
-						QSF_LOG_PRINTS(INFO, "acees terrain " << XPage << " / " << YPage << " or " << glm::abs(PageOffsetX - XPage) << " / " << glm::abs(PageOffsetY - YPage))
+						//QSF_LOG_PRINTS(INFO, "acees terrain " << XPage << " / " << YPage << " or " << glm::abs(PageOffsetX - XPage) << " / " << glm::abs(PageOffsetY - YPage))
 						//Copy and paste stuff
 						std::string LastLayerName = "";
 						std::vector<LayerData> DataToResort;
@@ -1375,7 +1397,7 @@ namespace user
 			}
 			if (LayerToReplace == -1)
 			{
-				QSF_LOG_PRINTS(INFO, "Did not found a good layer")
+				//QSF_LOG_PRINTS(INFO, "Did not found a good layer")
 					//we may search for an empty layer
 					return false;
 			}

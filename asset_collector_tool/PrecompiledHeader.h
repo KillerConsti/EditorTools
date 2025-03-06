@@ -53,3 +53,5 @@
 #include <vector>
 #include <string>
 #include <limits>
+
+#define NoQSFTerrain

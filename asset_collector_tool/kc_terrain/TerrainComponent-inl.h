@@ -13,7 +13,11 @@ namespace kc_terrain
 	//[ Public methods                                        ]
 	//[-------------------------------------------------------]
 	inline TerrainComponent::TerrainComponent(qsf::Prototype* prototype) :
+#ifndef NoQSFTerrain
+		qsf::TerrainComponent(prototype),
+#else
 		qsf::RendererComponent(prototype),
+#endif
 		mTerrainWorldSize(1500.0f),
 		mSkirtSize(2.0f),
 		mMaxPixelError(8.0f),
@@ -31,7 +35,8 @@ namespace kc_terrain
 		mBlendMapSize(1024),
 		mHeightMapSize(1025),
 		mDelete(false),
-		kc_mTerrainChunksPerEdge(16)
+		kc_mTerrainChunksPerEdge(16),
+		minTime(0.f)
 	{
 		// Nothing to do in here
 	}

@@ -136,7 +136,19 @@ namespace user
 
 		TerrainEditTool::~TerrainEditTool()
 		{
-
+			if (TerrainEditToolbox::GetInstance() == nullptr) //allready called
+			{
+				return;
+			}
+			if(!mSaveMapProxy.isValid())
+			return;
+			UpdateTerrains();
+			mSaveMapProxy.unregister();
+			PaintJobProxy.unregister();
+			if (QSF_DEBUGDRAW.isRequestIdValid(mDetailViewSingleTrack))
+				QSF_DEBUGDRAW.cancelRequest(mDetailViewSingleTrack);
+			SaveTheFuckingMap();
+			QSF_LOG_PRINTS(INFO, "TerrainHeightmapEditTool Shutdown")
 		}
 
 
@@ -218,6 +230,11 @@ namespace user
 
 		void TerrainEditTool::PaintJob(const qsf::JobArguments & jobArguments)
 		{
+			if (TerrainEditToolbox::GetInstance() == nullptr) //call on shutdown if our gui was shutdowned
+			{
+				onShutdown(nullptr);
+				return;
+			}
 			if (QSF_DEBUGDRAW.isRequestIdValid(mDetailViewSingleTrack))
 				QSF_DEBUGDRAW.cancelRequest(mDetailViewSingleTrack);
 			DebugRequsts.mCircles.clear();
@@ -952,8 +969,8 @@ namespace user
 			}
 			int OffsetX = TerrainEditGUI->GetMirrorX() ? partsize : 0;
 			int OffsetY = TerrainEditGUI->GetMirrorY() ? partsize : 0;
-			int PageOffsetX = TerrainEditGUI->GetMirrorPageX() ? mParts - 1 : 0;
-			int PageOffsetY = TerrainEditGUI->GetMirrorPageY() ? mParts - 1 : 0;
+			int PageOffsetX = TerrainEditGUI->GetMirrorX() ? mParts - 1 : 0;
+			int PageOffsetY = TerrainEditGUI->GetMirrorY() ? mParts - 1 : 0;
 
 
 			auto it_target = CopyFromTerrain->getOgreTerrainGroup()->getTerrainIterator();
@@ -1391,7 +1408,7 @@ namespace user
 			if (QSF_DEBUGDRAW.isRequestIdValid(mDetailViewSingleTrack))
 				QSF_DEBUGDRAW.cancelRequest(mDetailViewSingleTrack);
 			SaveTheFuckingMap();
-			QSF_LOG_PRINTS(INFO, "Shutdown")
+			QSF_LOG_PRINTS(INFO, "TerrainHeightmapEditTool Shutdown")
 		}
 
 

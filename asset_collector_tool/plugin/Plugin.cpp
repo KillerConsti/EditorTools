@@ -66,7 +66,11 @@ namespace user
 				// Declare CAMP reflection system classes
 				// -> Use Qt's "QT_TR_NOOP()"-macro in order to enable Qt's "lupdate"-program to find the internationalization texts
 				QSF_START_CAMP_CLASS_EXPORT(kc_terrain::TerrainComponent, "KC TerrainComponent" ,"Killers first terrain")
+#ifndef NoQSFTerrain
+					QSF_CAMP_IS_COMPONENT_DERIVED(qsf::TerrainComponent)
+#else
 					QSF_CAMP_IS_COMPONENT_DERIVED(qsf::RendererComponent)
+#endif
 					//QSF_ADD_CAMP_PROPERTY(New Global Glossiness, EditorToolsHelperComponent::GetGlobalGlossiness, EditorToolsHelperComponent::SetGlobalGlossiness, "set it directly with the tool", 0.75f)
 					QSF_ADD_CAMP_PROPERTY_DIRECT_ACCESS(Do Not Edit above the line,kc_terrain::TerrainComponent::uneditabld,"All values above are from old terrain","------------------------------------").tag("Serializable", false)
 					QSF_ADD_CAMP_PROPERTY(New Color Map, kc_terrain::TerrainComponent::GetColorMap, kc_terrain::TerrainComponent::SetNewColorMap, "set it directly with the tool", qsf::getUninitialized<uint64>()).tag("AssetType", qsf::QsfAssetTypes::TEXTURE.getName())
@@ -79,12 +83,16 @@ namespace user
 					QSF_ADD_CAMP_PROPERTY(Terrain Texture Asset (1), kc_terrain::TerrainComponent::GetNewTextureMap1_4, kc_terrain::TerrainComponent::SetNewTextureMap1_4, "this points to the texture map asset. It stores the layers 1-4 (0 is not stored and 5 is stored in the next entry).  Notice it may not be a dds file because ogre cannot read pixel values of this file. Use *.png or *.tif pls", 0.f).tag("AssetType", qsf::QsfAssetTypes::TEXTURE.getName())
 					QSF_ADD_CAMP_PROPERTY(Terrain Texture Asset (2), kc_terrain::TerrainComponent::GetNewTextureMap5_8, kc_terrain::TerrainComponent::SetNewTextureMap5_8, "this points to the texture map asset. It stores the layers 5 (0 is not stored and 1-4 are stored in the entry before). Notice it may not be a dds file because ogre cannot read pixel values of this file. Use *.png or *.tif pls", 0.f).tag("AssetType", qsf::QsfAssetTypes::TEXTURE.getName())
 					QSF_ADD_CAMP_PROPERTY(Terrain Texture Layer List, kc_terrain::TerrainComponent::GetTerrainLayerList, kc_terrain::TerrainComponent::SetTerrainLayerList, "this points to the layer list asset. It stores the names of the layers in a json file", 0.f).tag("AssetType", qsf::QsfAssetTypes::TEXTURE.getName())
-					QSF_ADD_CAMP_PROPERTY(Reload, kc_terrain::TerrainComponent::GetUpdate, kc_terrain::TerrainComponent::SetUpdate, "set it directly with the tool", false).tag("Serializable", false)
-					QSF_ADD_CAMP_PROPERTY(UpdatePosition, kc_terrain::TerrainComponent::GetUpdatePosition, kc_terrain::TerrainComponent::UpdatePosition, "set it directly with the tool ... not supported yet", false).tag("Serializable", false)
+					QSF_ADD_CAMP_PROPERTY(Reload, kc_terrain::TerrainComponent::GetUpdate, kc_terrain::TerrainComponent::SetUpdate, "use this after applying new assets - reloads whole terrain. Must be used after changing Chunk Map size or blend/height map size", false).tag("Serializable", false)
+					//updating posiition does not work
+					//QSF_ADD_CAMP_PROPERTY(Refresh Material only, kc_terrain::TerrainComponent::GetUpdatePosition, kc_terrain::TerrainComponent::UpdatePosition, "refreshs material - can be used if ", false).tag("Serializable", false)
+					QSF_ADD_CAMP_PROPERTY(Refresh Material only, kc_terrain::TerrainComponent::GetReloadAllMaterials, kc_terrain::TerrainComponent::SetReloadAllMaterials, "refreshs material - can be used as reload -light- because it does not update Materials but unload and reloads them", false).tag("Serializable", false)
 					QSF_ADD_CAMP_PROPERTY(Do Not Load, kc_terrain::TerrainComponent::GetDoNotLoadNextTime, kc_terrain::TerrainComponent::SetDoNotLoadNextTime, "you may force the terrain to not load so you can destroy this object without crash", false)
 					QSF_ADD_CAMP_PROPERTY(Blendmapsize , kc_terrain::TerrainComponent::GetBlendtMapSize, kc_terrain::TerrainComponent::SetBlendMapSize, "you can adjust the size of the blendmap here. Must be power of 2 like 2048", 1024)
 					QSF_ADD_CAMP_PROPERTY(HeightMapSize, kc_terrain::TerrainComponent::GetHeightMapSize, kc_terrain::TerrainComponent::SetHeightMapSize, "you can adjust the size of the heightmap here. Must be power of 2+1 like 2049", 1025)
 					QSF_ADD_CAMP_PROPERTY(KC Chunks per Edge, kc_terrain::TerrainComponent::kc_getTerrainChunksPerEdge,kc_terrain::TerrainComponent::kc_setTerrainChunksPerEdge,"number of chunks per edge e.g. 8 or 16 or 32. Must be lower as height and blendmapsize",16)
+
+					//QSF_ADD_CAMP_PROPERTY(SetEverythingVisible, kc_terrain::TerrainComponent::GetEverythingVisible, kc_terrain::TerrainComponent::SetEverythingVisible, "test", false).tag("Serializable", false)
 					QSF_END_CAMP_CLASS_EXPORT
 
 					QSF_START_CAMP_CLASS_EXPORT(EditorToolsHelperComponent, "This sets global glossiness", "you may just attach it to core entity")

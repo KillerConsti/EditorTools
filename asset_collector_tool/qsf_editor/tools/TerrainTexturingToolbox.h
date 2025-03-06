@@ -129,9 +129,6 @@ namespace user
 			TerrainEditMode2 GetEditMode();
 			TerrainEditMode2 mMode;
 			std::string path;
-			std::string GetSavePath();			
-			std::string InitSavePath();
-			std::string mSavepath;
 			glm::vec2 OldTerrain;
 			void SetCurrentTerrainData(std::vector<std::pair<std::string,int>> Data,int xTerrain,int yTerrain);
 			void UpdateTerrainList();
@@ -143,6 +140,7 @@ namespace user
 			bool IsInEraseMode();
 			bool MirrorX();
 			bool MirrorY();
+			static TerrainTexturingToolbox* GetInstance();
 		protected:
 			virtual bool onStartup(qsf::editor::ToolboxView& toolboxView) override;
 			virtual void retranslateUi(qsf::editor::ToolboxView& toolboxView) override;
@@ -159,7 +157,6 @@ namespace user
 			void OnBrushIntensitySliderChanged(const int value);
 			void onRadiusSliderChanged(const  int value);
 
-			void onSetSaveDirectory(const bool pressed);
 
 			//void onitemChanged(QTableWidgetItem *item);
 			
@@ -181,6 +178,7 @@ namespace user
 			bool WasPressed;
 			void ChangeMode(bool NewMode);
 			bool mEraseMode;
+			static TerrainTexturingToolbox* instance;
 			//[-------------------------------------------------------]
 			//[ CAMP reflection system                                ]
 			//[-------------------------------------------------------]

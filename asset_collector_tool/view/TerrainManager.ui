@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>EditorTerrainManager</class>
- <widget class="QWidget" name="EditorTerrainManager">
+ <class>DebugUnitView</class>
+ <widget class="QWidget" name="DebugUnitView">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -32,7 +32,7 @@
    <enum>Qt::StrongFocus</enum>
   </property>
   <property name="windowTitle">
-   <string>[KC] Terrain Manager (under construction)</string>
+   <string>[KC] Debug View</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <property name="leftMargin">
@@ -46,62 +46,70 @@
     </widget>
    </item>
    <item>
-    <widget class="QLabel" name="Materialinfos">
+    <widget class="QLabel" name="label_2">
      <property name="text">
-      <string>KC Terrains (for now only one is allowed)</string>
+      <string>Log Tracker</string>
      </property>
     </widget>
    </item>
    <item>
-    <widget class="QListWidget" name="listWidget"/>
-   </item>
-   <item>
-    <widget class="QPushButton" name="change_chunk_sizes">
-     <property name="text">
-      <string>Change </string>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="QPushButton" name="scale_terrain">
-     <property name="text">
-      <string>Scale Terrain Maps</string>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="QLabel" name="editmodeindicator">
-     <property name="text">
-      <string>Stick Objects to ground</string>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="QPushButton" name="stick_to_gnd">
+    <widget class="QTreeWidget" name="treeWidget">
      <property name="maximumSize">
       <size>
-       <width>95</width>
-       <height>95</height>
+       <width>16777215</width>
+       <height>16777215</height>
       </size>
      </property>
+     <column>
+      <property name="text">
+       <string notr="true"/>
+      </property>
+     </column>
+    </widget>
+   </item>
+   <item>
+    <widget class="QPushButton" name="pushCheckUnit">
      <property name="text">
-      <string/>
+      <string>Scan Tree</string>
      </property>
-     <property name="icon">
-      <iconset>
-       <normaloff>C:/Users/49151/Documents/stick_to_gnd.png</normaloff>C:/Users/49151/Documents/stick_to_gnd.png</iconset>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QPushButton" name="loadexternallog">
+       <property name="text">
+        <string>Load Log File</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="export_2">
+       <property name="text">
+        <string>Export To File (CSV)</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>Fast Search a Prototype:</string>
      </property>
-     <property name="iconSize">
-      <size>
-       <width>90</width>
-       <height>90</height>
-      </size>
-     </property>
-     <property name="checkable">
-      <bool>true</bool>
-     </property>
-     <property name="checked">
+    </widget>
+   </item>
+   <item>
+    <widget class="QLineEdit" name="line_edit_searchprototype">
+     <property name="acceptDrops">
       <bool>false</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QPushButton" name="searhprototype">
+     <property name="text">
+      <string>Search Prototype</string>
      </property>
     </widget>
    </item>

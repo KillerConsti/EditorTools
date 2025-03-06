@@ -210,7 +210,6 @@ namespace kc_terrain
 			// Connect Qt signals/slots
 			connect(mUiEditorTerrainManager->stick_to_gnd, SIGNAL(clicked(bool)), this, SLOT(onPressStickToGnd(bool)));
 			/*connect(mUiEditorTerrainManager->decompilebutton, SIGNAL(clicked(bool)), this, SLOT(onPushDecompileButton(bool)));
-			connect(mUiEditorTerrainManager->SetSaveLocationButton, SIGNAL(clicked(bool)), this, SLOT(onSetSaveDirectory(bool)));
 			connect(mUiEditorTerrainManager->SetSelectionGreenscreen, SIGNAL(clicked(bool)), this, SLOT(onSetSelectionGreenscreen(bool)));
 
 			connect(mUiEditorTerrainManager->cam1, SIGNAL(clicked(bool)), this, SLOT(onCam1(bool)));

@@ -26,6 +26,7 @@
 #include <qsf/renderer/terrain/TerrainComponent.h>
 
 #include <ui_TerrainEditColorMapToolbox.h>
+#include <qsf_editor/asset/AssetEditHelper.h>
 //[-------------------------------------------------------]
 //[ Forward declarations                                  ]
 //[-------------------------------------------------------]
@@ -132,13 +133,13 @@ namespace user
 			TerrainEditMode2 GetEditMode();
 			TerrainEditMode2 mMode;
 			void SetHeight(float NewHeight);
-			std::string path;
-			std::string GetSavePath();			
-			std::string InitSavePath();
-			void OverwriteSavePath();
-			std::string mSavepath;
+			std::string path;		
+			void InitSavePath();
 			QColor GetSelectedColor();
 			bool IsUnlocked();
+			bool GetMirrorX();
+			bool GetMirrorY();
+			static TerrainEditColorMapToolbox* GetInstance();
 		protected:
 			virtual bool onStartup(qsf::editor::ToolboxView& toolboxView) override;
 			virtual void retranslateUi(qsf::editor::ToolboxView& toolboxView) override;
@@ -159,8 +160,7 @@ namespace user
 			void onRadiusSliderChanged(const  int value);
 
 			void onPushPickColor(const bool pressed);
-			void onSetSaveDirectory(const bool pressed);
-
+			void onPushCopyButton(const bool pressed);
 			
 			
 			void onChangeBrushType(const int Type);
@@ -171,7 +171,6 @@ namespace user
 
 
 			bool CheckIfUnlocked();
-			
 			//[-------------------------------------------------------]
 			//[ Private data                                          ]
 			//[-------------------------------------------------------]
@@ -179,7 +178,8 @@ namespace user
 			boost::container::flat_set <uint64> CreatedUnits;
 			bool WasPressed;
 			bool m_unlocked;
-
+			std::shared_ptr<qsf::editor::AssetEditHelper> mAssetEditHelper;
+			static TerrainEditColorMapToolbox* instance;
 			//[-------------------------------------------------------]
 			//[ CAMP reflection system                                ]
 			//[-------------------------------------------------------]

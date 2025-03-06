@@ -106,7 +106,7 @@ namespace user
 {
 	namespace editor
 	{
-
+		TerrainEditToolbox* TerrainEditToolbox::instance = nullptr;
 		//[-------------------------------------------------------]
 		//[ Public definitions                                    ]
 		//[-------------------------------------------------------]
@@ -124,11 +124,12 @@ namespace user
 			mMode(Set),
 			mSavepath("")
 		{
-			
+			instance = this;
 		}
 
 		TerrainEditToolbox::~TerrainEditToolbox()
 		{
+			instance = nullptr;
 		}
 
 		bool TerrainEditToolbox::GetMirrorX()
@@ -139,16 +140,6 @@ namespace user
 		bool TerrainEditToolbox::GetMirrorY()
 		{
 			return mUITerrainEditToolbox->MirrorY->isChecked();
-		}
-
-		bool TerrainEditToolbox::GetMirrorPageX()
-		{
-			return mUITerrainEditToolbox->MirrorPagesX->isChecked();
-		}
-
-		bool TerrainEditToolbox::GetMirrorPageY()
-		{
-			return mUITerrainEditToolbox->MirrorPagesY->isChecked();
 		}
 
 
@@ -198,8 +189,6 @@ namespace user
 			mUITerrainEditToolbox->setupUi(toolboxView.widget());
 		if (mUITerrainEditToolbox == nullptr) //shouldnt happen
 			return false;
-		connect(mUITerrainEditToolbox->pushButton, SIGNAL(clicked(bool)), this, SLOT(onPushSaveMap(bool)));
-		connect(mUITerrainEditToolbox->pushButton_2, SIGNAL(clicked(bool)), this, SLOT(onSetSaveDirectory(bool)));
 		connect(mUITerrainEditToolbox->pushButtonSelect, SIGNAL(clicked(bool)), this, SLOT(onPushSelectButton(bool)));
 		//connect(mUITerrainEditToolbox->horizontalSlider, SIGNAL(valueChanged(int)), this, SLOT(onMinimumSliderChanged(int)));
 		connect(mUITerrainEditToolbox->horizontalSlider_2, SIGNAL(valueChanged(int)), this, SLOT(onRadiusSliderChanged(int)));
@@ -228,11 +217,14 @@ namespace user
 
 		void TerrainEditToolbox::onShutdown(qsf::editor::ToolboxView & toolboxView)
 		{
-			QSF_LOG_PRINTS(INFO,"TET is shutdowned")
+			QSF_LOG_PRINTS(INFO,"TerrainEditToolbox is shutdowned")
 				qsf::editor::EditModeManager& editModeManager = QSF_EDITOR_EDITMODE_MANAGER;
 			if (editModeManager.getSelectedEditMode() == editModeManager.get<TerrainEditTool>())
 			{
+				QSF_LOG_PRINTS(INFO, "disabled edit mode?")
 				editModeManager.selectEditModeByPointer(editModeManager.getPreviousEditMode(), editModeManager.getToolWhichSelectedEditMode());
+				//hopefully we trigger shutdown
+				editModeManager.forgetAboutPreviousEditMode();
 			}
 		}
 
@@ -427,6 +419,11 @@ namespace user
 		void TerrainEditToolbox::onCopyQSFMAP(const bool pressed)
 		{
 			QSF_MESSAGE.emitMessage(qsf::MessageConfiguration("kc::copy_heightmap"));
+		}
+
+		TerrainEditToolbox* TerrainEditToolbox::GetInstance()
+		{
+			return instance;
 		}
 
 

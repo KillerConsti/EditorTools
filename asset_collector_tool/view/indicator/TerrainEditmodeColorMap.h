@@ -109,7 +109,9 @@ namespace user
 			*    Destructor
 			*/
 			virtual ~TerrainEditmodeColorMap();
-
+			//must be public
+			void CopyOldMap();
+			void CopyOldMapWithNoAssetLoaded();
 			//[-------------------------------------------------------]
 			//[ Protected virtual qsf::editor::View methods           ]
 			//[-------------------------------------------------------]
@@ -225,6 +227,8 @@ namespace user
 			qsf::AssetPackage* m_OldAssetPackage;
 
 			void OnFinishEditing();
+
+			
 			//[-------------------------------------------------------]
 			//[ CAMP reflection system                                ]
 			//[-------------------------------------------------------]

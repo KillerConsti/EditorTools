@@ -29,6 +29,10 @@ namespace kc_terrain
 	a helper class to load our own terrain 
 	so we might make it more readable :D
 	*/
+
+	//not really in use
+	//mostly for terrraintexture
+	//will be implented with terrain manager
 	class TerrainScaler
 	{
 	public:

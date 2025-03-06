@@ -96,6 +96,8 @@
 #include <boost\filesystem.hpp>
 #include <qsf_editor/asset/AssetEditHelper.h>
 #include <experimental/filesystem>
+#include  <qsf/renderer/terrain/TerrainDefinition.h>
+#include <qsf/map/component/MapPropertiesBaseComponent.h>
 using namespace std::chrono;
 
 
@@ -123,8 +125,19 @@ namespace user
 
 		TerrainEditmodeColorMap::~TerrainEditmodeColorMap()
 		{
+			if (TerrainEditColorMapToolbox::GetInstance() == nullptr) //call on shutdown if our gui was shutdowned
+			{
+				return;
+			}
+			if(!PaintJobProxy.isValid())
+			return;
+			PaintJobProxy.unregister();
+			mDebugDrawProxy.unregister();
+			QSF_LOG_PRINTS(INFO, "TerrainEditmodeColorMap Shutdown")
+			OnFinishEditing();
 			//QSF_LOG_PRINTS(INFO, "left Edit Mode Color Map")
 		}
+
 
 
 		bool TerrainEditmodeColorMap::evaluateBrushPosition(const QPoint & mousePosition, glm::vec3 & position)
@@ -204,6 +217,11 @@ namespace user
 
 		void TerrainEditmodeColorMap::PaintJob(const qsf::JobArguments & jobArguments)
 		{
+			if (TerrainEditColorMapToolbox::GetInstance() == nullptr) //call on shutdown if our gui was shutdowned
+			{
+				onShutdown(nullptr);
+				return;
+			}
 			if(!TerrainEditGUI->IsUnlocked())
 			return;
 			if (QSF_DEBUGDRAW.isRequestIdValid(mDetailViewSingleTrack))
@@ -782,7 +800,10 @@ namespace user
 			mTerrainComponent = qsf::ComponentMapQuery(QSF_MAINMAP).getFirstInstance<kc_terrain::TerrainComponent>();
 			image = nullptr;
 			generateMaterial();
-
+			if (image == nullptr)
+			{
+				CopyOldMapWithNoAssetLoaded();
+			}
 			if (image == nullptr)
 			{
 				QSF_LOG_PRINTS(INFO, "buffer image is a nullptr")
@@ -810,7 +831,7 @@ namespace user
 			EditMode::onShutdown(nextEditMode);
 			PaintJobProxy.unregister();
 			mDebugDrawProxy.unregister();
-			QSF_LOG_PRINTS(INFO, "Shutdown")
+			QSF_LOG_PRINTS(INFO, "TerrainEditmodeColorMap Shutdown")
 				OnFinishEditing();
 		}
 
@@ -1070,7 +1091,182 @@ namespace user
 			}
 		}
 
+		void TerrainEditmodeColorMap::CopyOldMap()
+		{
+			auto ColorMapToRead = TerrainMaster->GetColorMap();
+			if (ColorMapToRead.getAsset() == nullptr)
+			{
+				QSF_LOG_PRINTS(INFO, "no color map is set in terrain component")
+					return;
+			}
 
+			qsf::TerrainComponent* CopyFromTerrain = nullptr;
+			for (qsf::TerrainComponent* terrainComponent : qsf::ComponentMapQuery(QSF_MAINMAP).getAllInstances<qsf::TerrainComponent>())
+			{
+				if (terrainComponent->getEntity().getComponent<kc_terrain::TerrainComponent>() == nullptr)
+				{
+					QSF_LOG_PRINTS(INFO, "found a old qsf terrain")
+						CopyFromTerrain = terrainComponent;
+					break;
+				}
+			}
+			if (CopyFromTerrain == nullptr)
+			{
+				QSF_LOG_PRINTS(INFO, "No QSF Terrain found")
+					return;
+			}
+
+
+			image = new Magick::Image(ColorMapToRead.getAbsoluteCachedAssetDataFilename());
+
+			auto image = new Magick::Image(qsf::AssetProxy(ColorMapToRead).getAbsoluteCachedAssetDataFilename());
+			if (TerrainEditGUI->GetMirrorX())
+			{
+				image->flip();
+			}
+			if (TerrainEditGUI->GetMirrorY())
+			{
+				image->flop();
+			}
+			image->syncPixels();
+
+			mAssetEditHelper = std::shared_ptr<qsf::editor::AssetEditHelper>(new qsf::editor::AssetEditHelper());
+			auto IAP = mAssetEditHelper->getIntermediateAssetPackage();
+
+				//QSF_LOG_PRINTS(INFO,"for some reasons it exists")
+				//ogreImage.save(TerrainMaster->GetNewHeightMap().getAbsoluteCachedAssetDataFilename());
+				image->write(TerrainMaster->GetColorMap().getAbsoluteCachedAssetDataFilename());
+				std::string TargetAssetName = qsf::AssetProxy(TerrainMaster->GetNewHeightMap()).getAssetPackage()->getName();
+				mAssetEditHelper->tryEditAsset(qsf::AssetProxy(TerrainMaster->GetNewHeightMap()).getGlobalAssetId(), TargetAssetName);
+				auto CachedAsset = mAssetEditHelper->getCachedAsset(qsf::AssetProxy(TerrainMaster->GetNewHeightMap()).getAsset()->getGlobalAssetId());
+				/*if (CachedAsset == nullptr)
+				QSF_LOG_PRINTS(INFO, "cached asset is a nullptr")
+				else
+				QSF_LOG_PRINTS(INFO, "cached asset isnot null?")*/
+				mAssetEditHelper->setAssetUploadData(qsf::AssetProxy(TerrainMaster->GetNewHeightMap()).getAsset()->getGlobalAssetId(), true, true);
+
+			// Cleanup
+
+			QSF_LOG_PRINTS(INFO, "Map was saved succesfully")
+				mAssetEditHelper->submit();
+			//mAssetEditHelper->callWhenFinishedUploading(boost::bind(&TerrainEditTool::WaitForSaveTerrain, this, boost::function<void(bool)>(boost::bind(&TerrainEditTool::onWaitForSave_TerrainDone, this, _1))));
+			TerrainMaster->setAllPropertyOverrideFlags(true);
+			SplitMapInSmallMaps();
+			//
+		}
+		void TerrainEditmodeColorMap::CopyOldMapWithNoAssetLoaded()
+		{
+			qsf::GlobalAssetId myID;
+			auto TerrainMaster = qsf::ComponentMapQuery(QSF_MAINMAP).getFirstInstance<kc_terrain::TerrainComponent>();
+			if(TerrainMaster == nullptr)
+			return;
+			if (TerrainMaster->GetColorMap().getAsset() != nullptr)
+			{
+				QSF_LOG_PRINTS(INFO, "pls start the tool first")
+				return;
+			}
+			QSF_LOG_PRINTS(INFO, "Copy QSF Terrain started")
+				//get old qsf terrain
+				qsf::TerrainComponent* CopyFromTerrain = nullptr;
+			for (qsf::TerrainComponent* terrainComponent : qsf::ComponentMapQuery(QSF_MAINMAP).getAllInstances<qsf::TerrainComponent>())
+			{
+				if (terrainComponent->getEntity().getComponent<kc_terrain::TerrainComponent>() == nullptr)
+				{
+					QSF_LOG_PRINTS(INFO, "found a old qsf terrain")
+						CopyFromTerrain = terrainComponent;
+					break;
+				}
+			}
+			if (CopyFromTerrain == nullptr)
+			{
+				QSF_LOG_PRINTS(INFO, "No QSF Terrain found")
+					return;
+			}
+			//load qsf terrain for mirroring
+			auto ColorMapToRead = CopyFromTerrain->getTerrainDefinition()->getColorMap();
+			if (qsf::AssetProxy(ColorMapToRead).getAsset() == nullptr)
+			{
+				QSF_LOG_PRINTS(INFO, "no color map is set in terrain component")
+					return;
+			}
+			auto image = new Magick::Image(qsf::AssetProxy(ColorMapToRead).getAbsoluteCachedAssetDataFilename());
+			image->magick("DDS");
+			image->type(Magick::ImageType::TrueColorAlphaType);
+			QSF_LOG_PRINTS(INFO,"read colormap ColorMapToRead"<< qsf::AssetProxy(ColorMapToRead).getAbsoluteCachedAssetDataFilename())
+				QSF_LOG_PRINTS(INFO, "rows " << image->rows())
+				if (TerrainEditGUI->GetMirrorX())
+				{
+					image->flip();
+				}
+			if (TerrainEditGUI->GetMirrorY())
+			{
+				image->flop();
+			}
+			image->syncPixels();
+			//save the map
+			mAssetEditHelper = std::shared_ptr<qsf::editor::AssetEditHelper>(new qsf::editor::AssetEditHelper());
+			auto IAP = mAssetEditHelper->getIntermediateAssetPackage();
+				try
+				{
+					auto Name = TerrainMaster->getEntity().getComponent<qsf::MetadataComponent>()->getName();
+					auto Mapname= QSF_MAINMAP.getCoreEntity().getComponent<qsf::MapPropertiesBaseComponent>()->getMapName();
+					std::transform(Mapname.begin(), Mapname.end(), Mapname.begin(),::tolower); // correct
+					Name +="_"+Mapname;
+					//b create folder structure in assethelper (to read and write)
+					if (!boost::filesystem::exists((QSF_FILE.getBaseDirectory() + "/" + IAP->getRelativeDirectory() + "/texture/colormap")))
+						boost::filesystem::create_directories(QSF_FILE.getBaseDirectory() + "/" + IAP->getRelativeDirectory() + "/texture/colormap");
+					//c write to new folder -I think it will copy to our direction we wrote before
+					//ogreImage.save(QSF_FILE.getBaseDirectory() + "/" + IAP->getRelativeDirectory() + "/texture/heightmap/heightmap_" + Name + "_" + TimeStamp +".tif");
+					auto relAssetDirectory = QSF_EDITOR_APPLICATION.getAssetImportManager().getDefaultDestinationAssetPackage()->getRelativeDirectory();
+					if (!boost::filesystem::exists((QSF_FILE.getBaseDirectory() + "/" + relAssetDirectory + "/texture/colormap")))
+						boost::filesystem::create_directories(QSF_FILE.getBaseDirectory() + "/" + relAssetDirectory + "/texture/colormap");
+
+
+
+					//MagImage->write(QSF_FILE.getBaseDirectory() + "/" + relAssetDirectory + "/texture/heightmap/heightmap_" + Name  +  ".tif");
+					QSF_LOG_PRINTS(INFO, "saved ogre img to " << QSF_FILE.getBaseDirectory() + "/" + IAP->getRelativeDirectory() + "/texture/colormap/colormap" + Name + ".dds")
+						//d learn our assets a few thing <-> this seems not needed
+						//delete[] buffer;
+						image->write(QSF_FILE.getBaseDirectory() + "/" + IAP->getRelativeDirectory() + "/texture/colormap/colormap" + Name + ".dds");
+						auto Asset = mAssetEditHelper->addAsset(QSF_EDITOR_APPLICATION.getAssetImportManager().getDefaultDestinationAssetPackage()->getName(), qsf::QsfAssetTypes::TEXTURE, "colormap", "colormap" + Name);
+					
+					if (Asset == nullptr)
+						QSF_LOG_PRINTS(INFO, "error occured " << Name << " could not create an asset")
+					else
+					{
+						myID = Asset->getGlobalAssetId();
+						auto CachedAsset = mAssetEditHelper->getCachedAsset(Asset->getGlobalAssetId());
+						if (CachedAsset == nullptr)
+							CachedAsset = &qsf::CachedAsset(Asset->getGlobalAssetId());
+						if (CachedAsset == nullptr)
+						{
+							QSF_LOG_PRINTS(INFO, "still a nullptr")
+						}
+						CachedAsset->setType("dds");
+						//QSF_LOG_PRINTS(INFO, qsf::AssetProxy(Asset->getGlobalAssetId()).getAbsoluteCachedAssetDataFilename())
+
+						if (mAssetEditHelper->setAssetUploadData(Asset->getGlobalAssetId(), true, true))
+							QSF_LOG_PRINTS(INFO, "Caching asset was not succesfull")
+					}
+					
+				}
+				catch (const std::exception& e)
+				{
+					QSF_LOG_PRINTS(INFO, e.what())
+				}
+				mAssetEditHelper->submit();
+				//update materials
+				TerrainMaster->SetNewColorMap(qsf::AssetProxy(myID));
+				TerrainMaster->setAllPropertyOverrideFlags(true);
+				TerrainMaster->ReloadSubTerrainMaterials(0, 0);
+				Ogre::TerrainGroup::TerrainIterator it3 = TerrainMaster->getOgreTerrainGroup()->getTerrainIterator();
+				while (it3.hasMoreElements()) // add the layer to all terrains in the terrainGroup
+				{
+					Ogre::TerrainGroup::TerrainSlot* a = it3.getNext();
+
+					TerrainMaster->RefreshMaterial(a->instance);
+				}
+		}
 		//[-------------------------------------------------------]
 		//[ Namespace                                             ]
 		//[-------------------------------------------------------]

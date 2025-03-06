@@ -277,24 +277,25 @@ text-decoration: underline;</string>
     </widget>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_4">
+    <widget class="QPushButton" name="copyMap">
+     <property name="text">
+      <string>Copy QSF MAP</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_6">
      <item>
-      <widget class="QPushButton" name="pushButton">
+      <widget class="QCheckBox" name="MirrorX">
        <property name="text">
-        <string>Save Map</string>
+        <string>MirrorX</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="pushButton_2">
-       <property name="maximumSize">
-        <size>
-         <width>80</width>
-         <height>16777215</height>
-        </size>
-       </property>
+      <widget class="QCheckBox" name="MirrorY">
        <property name="text">
-        <string>Set Directory</string>
+        <string>MirrorY</string>
        </property>
       </widget>
      </item>

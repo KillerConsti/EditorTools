@@ -40,7 +40,7 @@ namespace user
 		//[ Public definitions                                    ]
 		//[-------------------------------------------------------]
 		const uint32 TerrainTexturingToolbox::PLUGINABLE_ID = qsf::StringHash("qsf::editor::TerrainTexturingToolbox");
-
+		TerrainTexturingToolbox* TerrainTexturingToolbox::instance = nullptr;
 
 		//[-------------------------------------------------------]
 		//[ Public methods                                        ]
@@ -51,15 +51,19 @@ namespace user
 			qsf::editor::Tool(toolManager),
 			mUITerrainTexturingToolbox(new Ui::TerrainTexturingToolbox()),
 			mMode(Set),
-			mSavepath(""),
 			OldTerrain(glm::vec2(-1, -1)),
 			mEraseMode(true)
 		{
-
+			instance = this;
 		}
 
 		TerrainTexturingToolbox::~TerrainTexturingToolbox()
 		{
+			instance = nullptr;
+		}
+		TerrainTexturingToolbox * TerrainTexturingToolbox::GetInstance()
+		{
+			return instance;
 		}
 
 		float TerrainTexturingToolbox::GetBrushRadius()
@@ -104,6 +108,7 @@ namespace user
 			return mUITerrainTexturingToolbox->MirrorY->isChecked();
 		}
 
+
 		bool TerrainTexturingToolbox::onStartup(qsf::editor::ToolboxView & toolboxView)
 		{
 
@@ -113,8 +118,6 @@ namespace user
 			if (mUITerrainTexturingToolbox == nullptr) //shouldnt happen
 				return false;
 			ChangeMode(true);
-			QObject::connect(mUITerrainTexturingToolbox->pushButton, SIGNAL(clicked(bool)), this, SLOT(onPushSaveMap(bool)));
-			QObject::connect(mUITerrainTexturingToolbox->pushButton_2, SIGNAL(clicked(bool)), this, SLOT(onSetSaveDirectory(bool)));
 			QObject::connect(mUITerrainTexturingToolbox->pushButtonSelect, SIGNAL(clicked(bool)), this, SLOT(onPushSelectButton(bool)));
 			//connect(mUITerrainTexturingToolbox->horizontalSlider, SIGNAL(valueChanged(int)), this, SLOT(onMinimumSliderChanged(int)));
 			QObject::connect(mUITerrainTexturingToolbox->horizontalSlider_2, SIGNAL(valueChanged(int)), this, SLOT(onRadiusSliderChanged(int)));
@@ -126,7 +129,6 @@ namespace user
 			QObject::connect(mUITerrainTexturingToolbox->checkBox_erase, SIGNAL(clicked(bool)), this, SLOT(onPushEraseMode(bool)));
 			QObject::connect(mUITerrainTexturingToolbox->checkBox_combined, SIGNAL(clicked(bool)), this, SLOT(onPushCombinedMode(bool)));
 			QObject::connect(mUITerrainTexturingToolbox->comboBox, SIGNAL(currentIndexChanged(int)), SLOT(onChangeBrushType(int)));
-			InitSavePath();
 			UpdateTerrainList();
 
 			auto TableWidget = mUITerrainTexturingToolbox->tableWidget;
@@ -171,11 +173,14 @@ namespace user
 
 		void TerrainTexturingToolbox::onShutdown(qsf::editor::ToolboxView & toolboxView)
 		{
-			QSF_LOG_PRINTS(INFO, "TET is shutdowned")
+			QSF_LOG_PRINTS(INFO, "TerrainTexturingToolbox shutdown")
 				qsf::editor::EditModeManager& editModeManager = QSF_EDITOR_EDITMODE_MANAGER;
 			if (editModeManager.getSelectedEditMode() == editModeManager.get<TerrainTexturingTool>())
 			{
+				QSF_LOG_PRINTS(INFO, "disabled edit mode?")
 				editModeManager.selectEditModeByPointer(editModeManager.getPreviousEditMode(), editModeManager.getToolWhichSelectedEditMode());
+				//hopefully we trigger shutdown
+				editModeManager.forgetAboutPreviousEditMode();
 			}
 			disconnect(mUITerrainTexturingToolbox->listWidget, SIGNAL(customContextMenuRequested(const QPoint &)), this, SLOT(ShowContextMenu(const QPoint &)));
 		}
@@ -228,68 +233,6 @@ namespace user
 			mUITerrainTexturingToolbox->lineEdit_5->setText(ss.str().c_str());
 		}
 
-
-
-
-		void TerrainTexturingToolbox::onSetSaveDirectory(const bool pressed)
-		{
-			QWidget* qtw = new QWidget();
-			auto fileName = QFileDialog::getExistingDirectory(qtw,
-				tr("Set Save Directory"), "");
-			QSF_LOG_PRINTS(INFO, fileName.toStdString())
-				mSavepath = fileName.toStdString();
-
-			std::ofstream ofs(path + "plugin_settings.txt", std::ofstream::trunc);
-
-			ofs << fileName.toStdString();
-
-			ofs.close();
-
-		}
-
-
-
-		std::string TerrainTexturingToolbox::GetSavePath()
-		{
-			return mSavepath;
-		}
-
-		std::string TerrainTexturingToolbox::InitSavePath()
-		{
-			for (auto a : QSF_PLUGIN.getPlugins())
-			{
-				if (a->getFilename().find("asset_collector_tool.dll") != std::string::npos)
-				{
-					path = a->getFilename();
-					path.erase(path.end() - 24, path.end());
-
-
-				}
-			}
-			std::ifstream myfile(path + "plugin_settings.txt");
-			std::string line;
-			if (myfile.is_open())
-			{
-				while (std::getline(myfile, line))
-				{
-					mSavepath = line;
-					QSF_LOG_PRINTS(INFO, "Savepath is" << mSavepath)
-						break;
-
-				}
-				myfile.close();
-			}
-			else
-			{
-				std::ofstream myfile(path + "plugin_settings.txt");
-				if (myfile.is_open())
-				{
-					myfile << path;
-					myfile.close();
-				}
-			}
-			return std::string();
-		}
 
 
 		void TerrainTexturingToolbox::SetCurrentTerrainData(std::vector<std::pair<std::string, int>> Data, int xTerrain, int yTerrain)

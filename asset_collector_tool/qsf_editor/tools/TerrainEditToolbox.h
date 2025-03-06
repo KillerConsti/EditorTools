@@ -107,8 +107,6 @@ namespace user
 
 			bool GetMirrorX();
 			bool GetMirrorY();
-			bool GetMirrorPageX();
-			bool GetMirrorPageY();
 			float GetTerrainHeightByRayCast(int xPos,int yPos,int xTerrain,int yTerrain);
 			public: //brush settings
 
@@ -137,10 +135,12 @@ namespace user
 			TerrainEditMode2 mMode;
 			void SetHeight(float NewHeight);
 			std::string path;
+			//save stuff should be removed as we use the asset system
 			std::string GetSavePath();			
 			std::string InitSavePath();
 			
 			std::string mSavepath;
+			static TerrainEditToolbox* GetInstance();
 		protected:
 			virtual bool onStartup(qsf::editor::ToolboxView& toolboxView) override;
 			virtual void retranslateUi(qsf::editor::ToolboxView& toolboxView) override;
@@ -167,13 +167,14 @@ namespace user
 			//void onEditPrefab(QT::QString String);
 			void onPushSaveMap(const bool pressed);
 			void onCopyQSFMAP(const bool pressed);
-
+			
 			//[-------------------------------------------------------]
 			//[ Private data                                          ]
 			//[-------------------------------------------------------]
 		private:
 			boost::container::flat_set <uint64> CreatedUnits;
 			bool WasPressed;
+			static TerrainEditToolbox* instance;
 			
 			
 			//[-------------------------------------------------------]

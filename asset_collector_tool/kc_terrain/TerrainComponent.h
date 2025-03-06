@@ -16,6 +16,7 @@
 #include <asset_collector_tool\kc_terrain\TerrainContext.h>
 #include <qsf/renderer/terrain/TerrainComponent.h>
 #include <ogre\Terrain\OgreTerrain.h>
+#include <qsf\job\JobProxy.h>
 //[-------------------------------------------------------]
 //[ Forward declarations                                  ]
 //[-------------------------------------------------------]
@@ -61,7 +62,11 @@ namespace kc_terrain
 	*    with an optimized cached asset global color map. For editing the terrain color map, we keep the uncompressed source asset as tif. It's the job of the editor to generate the optimized
 	*    cached asset global color map.
 	*/
+#ifndef NoQSFTerrain
+	class TerrainComponent : public qsf::TerrainComponent
+#else
 	class TerrainComponent : public qsf::RendererComponent
+#endif
 	{
 
 
@@ -358,6 +363,13 @@ namespace kc_terrain
 
 		void SetHeightMapSize(int size);
 		int GetHeightMapSize();
+
+		void SetEverythingVisible(bool setvis);
+		bool GetEverythingVisible();
+
+		//reload <-> i.e. refresh materials using Camp
+		bool GetReloadAllMaterials();
+		void SetReloadAllMaterials(bool Set);
 	//[-------------------------------------------------------]
 	//[ Protected virtual qsf::Component methods              ]
 	//[-------------------------------------------------------]
@@ -413,6 +425,11 @@ namespace kc_terrain
 		int mBlendMapSize;
 		int mHeightMapSize;
 		int mColorMapSize;
+
+		//try to force visibilty
+		void VisiblityJob(const qsf::JobArguments& jobArguments);
+		float minTime;
+		qsf::JobProxy mVisiblityJob;
 	//[-------------------------------------------------------]
 	//[ CAMP reflection system                                ]
 	//[-------------------------------------------------------]

@@ -358,6 +358,20 @@ namespace kc_terrain
 			}
 			mAssetEditHelper->submit();
 		}
+		//we could improve speed if we dont have to save map
+		/*auto Mat = ogreTerrain->getMaterial();
+		auto iterator = Mat->getTechniqueIterator();
+		while (iterator.hasMoreElements())
+		{
+			auto tech = iterator.getNext();
+			auto passes = tech->getPassIterator();
+			while (passes.hasMoreElements())
+			{
+				auto pass = passes.getNext();
+				QSF_LOG_PRINTS(INFO,"Pass stuff" << pass->getName().c_str() <<" "<< pass->getColourWriteEnabled() << " "<<pass->getResourceGroup().c_str() << " ")
+				//pass->getMacroblock()
+			}
+		}*/
 
 	}
 
@@ -476,14 +490,6 @@ namespace kc_terrain
 			{
 				ColorMapAsset = m_profil_ColorMap;
 			}
-			// A global color map which spans all terrain chunks, usually only used during runtime for efficiency
-			//static const qsf::GlobalAssetId missingTextureGlobalAssetId = qsf::AssetProxy("qsf/texture/default/missing").getGlobalAssetId();
-			//const kc_terrain::TerrainDefinition* terrainDefinition = terrainComponent->getTerrainDefinition();
-			/*qsf::GlobalAssetId globalAssetId = (nullptr != terrainDefinition && terrainDefinition->isValid()) ? terrainDefinition->getColorMap() : qsf::getUninitialized<qsf::GlobalAssetId>();
-			if (qsf::isUninitialized(globalAssetId) || nullptr == QSF_ASSET.getAssetByGlobalAssetId(globalAssetId))
-			{
-				globalAssetId = ColorMapAsset;
-			}*/
 			terrainMaterial->setPropertyById("UseGlobalColorMap", qsf::MaterialPropertyValue::fromBoolean(qsf::isInitialized(ColorMapAsset)),qsf::MaterialProperty::Usage::DYNAMIC);
 			//terrainMaterial->setPropertyById("GlobalColorMap", qsf::MaterialPropertyValue::fromGlobalAssetId(qsf::getUninitialized<uint64>()), qsf::MaterialProperty::Usage::DYNAMIC);
 			terrainMaterial->setPropertyById("GlobalColorMap", qsf::MaterialPropertyValue::fromGlobalAssetId(ColorMapAsset), qsf::MaterialProperty::Usage::DYNAMIC);
