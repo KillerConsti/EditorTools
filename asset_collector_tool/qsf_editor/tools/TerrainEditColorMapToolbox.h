@@ -180,6 +180,9 @@ namespace user
 			bool m_unlocked;
 			std::shared_ptr<qsf::editor::AssetEditHelper> mAssetEditHelper;
 			static TerrainEditColorMapToolbox* instance;
+
+			void LoadSettings();
+			void SaveSettings();
 			//[-------------------------------------------------------]
 			//[ CAMP reflection system                                ]
 			//[-------------------------------------------------------]

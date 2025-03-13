@@ -66,7 +66,7 @@ namespace user
 			inline virtual const char* getName() const override;
 			inline virtual const char* getVendor() const override;
 			inline virtual const char* getDescription() const override;
-
+			bool mIngame;
 
 		//[-------------------------------------------------------]
 		//[ Protected virtual qsf::Plugin methods                 ]

@@ -28,6 +28,7 @@
 #include <em5/plugin/Plugin.h>
 #include <QtWidgets\qmenu.h>
 #include <qsf_editor/view/utility/ToolboxView.h>
+#include <asset_collector_tool\Manager\Settingsmanager.h>
 //[-------------------------------------------------------]
 //[ Namespace                                             ]
 //[-------------------------------------------------------]
@@ -155,7 +156,7 @@ namespace user
 			TableWidget->setItem(4, 0, newItem5);
 			QTableWidgetItem *newItem6 = new QTableWidgetItem("5");
 			TableWidget->setItem(5, 0, newItem6);
-
+			
 			mUITerrainTexturingToolbox->listWidget->setContextMenuPolicy(Qt::CustomContextMenu);
 			if (!connect(mUITerrainTexturingToolbox->listWidget, SIGNAL(customContextMenuRequested(const QPoint &)), this, SLOT(ShowContextMenu(const QPoint &))))
 				QSF_LOG_PRINTS(INFO, "Slot connection treewidget custom context Menu failed")
@@ -169,6 +170,7 @@ namespace user
 		void TerrainTexturingToolbox::retranslateUi(qsf::editor::ToolboxView & toolboxView)
 		{
 			mUITerrainTexturingToolbox->retranslateUi(toolboxView.widget());
+			LoadSettings();
 		}
 
 		void TerrainTexturingToolbox::onShutdown(qsf::editor::ToolboxView & toolboxView)
@@ -182,6 +184,7 @@ namespace user
 				//hopefully we trigger shutdown
 				editModeManager.forgetAboutPreviousEditMode();
 			}
+			SaveSettings();
 			disconnect(mUITerrainTexturingToolbox->listWidget, SIGNAL(customContextMenuRequested(const QPoint &)), this, SLOT(ShowContextMenu(const QPoint &)));
 		}
 
@@ -217,7 +220,53 @@ namespace user
 
 		}
 
+		void TerrainTexturingToolbox::LoadSettings()
+		{
+			auto Setman = user::editor::Settingsmanager::instance;
+			mUITerrainTexturingToolbox->horizontalSlider->setValue(Setman->GetBrushIntensity());
+			mUITerrainTexturingToolbox->horizontalSlider_2->setValue(Setman->GetBrushSize());
+			mUITerrainTexturingToolbox->comboBox->setCurrentIndex(Setman->GetBrushShape());
 
+			onRadiusSliderChanged(Setman->GetBrushSize());
+			OnBrushIntensitySliderChanged(Setman->GetBrushIntensity());
+			onChangeBrushType(Setman->GetBrushShape());
+
+			std::stringstream ss;
+			ss << 1.0*mUITerrainTexturingToolbox->horizontalSlider_2->value() / 10.0;
+			mUITerrainTexturingToolbox->lineEdit_5->setText(ss.str().c_str());
+
+
+			std::stringstream sst;
+			sst << mUITerrainTexturingToolbox->horizontalSlider->value();
+			mUITerrainTexturingToolbox->lineEdit->setText(sst.str().c_str());
+
+			switch (Setman->GetBrushShape())
+			{
+			case 0:
+
+				mUITerrainTexturingToolbox->comboBox->setCurrentIndex(0);
+				return;
+			case 1:
+
+				mUITerrainTexturingToolbox->comboBox->setCurrentIndex(1);
+				return;
+			case 2:
+				mUITerrainTexturingToolbox->comboBox->setCurrentIndex(2);
+				return;
+			default:
+				mUITerrainTexturingToolbox->comboBox->setCurrentIndex(3);
+				return;
+			}
+		}
+
+		void TerrainTexturingToolbox::SaveSettings()
+		{
+			auto Setman = user::editor::Settingsmanager::instance;
+
+			Setman->SetBrushIntensity(mUITerrainTexturingToolbox->horizontalSlider->value());
+			Setman->SetBrushSize(mUITerrainTexturingToolbox->horizontalSlider_2->value());
+			Setman->SetBrushShape(mUITerrainTexturingToolbox->comboBox->currentIndex());
+		}
 
 		void TerrainTexturingToolbox::OnBrushIntensitySliderChanged(const int value)
 		{

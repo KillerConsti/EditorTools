@@ -98,6 +98,7 @@
 #include <experimental/filesystem>
 #include  <qsf/renderer/terrain/TerrainDefinition.h>
 #include <qsf/map/component/MapPropertiesBaseComponent.h>
+#include <asset_collector_tool\Manager\Settingsmanager.h>
 using namespace std::chrono;
 
 
@@ -125,6 +126,7 @@ namespace user
 
 		TerrainEditmodeColorMap::~TerrainEditmodeColorMap()
 		{
+			
 			if (TerrainEditColorMapToolbox::GetInstance() == nullptr) //call on shutdown if our gui was shutdowned
 			{
 				return;
@@ -217,7 +219,7 @@ namespace user
 
 		void TerrainEditmodeColorMap::PaintJob(const qsf::JobArguments & jobArguments)
 		{
-			if (TerrainEditColorMapToolbox::GetInstance() == nullptr) //call on shutdown if our gui was shutdowned
+			if (TerrainEditColorMapToolbox::GetInstance() == nullptr || !TerrainMaster.valid()) //call on shutdown if our gui was shutdowned
 			{
 				onShutdown(nullptr);
 				return;
@@ -1081,6 +1083,11 @@ namespace user
 					return;
 			}
 			image->write(ColorMapToRead.getAbsoluteCachedAssetDataFilename());
+			if (!TerrainMaster.valid())
+			{
+				QSF_LOG_PRINTS(INFO, "Couldnt save terrain - terrain component was allready invalid")
+					return;
+			}
 			TerrainMaster->ReloadSubTerrainMaterials(0, 0);
 			Ogre::TerrainGroup::TerrainIterator it3 = TerrainMaster->getOgreTerrainGroup()->getTerrainIterator();
 			while (it3.hasMoreElements()) // add the layer to all terrains in the terrainGroup
@@ -1090,6 +1097,7 @@ namespace user
 				TerrainMaster->RefreshMaterial(a->instance);
 			}
 		}
+
 
 		void TerrainEditmodeColorMap::CopyOldMap()
 		{

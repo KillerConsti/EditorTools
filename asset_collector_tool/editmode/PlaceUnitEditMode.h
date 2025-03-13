@@ -170,6 +170,8 @@ namespace user
 			uint64 GetOrCreateEntity();
 			uint64 mEntityId;
 			 boost::container::flat_set<uint64> mIgnoreYourself;
+			 void SetText(qsf::Component* whatDidWeHit);
+			 bool CheckNewTerrain();
 			//[-------------------------------------------------------]
 			//[ CAMP reflection system                                ]
 			//[-------------------------------------------------------]

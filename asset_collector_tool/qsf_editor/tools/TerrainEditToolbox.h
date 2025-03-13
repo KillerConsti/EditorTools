@@ -176,7 +176,8 @@ namespace user
 			bool WasPressed;
 			static TerrainEditToolbox* instance;
 			
-			
+			void LoadSettings();
+			void SaveSettings();
 			//[-------------------------------------------------------]
 			//[ CAMP reflection system                                ]
 			//[-------------------------------------------------------]

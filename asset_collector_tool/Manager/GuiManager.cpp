@@ -61,6 +61,7 @@
 #include <asset_collector_tool\extern\include\Magick++.h>
 #include <fstream>
 #include <filesystem>
+#include <asset_collector_tool\view\IndicatorView.h>
 //[-------------------------------------------------------]
 //[ Namespace                                             ]
 //[-------------------------------------------------------]
@@ -77,7 +78,8 @@ namespace user
 		GUIManager::GUIManager() :
 			DebugToolView(nullptr),
 			ScenarioScriptToolView(nullptr),
-			ImageDecompilerView(nullptr)
+			ImageDecompilerView(nullptr),
+			IndicatorView(nullptr)
 		{
 			//mOnPreNewEmptyMapMessageProxy.registerAt(qsf::MessageConfiguration(qsf::editor::Messages::PRE_NEW_EMPTY_MAP), boost::bind(&GUIManager::onPreNewEmptyMap, this, _1));
 			mWaitUntilEditorReady.registerAt(em5::Jobs::ANIMATION_VEHICLE, boost::bind(&GUIManager::WaitUntilEditorReady, this, _1));
@@ -131,6 +133,7 @@ namespace user
 				return false;
 			// Nothing to do in here
 			auto Bar2 = QSF_EDITOR_APPLICATION.getMainWindow()->findChildren<QMenuBar *>("");
+			
 			/*for (size_t t = 0; t < Bar2.size(); t++)
 			{
 				QSF_LOG_PRINTS(INFO, Bar2.at((int)t)->windowTitle().toStdString());
@@ -278,6 +281,7 @@ namespace user
 			QAction* actionC_Setup = submenuC->addAction("Log Debugger");
 			QAction* actionC_SetupD = submenuC->addAction("Scenario Script Tool");
 			QAction* actionC_SetupE = submenuC->addAction("Image Decoder");
+			QAction* actionC_SetupF = submenuC->addAction("Indicator View");
 			//QAction* actionD_Setup = submenuD->addAction("Setup");
 			//QAction* actionE_Setup = submenuE->addAction("Setup");
 
@@ -329,6 +333,10 @@ namespace user
 			else if (action->text().toStdString() == "Image Decoder")
 			{
 				ShowImageDecoderView();
+			}
+			else if (action->text().toStdString() == "Indicator View")
+			{
+				ShowIndicatorView();
 			}
 			else if (action->text().toStdString() == "My Videos")
 			{
@@ -390,6 +398,22 @@ namespace user
 			else
 			{
 				QSF_SAFE_DELETE(ImageDecompilerView);
+			}
+		}
+
+		void GUIManager::ShowIndicatorView()
+		{
+			if (IndicatorView == nullptr)
+			{
+				QSF_LOG_PRINTS(INFO, "Feed our own menu")
+					auto Manager = &QSF_EDITOR_APPLICATION.getMainWindow()->getViewManager();
+				IndicatorView = new user::editor::IndicatorView(Manager, QSF_EDITOR_APPLICATION.getMainWindow()->topLevelWidget());
+				if (IndicatorView == nullptr)
+					QSF_LOG_PRINTS(INFO, "we created a nullptr")
+			}
+			else
+			{
+				QSF_SAFE_DELETE(IndicatorView);
 			}
 		}
 

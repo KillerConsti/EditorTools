@@ -100,6 +100,7 @@
 
 #include <em5/plugin/Plugin.h>
 #include <QtWidgets\qinputdialog.h>
+#include <asset_collector_tool\Manager\Settingsmanager.h>
 //[-------------------------------------------------------]
 //[ Namespace                                             ]
 //[-------------------------------------------------------]
@@ -194,7 +195,7 @@ namespace user
 		bool TerrainEditColorMapToolbox::onStartup(qsf::editor::ToolboxView & toolboxView)
 		{
 			if (mUITerrainEditColorMapToolbox != nullptr)
-
+			
 				mUITerrainEditColorMapToolbox->setupUi(toolboxView.widget());
 			mtoolboxView = &toolboxView;
 			if(mUITerrainEditColorMapToolbox == nullptr) //shouldnt happen
@@ -232,12 +233,14 @@ namespace user
 			mUITerrainEditColorMapToolbox->label_6->setAutoFillBackground(true);
 			pal.setColor(mUITerrainEditColorMapToolbox->label_6->backgroundRole(), Qt::green);
 			mUITerrainEditColorMapToolbox->label_6->setPalette(pal);
+			
 			return true;
 		}
 
 		void TerrainEditColorMapToolbox::retranslateUi(qsf::editor::ToolboxView & toolboxView)
 		{
 			mUITerrainEditColorMapToolbox->retranslateUi(toolboxView.widget());
+			LoadSettings();
 		}
 
 		void TerrainEditColorMapToolbox::onShutdown(qsf::editor::ToolboxView & toolboxView)
@@ -265,6 +268,7 @@ namespace user
 			disconnect(mUITerrainEditColorMapToolbox->comboBox, SIGNAL(currentIndexChanged(int)),this, SLOT(onChangeBrushType(int)));
 			disconnect(mUITerrainEditColorMapToolbox->use_alpha, SIGNAL(clicked(bool)),this, SLOT(onuse_alpha(bool)));
 			disconnect(mUITerrainEditColorMapToolbox->unlock_full_mode, SIGNAL(clicked(bool)), this, SLOT(OnPushUnlockFullMode(bool)));
+			SaveSettings();
 		}
 
 
@@ -431,6 +435,54 @@ namespace user
 			if(line == "KC_Terrain")
 			return true;
 			return false;
+		}
+
+		void TerrainEditColorMapToolbox::LoadSettings()
+		{
+			auto Setman = user::editor::Settingsmanager::instance;
+			mUITerrainEditColorMapToolbox->horizontalSlider->setValue(Setman->GetBrushIntensity());
+			mUITerrainEditColorMapToolbox->horizontalSlider_2->setValue(Setman->GetBrushSize());
+			mUITerrainEditColorMapToolbox->comboBox->setCurrentIndex(Setman->GetBrushShape());
+
+			onRadiusSliderChanged(Setman->GetBrushSize());
+			OnBrushIntensitySliderChanged(Setman->GetBrushIntensity());
+			onChangeBrushType(Setman->GetBrushShape());
+
+			std::stringstream ss;
+			ss << 1.0*mUITerrainEditColorMapToolbox->horizontalSlider_2->value() / 10.0;
+			mUITerrainEditColorMapToolbox->lineEdit_5->setText(ss.str().c_str());
+
+
+			std::stringstream sst;
+			sst << mUITerrainEditColorMapToolbox->horizontalSlider->value();
+			mUITerrainEditColorMapToolbox->lineEdit->setText(sst.str().c_str());
+
+			switch (Setman->GetBrushShape())
+			{
+			case 0:
+
+				mUITerrainEditColorMapToolbox->comboBox->setCurrentIndex(0);
+				return;
+			case 1:
+
+				mUITerrainEditColorMapToolbox->comboBox->setCurrentIndex(1);
+				return;
+			case 2:
+				mUITerrainEditColorMapToolbox->comboBox->setCurrentIndex(2);
+				return;
+			default:
+				mUITerrainEditColorMapToolbox->comboBox->setCurrentIndex(3);
+				return;
+			}
+		}
+
+		void TerrainEditColorMapToolbox::SaveSettings()
+		{
+			auto Setman = user::editor::Settingsmanager::instance;
+
+			Setman->SetBrushIntensity(mUITerrainEditColorMapToolbox->horizontalSlider->value());
+			Setman->SetBrushSize(mUITerrainEditColorMapToolbox->horizontalSlider_2->value());
+			Setman->SetBrushShape(mUITerrainEditColorMapToolbox->comboBox->currentIndex());
 		}
 
 		bool TerrainEditColorMapToolbox::GetMirrorX()

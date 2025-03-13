@@ -179,6 +179,9 @@ namespace user
 			void ChangeMode(bool NewMode);
 			bool mEraseMode;
 			static TerrainTexturingToolbox* instance;
+
+			void LoadSettings();
+			void SaveSettings();
 			//[-------------------------------------------------------]
 			//[ CAMP reflection system                                ]
 			//[-------------------------------------------------------]

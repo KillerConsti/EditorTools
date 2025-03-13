@@ -19,41 +19,40 @@
 #include <qsf/prototype/PrototypeManager.h>
 #include <qsf/prototype/PrototypeHelper.h>
 #include <qsf_editor_base/operation/CompoundOperation.h>
-#include <QtWidgets\qtreewidgetitemiterator.h>
-#include <asset_collector_tool\kc_terrain\TerrainComponent.h>
-#include <ogre\Ogre.h>
-#include <qsf\map\Entity.h>
-#include <ui_EditorTerrainManager.h>
-#include <qsf/job/JobProxy.h>
-#include <asset_collector_tool\editmode\PlaceUnitEditMode.h>
+#include <asset_collector_tool\view\KC_AbstractView.h>
+#include <..\tmp\qt\uic\asset_collector_tool\ui_IndicatorView.h>
 //[-------------------------------------------------------]
 //[ Forward declarations                                  ]
 //[-------------------------------------------------------]
-namespace Ui
+namespace qsf
 {
-	class EditorTerrainManager;
+	namespace editor
+	{
+		class AssetEditHelper;
+	}
 }
-
 
 
 //[-------------------------------------------------------]
 //[ Namespace                                             ]
 //[-------------------------------------------------------]
-namespace kc_terrain
+namespace user
 {
+	namespace editor
+	{
+
 
 		//[-------------------------------------------------------]
 		//[ Classes                                               ]
 		//[-------------------------------------------------------]
 		/**
 		*  @brief
-		*    Class that is responsible for the Asset Collection and provide the view (window)
-		*	 note that I dont get where the filename "IndicatorView" comes from and therefor i was not able to change these names from the *.cpp, *.h and *.ui files 
+		*   this is a wrapper to have a better "view" menu
 		*
 		*  @note
 		*    - The UI is created via source code
 		*/
-		class EditorTerrainManager : public qsf::editor::View
+		class IndicatorView : public qsf::editor::View
 		{
 
 
@@ -68,7 +67,7 @@ namespace kc_terrain
 		//[ Public definitions                                    ]
 		//[-------------------------------------------------------]
 		public:
-			static const uint32 PLUGINABLE_ID;	///< "user::editor::EditorTerrainManager" unique pluginable view ID
+			static const uint32 PLUGINABLE_ID;	///< "user::editor::IndicatorView" unique pluginable view ID
 
 
 		//[-------------------------------------------------------]
@@ -84,17 +83,29 @@ namespace kc_terrain
 			*  @param[in] qWidgetParent
 			*    Pointer to parent Qt widget, can be a null pointer (in this case you're responsible for destroying this view instance)
 			*/
-			EditorTerrainManager(qsf::editor::ViewManager* viewManager, QWidget* qWidgetParent);
+			IndicatorView(qsf::editor::ViewManager* viewManager, QWidget* qWidgetParent);
 
 			/**
 			*  @brief
 			*    Destructor
 			*/
-			virtual ~EditorTerrainManager();
+			virtual ~IndicatorView();
 
-			static EditorTerrainManager* GetInstance();
-			void setLabelName(std::string i);
+			private Q_SLOTS:
+			void onPushLoadButton(const bool pressed);
+			void GetSavePath();
+			void ShowContextMenu(const QPoint &pos);
+			void ExecutContextMenu(QAction *action);
+			void onitemClicked(QTreeWidgetItem *item, int column);
+		private:
+			void LoadFile(std::string Path);
+			std::string path;
+			Ui::IndicatorView* mUI_IndicatorView;
 
+			void UpdateListView();
+			 void addTreeRoot(QString name, QString description);
+			 QTreeWidgetItem * IndicatorView::GetItemAndClearTree(std::string RootName);
+			 QTreeWidgetItem* IndicatorView::addTreeChild(QTreeWidgetItem * parent, QString name, QString description, QString AdditionalInfos, QString BrokenComponentName);
 		//[-------------------------------------------------------]
 		//[ Protected virtual qsf::editor::View methods           ]
 		//[-------------------------------------------------------]
@@ -111,35 +122,6 @@ namespace kc_terrain
 			virtual void hideEvent(QHideEvent* qHideEvent) override;
 
 
-		//[-------------------------------------------------------]
-		//[ Private methods                                       ]
-		//[-------------------------------------------------------]
-		private:
-			/**
-			*  @brief
-			*    Perform a GUI rebuild
-			*/
-			void rebuildGui(); 
-			Ui::EditorTerrainManager*					mUiEditorTerrainManager;
-
-			void ActivateStickToGnd(bool active);
-			static EditorTerrainManager* Instance;
-		//[-------------------------------------------------------]
-		//[ Private Qt slots (MOC)                                ]
-		//[-------------------------------------------------------]
-		private Q_SLOTS:
-			void onPressStickToGnd(const bool pressed);
-			void onSelectionChanged(uint64 Id);
-			bool PushObjectOnTopmostTerrain(uint64 id);
-		private:
-			qsf::JobProxy mWaitUntilIsInEditMode;
-			void WaitUntilIsInEditMode(const qsf::JobArguments& jobArguments);
-			void ReplaceEditMode(bool IsGood);
-			user::editor::PlaceUnitEditMode* mPlaceUnitEditMode;
-
-		//[-------------------------------------------------------]
-		//[ CAMP reflection system                                ]
-		//[-------------------------------------------------------]
 			QSF_CAMP_RTTI()	// Only adds the virtual method "campClassId()", nothing more
 
 
@@ -149,13 +131,14 @@ namespace kc_terrain
 	//[-------------------------------------------------------]
 	//[ Namespace                                             ]
 	//[-------------------------------------------------------]
+	} // editor
 } // user
 
 
 //[-------------------------------------------------------]
 //[ CAMP reflection system                                ]
 //[-------------------------------------------------------]
-QSF_CAMP_TYPE_NONCOPYABLE(kc_terrain::EditorTerrainManager)
+QSF_CAMP_TYPE_NONCOPYABLE(user::editor::IndicatorView)
 
 
 

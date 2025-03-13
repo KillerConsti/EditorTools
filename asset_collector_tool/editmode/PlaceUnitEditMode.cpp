@@ -114,6 +114,7 @@
 #include <qsf/input/event/mouse/MouseButtonEvent.h>
 #include <qsf_editor/view/asset/PrefabBrowserView.h>
 #include <em5\map\EntityHelper.h>
+#include <asset_collector_tool/view/EditorTerrainManager.h>
 //[-------------------------------------------------------]
 //[ Namespace                                             ]
 //[-------------------------------------------------------]
@@ -227,15 +228,16 @@ namespace user
 			if(MyEntity == qsf::getUninitialized<uint64>()) //not yet created?
 				return;
 			auto NewPos = glm::vec3(0,0,0);
-			if (QSF_INPUT.getMouse().Right.isPressed())
-			{
-				NewPos = getPositionUnderMouse(LastMousePos);
-			}
+			NewPos = getPositionUnderMouse();
+			/*if (QSF_INPUT.getMouse().Right.isPressed())
+			{*/
+				//NewPos = getPositionUnderMouse(LastMousePos);
+			/*}
 			else
 			{
 				NewPos = getPositionUnderMouse();
 				LastMousePos = QSF_INPUT.getMouse().getPosition();
-			}
+			}*/
 			//0,0,0 is no update possible
 			if (glm::vec3(0, 0, 0) == NewPos)
 			{
@@ -281,9 +283,35 @@ namespace user
 			glm::vec2 mousePosition = QSF_INPUT.getMouse().getPosition();
 			qsf::RayMapQueryResponse response = qsf::RayMapQueryResponse(qsf::RayMapQueryResponse::POSITION_RESPONSE);
 			qsf::RayMapQuery(QSF_MAINMAP).getFirstHitByRenderWindow(getRenderView().getRenderWindow(), mousePosition.x, mousePosition.y, response,&IgnoreList);
-
+			if(kc_terrain::EditorTerrainManager::GetInstance() != nullptr)
+			{
+				SetText(response.component);
+			}
+			else
+			{
+				return glm::vec3(0, 0, 0);
+			}
 			if(response.component == nullptr)
-			return glm::vec3(0,0,0);
+			{
+				auto TerrainMaster = qsf::ComponentMapQuery(QSF_MAINMAP).getFirstInstance<kc_terrain::TerrainComponent>();
+				if(TerrainMaster != nullptr)
+				{
+					auto vec = glm::vec3();
+					if(TerrainMaster->getTerrainHitByRenderWindow(getRenderView().getRenderWindow(), mousePosition.x, mousePosition.y,&vec))
+					{
+						kc_terrain::EditorTerrainManager::GetInstance()->setLabelName("Hit kc Terrain");
+						return vec;
+					}
+				}
+				return glm::vec3(0, 0, 0);
+			}
+#ifdef NoQSFTerrain
+			if (response.component->getEntity().getComponent<kc_terrain::TerrainComponent>() != nullptr) //our own terrain component
+			{
+				return glm::vec3(response.position);
+			}
+#endif
+			//all others
 			if(response.component->getEntity().getComponent<qsf::TerrainComponent>() != nullptr || response.component->getEntity().getComponent<qsf::WalkableComponent>() != nullptr || response.component->getEntity().getComponent<qsf::StreetComponent>())
 			{
 				//QSF_DEBUGDRAW.requestDraw(qsf::CircleDebugDrawRequest(response.position,glm::vec3(0.f,1.f,0.f),1.f),qsf::DebugDrawLifetimeData(qsf::Time::fromMilliseconds(100.f)));
@@ -411,10 +439,48 @@ namespace user
 			//Ignore when using Raycast , notice we only have direct childs here. If we have a vehicle with huge amount of equipment it could slow down?
 			mIgnoreYourself.clear();
 			mIgnoreYourself.insert(mEntityId);
+			if(QSF_MAINMAP.getEntityById(mEntityId)->getComponent<qsf::LinkComponent>() != nullptr)
+			{
 			auto LC = QSF_MAINMAP.getEntityById(mEntityId)->getComponent<qsf::LinkComponent>();
 			for(auto a : LC->getChildLinks())
 				mIgnoreYourself.insert(a->getEntityId());
+			}
 			return mEntityId;
+		}
+
+		void PlaceUnitEditMode::SetText(qsf::Component* whatDidWeHit)
+		{
+			std::string Hitted;
+			if (whatDidWeHit == nullptr)
+			{
+				Hitted = "Nothing";
+			}
+			else if (whatDidWeHit->getEntity().getComponent<kc_terrain::TerrainComponent>() != nullptr)
+			{
+				Hitted = "KC_Terrain";
+				if (whatDidWeHit->getEntity().getComponent<qsf::TerrainComponent>() == nullptr)
+				{
+					Hitted = "KC_Terrain but not QSF";
+				}
+			}
+			else if (whatDidWeHit->getEntity().getComponent<qsf::WalkableComponent>() != nullptr)
+			{
+				Hitted = "Walkable "+ whatDidWeHit->getEntity().getComponent<qsf::MetadataComponent>()->getName();
+			}
+			else if (whatDidWeHit->getEntity().getComponent<qsf::StreetComponent>() != nullptr)
+			{
+				Hitted = "StreetComponent " + whatDidWeHit->getEntity().getComponent<qsf::MetadataComponent>()->getName();
+			}
+			else if (whatDidWeHit->getEntity().getComponent<qsf::TerrainComponent>() != nullptr)
+			{
+				Hitted = "qsf::Terrain";
+			}
+			kc_terrain::EditorTerrainManager::GetInstance()->setLabelName(Hitted);
+		}
+
+		bool PlaceUnitEditMode::CheckNewTerrain()
+		{
+			return false;
 		}
 
 
@@ -459,13 +525,14 @@ namespace user
 
 	uint64 GeneralFunctions::BuildEntity(glm::vec3 position, qsf::StringHash shash)
 	{
+		QSF_LOG_PRINTS(INFO,"Build Ent 1")
 		//Create Unit <-> this is quite long
 		qsf::Prototype* prototype = QSF_MAINPROTOTYPE.getPrefabByLocalAssetId(shash);
 		if (prototype == nullptr)
 		{
 			return qsf::getUninitialized<uint64>();
 		}
-
+		QSF_LOG_PRINTS(INFO, "Build Ent 2")
 		const uint32 selectedLayerId = QSF_EDITOR_SELECTION_SYSTEM.getSafe<qsf::editor::LayerSelectionManager>().getSelectedId();
 		// Copy an existing entity or create a prefab instance?
 		qsf::GlobalAssetId globalPrefabAssetId = qsf::getUninitialized<qsf::GlobalAssetId>();
@@ -486,7 +553,7 @@ namespace user
 				createPrefabInstance = false;
 			}
 		}
-
+		QSF_LOG_PRINTS(INFO, "Build Ent 3")
 		qsf::BasePrototypeManager::UniqueIdMap uniqueIdMap;
 		QSF_MAINPROTOTYPE.buildIdMatchingMapWithGeneratedIds(*prototype, uniqueIdMap, nullptr, createPrefabInstance);
 		std::vector<const qsf::Prototype*> originalPrototypes;
@@ -503,6 +570,7 @@ namespace user
 		buildInstantiateTemporaryPrototypesOperation(*compoundOperation, usedPrefabContent->getPrototypes(), selectedLayerId, false);
 		uint64 entityId = usedPrefabContent->getMainPrototype()->getId();
 		QSF_EDITOR_OPERATION.push(compoundOperation);
+		QSF_LOG_PRINTS(INFO, "Build Ent 4")
 		return entityId;
 		//Unit is created now apply transform
 	}

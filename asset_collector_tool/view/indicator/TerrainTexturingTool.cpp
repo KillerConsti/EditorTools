@@ -240,7 +240,7 @@ namespace user
 
 		void TerrainTexturingTool::PaintJob(const qsf::JobArguments & jobArguments)
 		{
-			if (TerrainTexturingToolbox::GetInstance() == nullptr) //call on shutdown if our gui was shutdowned
+			if (TerrainTexturingToolbox::GetInstance() == nullptr || !TerrainMaster.valid()) //call on shutdown if our gui was shutdowned
 			{
 				QSF_LOG_PRINTS(INFO,"Tool shutdown")
 				onShutdown(nullptr);
@@ -924,6 +924,11 @@ namespace user
 
 		void TerrainTexturingTool::SaveTheFuckingMap()
 		{
+			if(!TerrainMaster.valid() )
+			{
+				QSF_LOG_PRINTS(INFO,"Couldnt save terrain - terrain component was allready invalid")
+				return;
+			}
 			//take a look how it's done in terrain edit tool (modelling)
 			//we need to save 5 layers and the layerlist
 			//layer 0 is always 100% and cant be read anyway

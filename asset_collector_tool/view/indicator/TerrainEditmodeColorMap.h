@@ -227,7 +227,6 @@ namespace user
 			qsf::AssetPackage* m_OldAssetPackage;
 
 			void OnFinishEditing();
-
 			
 			//[-------------------------------------------------------]
 			//[ CAMP reflection system                                ]

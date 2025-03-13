@@ -156,9 +156,10 @@ namespace user
 			void onPushenviromentbutton(const bool pressed);
 
 			void onPush_AnalyseMeshButton(const bool pressed);
-
+			void onPushFindWrongDirectionEntities(const bool pressed);
 			std::string  ReadSkeleton();
 			void OnPushStartReadMaterial(const bool pressed);
+			void OnOPushFindNode(const bool pressed);
 		private:
 			Magick::Image* image;
 			QImage* mQImage;
@@ -194,7 +195,9 @@ namespace user
 			std::vector<uint64> DebugEntitiesFullNodeView;
 			std::vector<uint64> DebugEntities;
 			qsf::CompoundDebugDrawRequest SelectedNodeDebug;
+			qsf::CompoundDebugDrawRequest SelectedGateDebug;
 			uint32 mSelectedNodeDebug;
+			uint32 mSelectedGateDebug;
 			//checks if it element of DebugEntities
 			bool IsEntityAllreadySelected(uint64 Target,std::vector<uint64> CompareList);
 			void UpdateStreetDebugNodes();

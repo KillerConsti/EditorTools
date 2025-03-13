@@ -230,7 +230,7 @@ namespace user
 
 		void TerrainEditTool::PaintJob(const qsf::JobArguments & jobArguments)
 		{
-			if (TerrainEditToolbox::GetInstance() == nullptr) //call on shutdown if our gui was shutdowned
+			if (TerrainEditToolbox::GetInstance() == nullptr || !TerrainMaster.valid()) //call on shutdown if our gui was shutdowned
 			{
 				onShutdown(nullptr);
 				return;
@@ -304,7 +304,7 @@ namespace user
 			else
 				return;
 			float TotalRadius = Radius * Scale;
-			float BrushIntensity = TerrainEditGUI->GetBrushIntensity()*0.25f;
+			float BrushIntensity = TerrainEditGUI->GetBrushIntensity()*0.05f;
 			int MapPointMinX = glm::clamp((int)glm::ceil(MapPoint.x - TotalRadius), 0, (int)Heighmapsize);
 			int MapPointMaxX = glm::clamp((int)glm::floor(MapPoint.x + TotalRadius), 0, (int)Heighmapsize);
 			int MapPointMinY = glm::clamp((int)glm::ceil(MapPoint.y - TotalRadius), 0, (int)Heighmapsize);
@@ -745,11 +745,11 @@ namespace user
 
 		void TerrainEditTool::SaveTheFuckingMap()
 		{
-			if (TerrainEditGUI == nullptr)
-				return;
 			if (TerrainMaster.get() == nullptr)
-				return;
-
+			{
+				QSF_LOG_PRINTS(INFO, "Couldnt save terrain - terrain component was allready invalid")
+					return;
+			}
 
 			std::string widthandheight = boost::lexical_cast<std::string>(Heighmapsize) + "x" + boost::lexical_cast<std::string>(Heighmapsize);
 			Magick::Image* MagImage = new Magick::Image();

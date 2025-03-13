@@ -50,14 +50,23 @@
     <Filter Include="Source Files\Manager">
       <UniqueIdentifier>{ed8323c4-9483-439e-9301-7758f7f5ecdc}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\component">
-      <UniqueIdentifier>{5bc65a6c-7413-4421-9550-f857a1653260}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\kc_terrain">
       <UniqueIdentifier>{a4f2ba62-4b22-4099-bcc6-926fa62f3ca3}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\view\extern">
       <UniqueIdentifier>{0a7e1620-817c-49ad-a653-31c2319baf9b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\game">
+      <UniqueIdentifier>{723c4e7c-03dc-468d-88c9-3bbb404c7be9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\game\command">
+      <UniqueIdentifier>{bda49fcf-3589-4547-9cf8-d394da7a31c8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\game\component">
+      <UniqueIdentifier>{5bc65a6c-7413-4421-9550-f857a1653260}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\game\gamemanager">
+      <UniqueIdentifier>{270493f7-c936-4f65-87fe-ded2b4c667de}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -143,7 +152,7 @@
       <Filter>GeneratedQtFiles\moc</Filter>
     </ClCompile>
     <ClCompile Include="asset_collector_tool\component\EditorToolsHelperComponent.cpp">
-      <Filter>Source Files\component</Filter>
+      <Filter>Source Files\game\component</Filter>
     </ClCompile>
     <ClCompile Include="asset_collector_tool\view\KC_AbstractView.cpp">
       <Filter>Source Files\view</Filter>
@@ -211,6 +220,24 @@
     <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_UnoImageWriter.cpp">
       <Filter>GeneratedQtFiles\moc</Filter>
     </ClCompile>
+    <ClCompile Include="asset_collector_tool\command\MoveCommand.cpp">
+      <Filter>Source Files\game\command</Filter>
+    </ClCompile>
+    <ClCompile Include="asset_collector_tool\Manager\Settingsmanager.cpp">
+      <Filter>Source Files\plugin</Filter>
+    </ClCompile>
+    <ClCompile Include="asset_collector_tool\component\KCIndicatorComponent.cpp">
+      <Filter>Source Files\game\component</Filter>
+    </ClCompile>
+    <ClCompile Include="asset_collector_tool\game\Manager\GameManager.cpp">
+      <Filter>Source Files\game\gamemanager</Filter>
+    </ClCompile>
+    <ClCompile Include="asset_collector_tool\view\IndicatorView.cpp">
+      <Filter>Source Files\view</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_IndicatorView.cpp">
+      <Filter>GeneratedQtFiles\moc</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="asset_collector_tool\PrecompiledHeader.h">
@@ -250,7 +277,7 @@
       <Filter>GeneratedQtFiles\uic</Filter>
     </ClInclude>
     <ClInclude Include="asset_collector_tool\component\EditorToolsHelperComponent.h">
-      <Filter>Source Files\component</Filter>
+      <Filter>Source Files\game\component</Filter>
     </ClInclude>
     <ClInclude Include="asset_collector_tool\kc_terrain\TerrainMaterialGenerator.h">
       <Filter>Source Files\kc_terrain</Filter>
@@ -292,6 +319,21 @@
       <Filter>GeneratedQtFiles\uic</Filter>
     </ClInclude>
     <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_UnitViewer.h">
+      <Filter>GeneratedQtFiles\uic</Filter>
+    </ClInclude>
+    <ClInclude Include="asset_collector_tool\command\MoveCommand.h">
+      <Filter>Source Files\game\command</Filter>
+    </ClInclude>
+    <ClInclude Include="asset_collector_tool\Manager\Settingsmanager.h">
+      <Filter>Source Files\plugin</Filter>
+    </ClInclude>
+    <ClInclude Include="asset_collector_tool\component\KCIndicatorComponent.h">
+      <Filter>Source Files\game\component</Filter>
+    </ClInclude>
+    <ClInclude Include="asset_collector_tool\game\Manager\GameManager.h">
+      <Filter>Source Files\game\gamemanager</Filter>
+    </ClInclude>
+    <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_IndicatorView.h">
       <Filter>GeneratedQtFiles\uic</Filter>
     </ClInclude>
   </ItemGroup>
@@ -359,6 +401,9 @@
     <QtMOC Include="asset_collector_tool\view\UnoImageWriter.h">
       <Filter>Source Files\view</Filter>
     </QtMOC>
+    <QtMOC Include="asset_collector_tool\view\IndicatorView.h">
+      <Filter>Source Files\view</Filter>
+    </QtMOC>
   </ItemGroup>
   <ItemGroup>
     <QtRCC Include="asset_collector_tool\ressources\ressources.qrc">
@@ -404,6 +449,9 @@
     </QtUI>
     <QtUI Include="asset_collector_tool\view\indicator\UnitPlacerView.ui">
       <Filter>Source Files\view\AssetCollectorTool</Filter>
+    </QtUI>
+    <QtUI Include="asset_collector_tool\view\IndicatorView.ui">
+      <Filter>Source Files\view</Filter>
     </QtUI>
   </ItemGroup>
 </Project>

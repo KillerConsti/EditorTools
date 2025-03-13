@@ -24,6 +24,7 @@
 #include <asset_collector_tool\view\indicator\ScenarioScriptTool.h>
 #include <asset_collector_tool\view\ImageDecompiler.h>
 #include <QtCore\qcoreapplication.h>
+#include <asset_collector_tool\view\IndicatorView.h>
 //[-------------------------------------------------------]
 //[ Forward declarations                                  ]
 //[-------------------------------------------------------]
@@ -95,6 +96,7 @@ namespace user
 			void ShowDebugGui();
 			void ShowScenarioScriptToolView();
 			void ShowImageDecoderView();
+			void ShowIndicatorView();
 			private:
 			uint64 BuildComponentHolder();
 			void GUIManager::buildInstantiateTemporaryPrototypesOperation(qsf::editor::base::CompoundOperation & compoundOperation, const std::vector<qsf::Prototype*>& temporaryPrototypes, uint32 layerId, bool select);
@@ -102,6 +104,7 @@ namespace user
 			qsf::editor::View* DebugToolView;
 			qsf::editor::View* ScenarioScriptToolView;
 			qsf::editor::View* ImageDecompilerView;
+			qsf::editor::View* IndicatorView;
 			void SetFarClipping();
 			float OldFarClippingValue;
 		};

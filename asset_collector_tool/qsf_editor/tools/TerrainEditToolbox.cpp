@@ -99,6 +99,7 @@
 #include <qsf/plugin/PluginSystem.h>
 
 #include <em5/plugin/Plugin.h>
+#include <asset_collector_tool\Manager\Settingsmanager.h>
 //[-------------------------------------------------------]
 //[ Namespace                                             ]
 //[-------------------------------------------------------]
@@ -207,12 +208,14 @@ namespace user
 		connect(mUITerrainEditToolbox->tool_lower, SIGNAL(clicked(bool)), this, SLOT(onPushLower(bool)));
 		onPushSetHeight(true);
 		InitSavePath();
+		
 			return true;
 		}
 
 		void TerrainEditToolbox::retranslateUi(qsf::editor::ToolboxView & toolboxView)
 		{
 			mUITerrainEditToolbox->retranslateUi(toolboxView.widget());
+			LoadSettings();
 		}
 
 		void TerrainEditToolbox::onShutdown(qsf::editor::ToolboxView & toolboxView)
@@ -226,6 +229,7 @@ namespace user
 				//hopefully we trigger shutdown
 				editModeManager.forgetAboutPreviousEditMode();
 			}
+			SaveSettings();
 		}
 
 		
@@ -403,7 +407,54 @@ namespace user
 				QSF_EDITOR_EDITMODE_MANAGER.get<TerrainEditTool>()->LoadMap(Dia, directory);
 		}
 
+		void TerrainEditToolbox::LoadSettings()
+		{
+			
+			auto Setman = user::editor::Settingsmanager::instance;
+			mUITerrainEditToolbox->horizontalSlider->setValue(Setman->GetBrushIntensity());
+			mUITerrainEditToolbox->horizontalSlider_2->setValue(Setman->GetBrushSize());
+			mUITerrainEditToolbox->comboBox->setCurrentIndex(Setman->GetBrushShape());
 
+			onRadiusSliderChanged(Setman->GetBrushSize());
+			OnBrushIntensitySliderChanged(Setman->GetBrushIntensity());
+			onChangeBrushType(Setman->GetBrushShape());
+
+			std::stringstream ss;
+			ss << 1.0*mUITerrainEditToolbox->horizontalSlider_2->value() / 10.0;
+			mUITerrainEditToolbox->lineEdit_5->setText(ss.str().c_str());
+
+
+				std::stringstream sst;
+				sst << mUITerrainEditToolbox->horizontalSlider->value();
+				mUITerrainEditToolbox->lineEdit->setText(sst.str().c_str());
+				switch (Setman->GetBrushShape())
+				{
+				case 0:
+					
+					mUITerrainEditToolbox->comboBox->setCurrentIndex(0);
+					return;
+				case 1:
+					
+					mUITerrainEditToolbox->comboBox->setCurrentIndex(1);
+					return;
+				case 2:
+					mUITerrainEditToolbox->comboBox->setCurrentIndex(2);
+					return;
+				default:
+					mUITerrainEditToolbox->comboBox->setCurrentIndex(3);
+					return;
+				}
+
+		}
+
+		void TerrainEditToolbox::SaveSettings()
+		{
+			auto Setman = user::editor::Settingsmanager::instance;
+
+			Setman->SetBrushIntensity(mUITerrainEditToolbox->horizontalSlider->value());
+			Setman->SetBrushSize(mUITerrainEditToolbox->horizontalSlider_2->value());
+			Setman->SetBrushShape(mUITerrainEditToolbox->comboBox->currentIndex());
+		}
 
 		void TerrainEditToolbox::onChangeBrushType(const int Type)
 		{

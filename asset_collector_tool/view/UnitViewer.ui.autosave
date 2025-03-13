@@ -332,7 +332,7 @@
           <item>
            <widget class="QPushButton" name="BritifyCrossing">
             <property name="toolTip">
-             <string>mirror crossing to make it left hand driven</string>
+             <string>mirror crossing to make it left hand driven. can also be used on objects to apply the &quot;Britify Map effect&quot;</string>
             </property>
             <property name="text">
              <string>Britify Crossing</string>
@@ -341,6 +341,9 @@
           </item>
           <item>
            <widget class="QPushButton" name="FindWrongDirection">
+            <property name="toolTip">
+             <string>Mass conversion of objects looking into bottom direction</string>
+            </property>
             <property name="text">
              <string>Find Stuff Looking into wrong direction</string>
             </property>

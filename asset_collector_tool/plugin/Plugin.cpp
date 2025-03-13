@@ -37,6 +37,11 @@
 #include <asset_collector_tool\editmode\PlaceUnitEditMode.h>
 #include <asset_collector_tool\view\UnoImageWriter.h>
 #include <qsf/renderer/component/RendererComponent.h>
+#include <asset_collector_tool\command\MoveCommand.h>
+#include <asset_collector_tool\component\KCIndicatorComponent.h>
+#include <asset_collector_tool\game\Manager\GameManager.h>
+#include <asset_collector_tool\view\IndicatorView.h>
+#include <asset_collector_tool\Manager\Settingsmanager.h>
 //[-------------------------------------------------------]
 //[ Namespace                                             ]
 //[-------------------------------------------------------]
@@ -63,6 +68,7 @@ namespace user
 		{
 			try
 			{
+				mIngame = true;
 				// Declare CAMP reflection system classes
 				// -> Use Qt's "QT_TR_NOOP()"-macro in order to enable Qt's "lupdate"-program to find the internationalization texts
 				QSF_START_CAMP_CLASS_EXPORT(kc_terrain::TerrainComponent, "KC TerrainComponent" ,"Killers first terrain")
@@ -98,6 +104,25 @@ namespace user
 					QSF_START_CAMP_CLASS_EXPORT(EditorToolsHelperComponent, "This sets global glossiness", "you may just attach it to core entity")
 					QSF_CAMP_IS_COMPONENT
 					QSF_ADD_CAMP_PROPERTY(New Global Glossiness, EditorToolsHelperComponent::GetGlobalGlossiness, EditorToolsHelperComponent::SetGlobalGlossiness, "set it directly with the tool", 0.75f)
+					QSF_END_CAMP_CLASS_EXPORT
+
+					/* Game stuff */
+					QSF_START_CAMP_CLASS_EXPORT(kc_terrain::MoveCommand, "kc_terrain::MoveCommand","includes kc terrain")
+					QSF_GAME_CAMP_IS_COMMAND
+					QSF_END_CAMP_CLASS_EXPORT
+
+					QSF_CAMP_START_ENUM_EXPORT(kc::KCIndicatorComponent::Color)
+					QSF_CAMP_ENUM_VALUE(WHITE)
+					QSF_CAMP_ENUM_VALUE(RED)
+					QSF_CAMP_ENUM_VALUE(YELLOW)
+					QSF_CAMP_ENUM_VALUE(GREEN)
+					QSF_CAMP_ENUM_VALUE(BLUE)
+					QSF_CAMP_END_ENUM_EXPORT
+
+					QSF_START_CAMP_CLASS_EXPORT(kc::KCIndicatorComponent, "kc::KCIndicatorComponent","This component can be (ingame) used to mark objects which can be transfered into editor")
+					QSF_CAMP_IS_COMPONENT
+					QSF_ADD_CAMP_PROPERTY(Color, kc::KCIndicatorComponent::getColor, kc::KCIndicatorComponent::setColor,"Color like white- no prio, red high prio, blue a nearby object needs handling...", kc::KCIndicatorComponent::Color::WHITE)
+					QSF_ADD_CAMP_PROPERTY(IsAnimated, kc::KCIndicatorComponent::isAnimated, kc::KCIndicatorComponent::setIsAnimated, QT_TR_NOOP("ID_USER_COMPONENT_INDICATOR_ISANIMATED_DESCRIPTION"), false)
 					QSF_END_CAMP_CLASS_EXPORT
 			}
 			catch (const std::exception& e)
@@ -261,7 +286,7 @@ namespace user
 					.constructor2<qsf::editor::ViewManager*, QWidget*>()
 					.getClass()
 				);
-
+				mIngame = false;
 
 
 				//we dont want a log message here because we see this window pretty easy in the editor (or not?)
@@ -287,11 +312,27 @@ namespace user
 			GUIManager::init();
 			// Done
 			QSF_LOG_PRINTS(INFO, "startup editor tools finished")
+				if (mIngame)
+				{
+					GameManager::init();
+			}
+				else
+				{
+					user::editor::Settingsmanager::init();
+			}
 			return true;
 		}
 
 		void Plugin::onShutdown()
 		{
+			if (mIngame)
+			{
+				GameManager::instance->~GameManager();
+			}
+			else
+			{
+				user::editor::Settingsmanager::instance->~Settingsmanager();
+			}
 			GUIManager::instance->~GUIManager();
 			QSF_SAFE_DELETE(GUIManager::instance);
 			// Nothing to do in here

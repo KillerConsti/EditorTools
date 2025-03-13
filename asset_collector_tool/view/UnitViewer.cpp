@@ -91,6 +91,10 @@
 #include <QtWidgets\qprogressbar.h>
 #include <qsf/component/nodes/PathMeshComponent.h>
 #include <qsf/component/utility/BoostSignalComponent.h>
+#include <QtWidgets\qinputdialog.h>
+#include <qsf_editor/EditorHelper.h>
+#include <qsf_editor/application/Application.h>
+#include <qsf_editor/application/manager/CameraManager.h>
 //[-------------------------------------------------------]
 //[ Namespace                                             ]
 //[-------------------------------------------------------]
@@ -193,6 +197,7 @@ namespace user
 				connect(mUiUnitViewer->pushButtonUV_coordinates, SIGNAL(clicked(bool)), this, SLOT(OnPushStartReadMaterial(bool)));
 				connect(mUiUnitViewer->BritifyMap, SIGNAL(clicked(bool)), this, SLOT(onPushBritifyMap(bool)));
 				connect(mUiUnitViewer->BritifyCrossing, SIGNAL(clicked(bool)), this, SLOT(onPushBritifyCrossing(bool)));
+				connect(mUiUnitViewer->FindWrongDirection, SIGNAL(clicked(bool)), this, SLOT(onPushFindWrongDirectionEntities(bool)));
 				//connect(mUiUnitViewer->setsimulting, SIGNAL(clicked(bool)), this, SLOT(OnPushSetSimulating(bool)));
 				//connect(mUITrainTrackTool->pushButton_fill_tree_view, SIGNAL(clicked(bool)), this, SLOT(CreatePathEntities(bool)));
 				/*connect(mUiUnitViewer->pushCheckUnit, SIGNAL(clicked(bool)), this, SLOT(onPushSelectButton(bool)));
@@ -203,6 +208,7 @@ namespace user
 				//connect(mUiUnitViewer->comboBoxType, SIGNAL(currentIndexChanged(int)), this, SLOT(onCurrentIndexChanged(int)));
 
 				connect(mUiUnitViewer->AnalyseMeshButton, SIGNAL(clicked(bool)), this, SLOT(onPush_AnalyseMeshButton(bool)));
+				connect(mUiUnitViewer->searchNode, SIGNAL(clicked(bool)), this, SLOT(OnOPushFindNode(bool)));
 				qsf::editor::EntitySelectionManager& entitySelectionManager = QSF_EDITOR_SELECTION_SYSTEM.getSafe<qsf::editor::EntitySelectionManager>();
 				auto con2 = &entitySelectionManager.Selected.connect(boost::bind(&UnitViewer::onSelectionChanged, this, _1), boost::signals2::at_back);
 				if (con2 == nullptr)
@@ -533,6 +539,8 @@ namespace user
 
 		void UnitViewer::onPushRemoveDebugCircles(const bool pressed)
 		{
+			if (QSF_DEBUGDRAW.isRequestIdValid(mSelectedGateDebug))
+				QSF_DEBUGDRAW.cancelRequest(mSelectedGateDebug);
 			DebugEntitiesFullNodeView.clear();
 			DebugEntities.clear();
 			UpdateStreetDebugNodes();
@@ -565,6 +573,17 @@ namespace user
 		{
 			if(mBritifyJob.isValid())
 			return;
+			QInputDialog *dialog = new QInputDialog();
+			dialog->setInputMode(QInputDialog::InputMode::IntInput);
+			dialog->setWindowTitle("Do you really want to mirror the map?");
+			dialog->setLabelText("Really? Really?");
+			dialog->setTextValue("");
+			int ret = dialog->exec();
+			QString text = dialog->textValue();
+			if (ret != QDialog::Accepted)
+			{
+				return;
+			}
 			mUiUnitViewer->BritifyMap->setEnabled(false);
 			mBritifyState = BritifyState::Start;
 			mOldBritifyState = BritifyState::Finish;
@@ -910,8 +929,17 @@ namespace user
 
 		void UnitViewer::onPushBritifyCrossing(const bool pressed)
 		{
-			
+			auto mapcomponents = qsf::ComponentMapQuery(QSF_MAINMAP).getAllInstances<qsf::MapPropertiesComponent>();
+			{
+				for (auto a : mapcomponents)
+				{
+					mMidpoint = a->getMapBoundaryTopLeft() + a->getMapBoundaryBottomRight();
+					mMidpoint = mMidpoint / 2.f;
+					break;
+				}
+			}
 			qsf::editor::base::CompoundOperation* compoundOperation2 = new qsf::editor::base::CompoundOperation();
+			bool first = false;
 			for (auto ab : GetSelectedEntity())
 			{
 				auto a = ab->getComponent<qsf::TransformComponent>();
@@ -928,8 +956,42 @@ namespace user
 					a->setRotation(b*qsf::EulerAngles::eulerToQuaternion(0.f, glm::radians(180.f), 0.f));
 					compoundOperation2->pushBackOperation(new qsf::editor::base::SetComponentPropertyOperation(a->getId(), qsf::TransformComponent::COMPONENT_ID, qsf::StringHash("Rotation"), a->getRotation()));
 				}
-			}
-			QSF_EDITOR_OPERATION.push(compoundOperation2);
+				else
+				{
+					qsf::editor::base::CompoundOperation* compoundOperation2 = new qsf::editor::base::CompoundOperation();
+						//mirror z position
+						glm::vec3 Oldpos = a->getPosition();
+						float Dist = a->getPosition().z - mMidpoint.z;
+						a->setPosition(glm::vec3(a->getPosition().x, a->getPosition().y, mMidpoint.z - Dist));
+						compoundOperation2->pushBackOperation(new qsf::editor::base::SetComponentPropertyOperation(a->getId(), qsf::TransformComponent::COMPONENT_ID, qsf::StringHash("Position"), a->getPosition()));
+						if (a->getEntity().getComponent<qsf::StreetSectionComponent>() != nullptr)
+						{
+							HandleStreetSection(&a->getEntity());
+							continue;
+						}
+						glm::vec3 Scale = a->getScale();
+						Scale.y = Scale.y*-1.f;
+						a->setScale(Scale);
+						compoundOperation2->pushBackOperation(new qsf::editor::base::SetComponentPropertyOperation(a->getId(), qsf::TransformComponent::COMPONENT_ID, qsf::StringHash("Scale"), a->getScale()));
+						//finally we need to invert the turning
+						auto b = a->getRotation();
+						auto OldRot = b;
+						b.y = -b.y;
+						b.z = -b.z;
+						a->setRotation(b*qsf::EulerAngles::eulerToQuaternion(0.f, glm::radians(180.f), 0.f));
+						compoundOperation2->pushBackOperation(new qsf::editor::base::SetComponentPropertyOperation(a->getId(), qsf::TransformComponent::COMPONENT_ID, qsf::StringHash("Rotation"), a->getRotation()));
+						QSF_EDITOR_OPERATION.push(compoundOperation2);
+						//only for the first object : Move the camera
+						if (first == false)
+						{
+							first = true;
+							
+							QSF_EDITOR_APPLICATION.getCameraManager().flyCameraToPosition(a->getPosition()+glm::vec3(0.f,20.f,0.f));
+						}
+
+					}
+				}
+
 		}
 
 		void UnitViewer::onPushbrakeButton(const bool pressed)
@@ -1151,6 +1213,54 @@ namespace user
 			mUiUnitViewer->textBrowser->setText(TextbrowserText.c_str());
 		}
 
+		void UnitViewer::onPushFindWrongDirectionEntities(const bool pressed)
+		{
+			std::vector<qsf::TransformComponent*> MyTransforms;
+			qsf::ComponentMapQuery(QSF_MAINMAP).getAllInstances<qsf::TransformComponent>().copyToVector(MyTransforms);
+			boost::container::flat_set<uint64> MyList;
+			ChildTransforms.clear();
+			for (auto a : MyTransforms)
+			{
+				auto entityId = a->getEntityId();
+				if(a->getEntity().getComponent<qsf::MeshComponent>() == nullptr)
+				continue; //exclude terrain, cam etc
+				auto x = a->getRotation()*a->getScale();
+				if (x.y < -0.5)
+				{
+					//we are upside down
+					CollectAllChildTransforms(QSF_MAINMAP.getEntityById(a->getEntityId()));
+					a->setScale(glm::vec3(a->getScale().x,a->getScale().y*-1.f,a->getScale().z));
+					a->setAllPropertyOverrideFlags(true);
+					MyList.insert(a->getEntityId());
+				}
+				
+				/*if (entityId == 16802564712317299536)
+				{
+					QSF_LOG_PRINTS(INFO, "we face into wrong direction "<< x)
+				}
+				else if (entityId == 6346695056171085224)
+				{
+					QSF_LOG_PRINTS(INFO, "we also face into wrong direction " << x)
+				}
+				else if (entityId == 15700804600439258701)
+				{
+					QSF_LOG_PRINTS(INFO, "we also face into rigght direction " << x)
+				}
+				else if (entityId == 16167579297089897922)
+				{
+					QSF_LOG_PRINTS(INFO, "we also face into rigght direction " << x)
+				}*/
+
+			}
+			for (uint64 t = 0; t < ChildTransforms.size(); t++)
+			{
+				ApplyChildTransforms((int)t);
+			}
+			QSF_EDITOR_SELECTION_SYSTEM.getSafe<qsf::editor::EntitySelectionManager>().clearSelection();
+			QSF_EDITOR_SELECTION_SYSTEM.getSafe<qsf::editor::EntitySelectionManager>().setSelectionByIdSet(MyList);
+			QSF_LOG_PRINTS(INFO,"changed rotation of "<< MyList.size() << "objects")
+		}
+
 		std::string UnitViewer::ReadSkeleton()
 		{
 			qsf::Entity* MyEnt = nullptr;
@@ -1245,6 +1355,45 @@ namespace user
 			{
 				mMaterialViewerJob.unregister();
 				mUiUnitViewer->pushButtonUV_coordinates->setChecked(false);
+			}
+		}
+
+		void UnitViewer::OnOPushFindNode(const bool pressed)
+		{
+			qsf::ComponentCollection::ComponentList<qsf::StreetCrossingComponent> QueryFireComponents = qsf::ComponentMapQuery(QSF_MAINMAP).getAllInstances<qsf::StreetCrossingComponent>();
+			uint64 Id;
+			try
+			{
+				Id = boost::lexical_cast<uint64>(mUiUnitViewer->searchnodeIdField->text().toStdString());
+			}
+			catch (const std::exception&)
+			{
+				return;
+			}
+			for (auto a : QueryFireComponents)
+			{
+				for (size_t t= 0; t <a->getStreetGateways().size();t++)
+				{
+					auto b = a->getStreetGateways().at(t);
+					if (b.getStreetGatewayLink().getConnectedEntityId() == Id)
+					{
+						auto vec = a->getStreetGatewayPositionInWorldSpace((uint32)t);
+						QSF_EDITOR_APPLICATION.getCameraManager().flyCameraToPosition(vec + glm::vec3(0.f, 20.f, 0.f));
+						qsf::editor::EntitySelectionManager& entitySelectionManager = QSF_EDITOR_SELECTION_SYSTEM.getSafe<qsf::editor::EntitySelectionManager>();
+						entitySelectionManager.clearSelection();
+
+						entitySelectionManager.addIdToSelection(a->getEntityId());
+
+						if (QSF_DEBUGDRAW.isRequestIdValid(mSelectedGateDebug))
+							QSF_DEBUGDRAW.cancelRequest(mSelectedGateDebug);
+
+						SelectedGateDebug.mCircles.clear();
+						SelectedGateDebug.mCircles.push_back(qsf::CircleDebugDrawRequest(vec, qsf::CoordinateSystem::getUp(), 1.4f, qsf::Color4::PURPLE, false));
+						SelectedGateDebug.mCircles.push_back(qsf::CircleDebugDrawRequest(vec, qsf::CoordinateSystem::getUp(), 0.1f, qsf::Color4::PURPLE, true));
+						mSelectedGateDebug = QSF_DEBUGDRAW.requestDraw(SelectedGateDebug);
+						return;
+					}
+				}
 			}
 		}
 
@@ -1749,6 +1898,8 @@ namespace user
 		{
 			if (QSF_DEBUGDRAW.isRequestIdValid(mSelectedNodeDebug))
 				QSF_DEBUGDRAW.cancelRequest(mSelectedNodeDebug);
+			if (QSF_DEBUGDRAW.isRequestIdValid(mSelectedGateDebug))
+				QSF_DEBUGDRAW.cancelRequest(mSelectedGateDebug);
 			mTireJob.unregister();
 			// Call the base implementation
 			View::hideEvent(qHideEvent);

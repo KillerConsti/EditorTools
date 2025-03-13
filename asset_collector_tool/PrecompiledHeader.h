@@ -55,3 +55,4 @@
 #include <limits>
 
 #define NoQSFTerrain
+#define FinalBuild

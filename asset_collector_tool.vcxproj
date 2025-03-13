@@ -48,7 +48,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>true</LinkIncremental>
     <IntDir>..\tmp\vc11\$(PlatformName)_$(Configuration)\$(ProjectName)\</IntDir>
-    <OutDir>D:\SteamLibrary\steamapps\common\EMERGENCY 20\data\asset_collector_tool_for_editor\x64\</OutDir>
+    <OutDir>D:\SteamLibrary\steamapps\common\EMERGENCY 20\data\kc_editor_tools\x64\</OutDir>
     <LibraryPath>..\..\data\asset_collector_tool_for_editor\x64\externals;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Retail|x64'">
@@ -76,7 +76,7 @@
       <EnableCOMDATFolding>false</EnableCOMDATFolding>
       <OptimizeReferences>false</OptimizeReferences>
       <AdditionalLibraryDirectories>$(QsfDir)external\_windows_$(PlatformTarget)\vld\lib;$(QsfDir)external\_windows_$(PlatformTarget)\boost\lib;$(QsfDir)external\_windows_$(PlatformTarget)\camp\lib;$(QsfDir)external\_windows_$(PlatformTarget)\qt\lib;$(QsfDir)external\_windows_$(PlatformTarget)\tbb\lib;$(QsfDir)lib\$(PlatformTarget)r;$(EM5SdkDir)lib\$(PlatformTarget)r;..\lib\$(PlatformTarget);$(QsfDir)external\_windows_$(PlatformTarget)\ogre\lib\RelWithDebInfo;asset_collector_tool\extern;..\..\data\asset_collector_tool_for_editor\x64\externals</AdditionalLibraryDirectories>
-      <AdditionalDependencies>camp.lib;Qt5Core.lib;Qt5Gui.lib;Qt5Widgets.lib;qsf.lib;qsf_ai.lib;qsf_editor_base.lib;qsf_editor.lib;qsf_compositing.lib;em5_editor.lib;qsf_game.lib;em5.lib;OgreMain.lib;OgreTerrain.lib;CORE_RL_MagickCore_.lib;CORE_RL_Magick++_.lib;CORE_RL_MagickWand_.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>camp.lib;Qt5Core.lib;Qt5Gui.lib;Qt5Widgets.lib;qsf.lib;qsf_ai.lib;qsf_logic.lib;qsf_editor_base.lib;qsf_editor.lib;qsf_game.lib;qsf_compositing.lib;em5_editor.lib;em5.lib;OgreMain.lib;OgreTerrain.lib;CORE_RL_MagickCore_.lib;CORE_RL_Magick++_.lib;CORE_RL_MagickWand_.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>..\lib\$(PlatformTarget)$(CfgExtension)\$(TargetName).lib</ImportLibrary>
     </Link>
     <PostBuildEvent />
@@ -117,6 +117,7 @@
     <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_EditorTerrainManager.cpp" />
     <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_GuiManager.cpp" />
     <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_ImageDecompiler.cpp" />
+    <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_IndicatorView.cpp" />
     <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_KC_AbstractView.cpp" />
     <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_OrderInfoPictureCreator.cpp" />
     <ClCompile Include="..\tmp\qt\moc\asset_collector_tool\moc_PlaceUnitEditMode.cpp" />
@@ -134,8 +135,11 @@
     <ClCompile Include="..\tmp\qt\rcc\asset_collector_tool\res_ressources.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="asset_collector_tool\command\MoveCommand.cpp" />
     <ClCompile Include="asset_collector_tool\component\EditorToolsHelperComponent.cpp" />
+    <ClCompile Include="asset_collector_tool\component\KCIndicatorComponent.cpp" />
     <ClCompile Include="asset_collector_tool\editmode\PlaceUnitEditMode.cpp" />
+    <ClCompile Include="asset_collector_tool\game\Manager\GameManager.cpp" />
     <ClCompile Include="asset_collector_tool\kc_terrain\TerrainComponent.cpp" />
     <ClCompile Include="asset_collector_tool\kc_terrain\TerrainContext.cpp" />
     <ClCompile Include="asset_collector_tool\kc_terrain\TerrainLoader.cpp" />
@@ -144,6 +148,7 @@
     <ClCompile Include="asset_collector_tool\kc_terrain\TerrainScaler.cpp" />
     <ClCompile Include="asset_collector_tool\Main.cpp" />
     <ClCompile Include="asset_collector_tool\Manager\GuiManager.cpp" />
+    <ClCompile Include="asset_collector_tool\Manager\Settingsmanager.cpp" />
     <ClCompile Include="asset_collector_tool\plugin\Plugin.cpp" />
     <ClCompile Include="asset_collector_tool\PrecompiledHeader.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
@@ -156,6 +161,7 @@
     <ClCompile Include="asset_collector_tool\tools\TrainTrackTool.cpp" />
     <ClCompile Include="asset_collector_tool\view\DebugUnitView.cpp" />
     <ClCompile Include="asset_collector_tool\view\ImageDecompiler.cpp" />
+    <ClCompile Include="asset_collector_tool\view\IndicatorView.cpp" />
     <ClCompile Include="asset_collector_tool\view\indicator\AssetCollectorTool.cpp" />
     <ClCompile Include="asset_collector_tool\view\indicator\ScenarioScriptTool.cpp" />
     <ClCompile Include="asset_collector_tool\view\indicator\TerrainEditmodeColorMap.cpp" />
@@ -173,6 +179,7 @@
     <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_DebugUnitView.h" />
     <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_EditorTerrainManager.h" />
     <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_ImageDecompiler.h" />
+    <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_IndicatorView.h" />
     <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_KC_AbstractView.h" />
     <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_OrderInfoPictureCreator.h" />
     <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_ScenarioScriptTool.h" />
@@ -184,9 +191,11 @@
     <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_UnitPlacerView.h" />
     <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_UnitViewer.h" />
     <ClInclude Include="..\tmp\qt\uic\asset_collector_tool\ui_UnoImageWriter.h" />
+    <ClInclude Include="asset_collector_tool\command\MoveCommand.h" />
     <ClInclude Include="asset_collector_tool\component\EditorToolsHelperComponent.h" />
     <QtMOC Include="asset_collector_tool\view\UnoImageWriter.h" />
     <QtMOC Include="asset_collector_tool\editmode\PlaceUnitEditMode.h" />
+    <ClInclude Include="asset_collector_tool\component\KCIndicatorComponent.h" />
     <ClInclude Include="asset_collector_tool\Export.h" />
     <QtMOC Include="asset_collector_tool\view\EditorTerrainManager.h" />
     <QtMOC Include="asset_collector_tool\view\OrderInfoPictureCreator.h" />
@@ -200,6 +209,7 @@
     <QtMOC Include="asset_collector_tool\tools\TrainTrackTool.h" />
     <QtMOC Include="asset_collector_tool\view\DebugUnitView.h" />
     <QtMOC Include="asset_collector_tool\Manager\GuiManager.h" />
+    <ClInclude Include="asset_collector_tool\game\Manager\GameManager.h" />
     <ClInclude Include="asset_collector_tool\kc_terrain\TerrainComponent-inl.h" />
     <ClInclude Include="asset_collector_tool\kc_terrain\TerrainComponent.h" />
     <ClInclude Include="asset_collector_tool\kc_terrain\TerrainContext-inl.h" />
@@ -209,6 +219,8 @@
     <QtMOC Include="asset_collector_tool\view\ImageDecompiler.h" />
     <ClInclude Include="asset_collector_tool\kc_terrain\TerrainMaterialGeneratorOgreMaterial.h" />
     <ClInclude Include="asset_collector_tool\kc_terrain\TerrainScaler.h" />
+    <ClInclude Include="asset_collector_tool\Manager\Settingsmanager.h" />
+    <QtMOC Include="asset_collector_tool\view\IndicatorView.h" />
     <ClInclude Include="asset_collector_tool\view\indicator\ScenarioScriptTool.h" />
     <QtMOC Include="asset_collector_tool\view\indicator\TerrainEditTool.h" />
     <QtMOC Include="asset_collector_tool\view\indicator\AssetCollectorTool.h" />
@@ -217,6 +229,9 @@
     <ClInclude Include="asset_collector_tool\PrecompiledHeader.h" />
   </ItemGroup>
   <ItemGroup>
+    <QtUI Include="asset_collector_tool\view\IndicatorView.ui">
+      <FileType>Document</FileType>
+    </QtUI>
     <QtUI Include="asset_collector_tool\view\UnoImageWriter.ui">
       <FileType>Document</FileType>
     </QtUI>

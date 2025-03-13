@@ -144,7 +144,7 @@ using namespace Magick;
 //[-------------------------------------------------------]
 namespace kc_terrain
 {
-
+	EditorTerrainManager* EditorTerrainManager::Instance = nullptr;
 	using boost::lexical_cast;
 	using boost::bad_lexical_cast;
 	//[-------------------------------------------------------]
@@ -164,9 +164,6 @@ namespace kc_terrain
 	{
 		// Add the created Qt dock widget to the given Qt main window and tabify it for better usability
 		addViewAndTabify(reinterpret_cast<QMainWindow&>(*qWidgetParent), Qt::RightDockWidgetArea);
-#ifdef FinalBuild
-		mWaitUntilIsInEditMode.registerAt(em5::Jobs::ANIMATION_VEHICLE, boost::bind(&EditorTerrainManager::WaitUntilIsInEditMode, this, _1));
-#endif
 	}
 
 	EditorTerrainManager::~EditorTerrainManager()
@@ -179,6 +176,16 @@ namespace kc_terrain
 			entitySelectionManager.Selected.disconnect(boost::bind(&EditorTerrainManager::onSelectionChanged, this, _1));
 			delete mUiEditorTerrainManager;
 		}
+	}
+
+	EditorTerrainManager * EditorTerrainManager::GetInstance()
+	{
+		return Instance;
+	}
+
+	void EditorTerrainManager::setLabelName(std::string i)
+	{
+		mUiEditorTerrainManager->label->setText(i.c_str());
 	}
 
 
@@ -218,14 +225,18 @@ namespace kc_terrain
 			connect(mUiEditorTerrainManager->removeEntity, SIGNAL(clicked(bool)), this, SLOT(onremoveEntity(bool)));
 			connect(mUiEditorTerrainManager->OpenSaveLocation, SIGNAL(clicked(bool)), this, SLOT(onOpenSaveLocation(bool)));*/
 			qsf::editor::EntitySelectionManager& entitySelectionManager = QSF_EDITOR_SELECTION_SYSTEM.getSafe<qsf::editor::EntitySelectionManager>();
+			mWaitUntilIsInEditMode.registerAt(em5::Jobs::ANIMATION_VEHICLE, boost::bind(&EditorTerrainManager::WaitUntilIsInEditMode, this, _1));
 			auto con2 = &entitySelectionManager.Selected.connect(boost::bind(&EditorTerrainManager::onSelectionChanged, this, _1), boost::signals2::at_back);
 			if (con2 == nullptr)
 			{
 				QSF_LOG_PRINTS(INFO, "entitySelectionManager :: Slot connection failed 2 ")
 			}
+			Instance = this;
 		}
-		else if (!visible && nullptr == mUiEditorTerrainManager)
+		else if (!visible || nullptr == mUiEditorTerrainManager)
 		{
+			Instance= nullptr;
+			mWaitUntilIsInEditMode.unregister();
 		}
 
 	}
@@ -271,7 +282,6 @@ namespace kc_terrain
 	//we could also just store a list of old entites
 	void EditorTerrainManager::onSelectionChanged(uint64 Id)
 	{
-#ifndef FinalBuild
 		if (Id == qsf::getUninitialized<uint64>())
 			return;
 		auto sel = QSF_EDITOR_EDITMODE_MANAGER.getSelectedEditMode();
@@ -285,7 +295,6 @@ namespace kc_terrain
 		QSF_LOG_PRINTS(INFO, "we selected a new unit (at least we guess so)")
 			if (PushObjectOnTopmostTerrain(Id))
 				QSF_LOG_PRINTS(INFO, "new pos")
-#endif
 	}
 
 	bool EditorTerrainManager::PushObjectOnTopmostTerrain(uint64 id)
@@ -408,6 +417,9 @@ namespace kc_terrain
 
 	void EditorTerrainManager::WaitUntilIsInEditMode(const qsf::JobArguments & jobArguments)
 	{
+		auto TerrainMaster = qsf::ComponentMapQuery(QSF_MAINMAP).getFirstInstance<kc_terrain::TerrainComponent>();
+		if (TerrainMaster == nullptr)
+			return;
 		auto sel = QSF_EDITOR_EDITMODE_MANAGER.getSelectedEditMode();
 		if (sel == nullptr)
 		{
@@ -447,7 +459,7 @@ namespace kc_terrain
 			ReplaceEditMode(false);
 			return;
 		}
-	
+			
 			ReplaceEditMode(true);
 
 			auto PIB = static_cast<qsf::editor::PrefabInstancingEditMode*>(sel);
