@@ -76,7 +76,18 @@ namespace user
 
 			static void init();
 
+			//UpdateAssetStuffWhich does not belong here
+			struct UpdateAsset 
+			{
+				uint64 mGlobalAssetId;
+				uint64 mEntityId; //needed?
+				float Time = 0.f;
+			};
+			UpdateAsset mUpdateAsset;
+			void StartTimerUpdateAsset(uint64 GlobalAssetId, uint64 EntityId);
+			void WaitUntilUpdateAsset(const qsf::JobArguments& jobArguments);
 		private:
+			qsf::JobProxy mAssetReadyForUpdate;
 			void onPreNewEmptyMap(const qsf::MessageParameters& parameters);
 			qsf::MessageProxy mOnPreNewEmptyMapMessageProxy;
 			qsf::JobProxy mWaitUntilEditorReady;

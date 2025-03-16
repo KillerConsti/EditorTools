@@ -322,7 +322,7 @@ namespace kc_terrain
 
 	void TerrainMaterialGenerator::RefreshMaterial(const Ogre::Terrain* ogreTerrain)
 	{
-			auto  OgreTerrain = kc_terrain::TerrainMaterialGenerator::generate(ogreTerrain);
+			getProfiles().at(0)->generate(ogreTerrain);
 
 	}
 
@@ -339,8 +339,8 @@ namespace kc_terrain
 			}
 			mAssetEditHelper->submit();
 		}
-		//auto  OgreTerrain = kc_terrain::TerrainMaterialGenerator::generate(ogreTerrain);
-		//_markChanged();
+		auto  OgreTerrain = kc_terrain::TerrainMaterialGenerator::generate(ogreTerrain);
+		_markChanged();
 		return;
 
 	}
@@ -358,20 +358,6 @@ namespace kc_terrain
 			}
 			mAssetEditHelper->submit();
 		}
-		//we could improve speed if we dont have to save map
-		/*auto Mat = ogreTerrain->getMaterial();
-		auto iterator = Mat->getTechniqueIterator();
-		while (iterator.hasMoreElements())
-		{
-			auto tech = iterator.getNext();
-			auto passes = tech->getPassIterator();
-			while (passes.hasMoreElements())
-			{
-				auto pass = passes.getNext();
-				QSF_LOG_PRINTS(INFO,"Pass stuff" << pass->getName().c_str() <<" "<< pass->getColourWriteEnabled() << " "<<pass->getResourceGroup().c_str() << " ")
-				//pass->getMacroblock()
-			}
-		}*/
 
 	}
 

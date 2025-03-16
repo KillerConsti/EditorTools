@@ -99,6 +99,7 @@
 #include  <qsf/renderer/terrain/TerrainDefinition.h>
 #include <qsf/map/component/MapPropertiesBaseComponent.h>
 #include <asset_collector_tool\Manager\Settingsmanager.h>
+#include <asset_collector_tool\Manager\GuiManager.h>
 using namespace std::chrono;
 
 
@@ -788,7 +789,6 @@ namespace user
 				Ogre::TerrainGroup::TerrainSlot* a = it.getNext();
 				counter++;
 			}
-			//TerrainMaster->setEditing(true);
 			EditMode::onStartup(previousEditMode);
 
 			user::editor::TerrainEditColorMapToolbox* TET = static_cast<user::editor::TerrainEditColorMapToolbox*>(this->getManager().getToolWhichSelectedEditMode());
@@ -805,6 +805,7 @@ namespace user
 			if (image == nullptr)
 			{
 				CopyOldMapWithNoAssetLoaded();
+				generateMaterial();
 			}
 			if (image == nullptr)
 			{
@@ -835,17 +836,18 @@ namespace user
 			mDebugDrawProxy.unregister();
 			QSF_LOG_PRINTS(INFO, "TerrainEditmodeColorMap Shutdown")
 				OnFinishEditing();
+			onSplitMap_waitForSave_TerrainDone(true);
 		}
 
 		bool TerrainEditmodeColorMap::SplitMapInSmallMaps()
 		{
 			m_OldAssetPackage = QSF_EDITOR_APPLICATION.getAssetImportManager().getDefaultDestinationAssetPackage();
-			QSF_EDITOR_APPLICATION.getAssetImportManager().setDefaultDestinationAssetPackage("asset_collector_tool_for_editor", "kc_terrrain_working_dir");
+			QSF_EDITOR_APPLICATION.getAssetImportManager().setDefaultDestinationAssetPackage("kc_editor_tools", "kc_terrrain_working_dir");
 			qsf::AssetPackage* AP;
 			mAssetEditHelper = std::shared_ptr<qsf::editor::AssetEditHelper>(new qsf::editor::AssetEditHelper());
 			for (auto a : EM5_MOD.getMods())
 			{
-				if (a.second->getName() == "asset_collector_tool_for_editor")
+				if (a.second->getName() == "kc_editor_tools")
 				{
 					AP = a.second->getProject().getAssetPackageByName("kc_terrrain_working_dir");
 				}
@@ -905,7 +907,7 @@ namespace user
 					int yOffset = y * partsize;
 					TerrainImg->copyPixels(*image, Magick::Geometry(partsize, partsize, xOffset, yOffset), Magick::Offset(0, 0));
 					TerrainImg->syncPixels();
-					std::string LocalAssetNameToCheck = "asset_collector_tool_for_editor/texture/colormaptextures/terrainchunk_" + boost::lexical_cast<std::string>(x) + "_" + boost::lexical_cast<std::string>(y) + "_tecm";
+					std::string LocalAssetNameToCheck = "kc_editor_tools/texture/colormaptextures/terrainchunk_" + boost::lexical_cast<std::string>(x) + "_" + boost::lexical_cast<std::string>(y) + "_tecm";
 					qsf::AssetProxy AP = qsf::AssetProxy(LocalAssetNameToCheck);
 					if (AP.getAsset() != nullptr)
 					{
@@ -946,6 +948,7 @@ namespace user
 							QSF_LOG_PRINTS(INFO, e.what())
 								return false;
 						}
+						//rename didnt work
 						std::string LocalAssetName = "asset_collector_tool_for_editor/texture/colormaptextures/terrainchunk_" + boost::lexical_cast<std::string>(x) + "_" + boost::lexical_cast<std::string>(y) + "_tecm";
 						m_SmallImages.push_back(std::pair<Magick::Image*, std::string>(TerrainImg, LocalAssetName));
 						//add them to explorer
@@ -960,8 +963,8 @@ namespace user
 								//a add asset
 								auto Asset = mAssetEditHelper->addAsset("kc_terrrain_working_dir", qsf::QsfAssetTypes::TEXTURE, "colormaptextures", "terrainchunk_" + boost::lexical_cast<std::string>(x) + "_" + boost::lexical_cast<std::string>(y) + "_tecm");
 								//b create folder structure in assethelper (to read and write)
-								if (!boost::filesystem::exists((QSF_FILE.getBaseDirectory() + "/data/asset_collector_tool_for_editor/" + IAP->getName() + "/texture/colormaptextures")))
-									boost::filesystem::create_directories(QSF_FILE.getBaseDirectory() + "/data/asset_collector_tool_for_editor/" + IAP->getName() + "/texture/colormaptextures");
+								if (!boost::filesystem::exists((QSF_FILE.getBaseDirectory() + "/data/kc_editor_tools/" + IAP->getName() + "/texture/colormaptextures")))
+									boost::filesystem::create_directories(QSF_FILE.getBaseDirectory() + "/data/kc_editor_tools/" + IAP->getName() + "/texture/colormaptextures");
 								//c write to new folder -I think it will copy to our direction we wrote before
 								TerrainImg->write(pathtoassethelper + "/texture/colormaptextures/terrainchunk_" + boost::lexical_cast<std::string>(x) + "_" + boost::lexical_cast<std::string>(y) + "_tecm.dds");
 
@@ -1012,7 +1015,9 @@ namespace user
 			mAssetEditHelper->submit();
 			//load Materials but wait until submit is completed
 			mAssetEditHelper->callWhenFinishedUploading(boost::bind(&TerrainEditmodeColorMap::SplitMap_waitForSaveTerrain, this, boost::function<void(bool)>(boost::bind(&TerrainEditmodeColorMap::onSplitMap_waitForSave_TerrainDone, this, _1))));
-
+			//mAssetEditHelper->callWhenFinishedUploading(boost::bind(&TerrainEditmodeColorMap::SplitMap_waitForSaveTerrain, this, boost::function<void(bool)>(boost::bind(&TerrainEditmodeColorMap::onSplitMap_waitForSave_TerrainDone, this, _1))));
+			//try a direct call to change default destionation package
+			//onSplitMap_waitForSave_TerrainDone(true);
 			return true;
 
 		}
@@ -1026,11 +1031,15 @@ namespace user
 
 		void TerrainEditmodeColorMap::onSplitMap_waitForSave_TerrainDone(bool isGood)
 		{
-			QSF_LOG_PRINTS(INFO, "Created Splitmaps func 2")
 				QSF_CHECK(nullptr != mAssetEditHelper, "qsf::editor::TerrainEditHelper::onSaveTerrainDone(): nullptr != mAssetEditHelper", QSF_REACT_THROW);
 			mAssetEditHelper->reset();
+			if (m_OldAssetPackage == nullptr)
+			{
+				return;
+			}
 			QSF_EDITOR_APPLICATION.getAssetImportManager().setDefaultDestinationAssetPackage(m_OldAssetPackage->getProject().getName(), m_OldAssetPackage->getName());
 			m_OldAssetPackage = nullptr;
+			QSF_LOG_PRINTS(INFO, "we changed back the default asset destionation asset package")
 		}
 
 		void TerrainEditmodeColorMap::ChangeMaterialToUseSmallMaps(int x, int y)
@@ -1041,6 +1050,7 @@ namespace user
 				{
 					int y_mirror = mParts - 1 - y;
 					//QSF_LOG_PRINTS(INFO, "x "<< x << " y "<<y<< " "<< GetSmallImageByTerrainId(x, y).second)
+					//QSF_LOG_PRINTS(INFO, GetSmallImageByTerrainId(x, y).second)
 					TerrainMaster->UseMiniColorMaps(mParts, x, y_mirror, GetSmallImageByTerrainId(x, y).second);
 				}
 			}
@@ -1083,18 +1093,38 @@ namespace user
 					return;
 			}
 			image->write(ColorMapToRead.getAbsoluteCachedAssetDataFilename());
+			//Update img in worldbuilder (this is done with tryeditasset)
+			if (qsf::AssetProxy(ColorMapToRead).getGlobalAssetId() != qsf::getUninitialized<uint64>())
+			{
+				auto mAssetEditHelper = std::shared_ptr<qsf::editor::AssetEditHelper>(new qsf::editor::AssetEditHelper());
+				std::string TargetAssetName = qsf::AssetProxy(ColorMapToRead).getAssetPackage()->getName();
+				mAssetEditHelper->tryEditAsset(qsf::AssetProxy(ColorMapToRead).getGlobalAssetId(), TargetAssetName);
+				if (!mAssetEditHelper->setAssetUploadData(ColorMapToRead.getGlobalAssetId(), true, true))
+				{
+					//QSF_LOG_PRINTS(INFO,"couldnt update colormap?")
+				}
+				if (mAssetEditHelper->submit())
+				{
+					QSF_LOG_PRINTS(INFO,"error occured when submitting colormap")
+				}
+			}
+			QSF_LOG_PRINTS(INFO,"updated whole color map")
 			if (!TerrainMaster.valid())
 			{
 				QSF_LOG_PRINTS(INFO, "Couldnt save terrain - terrain component was allready invalid")
 					return;
 			}
-			TerrainMaster->ReloadSubTerrainMaterials(0, 0);
+			//if(GUIManager::instance != nullptr)
+				//GUIManager::instance->StartTimerUpdateAsset(ColorMapToRead.getGlobalAssetId(),TerrainMaster->getEntityId());
+		
 			Ogre::TerrainGroup::TerrainIterator it3 = TerrainMaster->getOgreTerrainGroup()->getTerrainIterator();
+			qsf::MaterialManager& materialManager = QSF_MATERIAL.getMaterialManager();
 			while (it3.hasMoreElements()) // add the layer to all terrains in the terrainGroup
 			{
 				Ogre::TerrainGroup::TerrainSlot* a = it3.getNext();
-
-				TerrainMaster->RefreshMaterial(a->instance);
+				//TerrainMaster->ReloadSubTerrainMaterials(a->x, a->y);
+				TerrainMaster->ReloadSmallTerrainMaterial(a->x, a->y, ColorMapToRead.getGlobalAssetId());
+				//TerrainMaster->RefreshMaterial(a->instance);
 			}
 		}
 

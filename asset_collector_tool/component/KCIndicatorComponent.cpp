@@ -34,7 +34,8 @@ namespace kc
 	KCIndicatorComponent::KCIndicatorComponent(qsf::Prototype* prototype) :
 		qsf::Component(prototype),
 		mColor(Color::WHITE),
-		mIsAnimated(false)
+		mIsAnimated(false),
+		mVisOnlyInEditor(false)
 	{
 		// Nothing to do in here
 	}
@@ -64,6 +65,21 @@ namespace kc
 		mIsAnimated = animated;
 	}
 
+	void KCIndicatorComponent::SetShowInEditorOnly(bool _Set)
+	{
+		mVisOnlyInEditor =_Set;
+		if (mVisOnlyInEditor && EM5_GUI.getInstance() != nullptr)
+		{
+			mDebugDrawProxy.unregister();
+			mUpdateJobProxy.unregister();
+		}
+	}
+
+	bool KCIndicatorComponent::GetShowInEditorOnly()
+	{
+		return mVisOnlyInEditor;
+	}
+
 
 	//[-------------------------------------------------------]
 	//[ Protected virtual em5::Component methods              ]
@@ -73,7 +89,11 @@ namespace kc
 		// Activate regular update call by registering via the job proxy
 		//  -> We take the "ANIMATION_GENERAL" job here, which gets called once a frame and works in the editor as well -- in contrast to "SIMULATION" jobs
 		mUpdateJobProxy.registerAt(em5::Jobs::ANIMATION_FIREHOSE, boost::bind(&KCIndicatorComponent::updateJob, this, _1));
-
+		if (mVisOnlyInEditor && EM5_GUI.getInstance() != nullptr)
+		{
+			mDebugDrawProxy.unregister();
+			mUpdateJobProxy.unregister();
+		}
 		// Done
 		return true;
 	}

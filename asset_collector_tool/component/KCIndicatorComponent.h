@@ -45,7 +45,8 @@ namespace kc
 		bool isAnimated();
 		void setIsAnimated(bool animated);
 
-
+		void SetShowInEditorOnly(bool _Set);
+		bool GetShowInEditorOnly();
 		//[-------------------------------------------------------]
 		//[ Protected virtual qsf::Component methods              ]
 		//[-------------------------------------------------------]
@@ -72,7 +73,7 @@ namespace kc
 		Color				mColor;				///< Selected color of this indicator
 		bool				mIsAnimated;		///< If "true", the indicator is animated
 		qsf::Time			mAnimationTime;		///< Current time for animation
-
+		bool mVisOnlyInEditor;
 		qsf::JobProxy		mUpdateJobProxy;	///< Update job proxy, needed to get regular update calls
 		qsf::DebugDrawProxy mDebugDrawProxy;	///< Debug draw proxy, needed for the visual representation
 		QSF_CAMP_RTTI()

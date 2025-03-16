@@ -122,6 +122,7 @@ namespace user
 					QSF_START_CAMP_CLASS_EXPORT(kc::KCIndicatorComponent, "kc::KCIndicatorComponent","This component can be (ingame) used to mark objects which can be transfered into editor")
 					QSF_CAMP_IS_COMPONENT
 					QSF_ADD_CAMP_PROPERTY(Color, kc::KCIndicatorComponent::getColor, kc::KCIndicatorComponent::setColor,"Color like white- no prio, red high prio, blue a nearby object needs handling...", kc::KCIndicatorComponent::Color::WHITE)
+					QSF_ADD_CAMP_PROPERTY(Only Visible In Editor, kc::KCIndicatorComponent::GetShowInEditorOnly, kc::KCIndicatorComponent::SetShowInEditorOnly, "use this to hide this component ingame", false)
 					QSF_ADD_CAMP_PROPERTY(IsAnimated, kc::KCIndicatorComponent::isAnimated, kc::KCIndicatorComponent::setIsAnimated, QT_TR_NOOP("ID_USER_COMPONENT_INDICATOR_ISANIMATED_DESCRIPTION"), false)
 					QSF_END_CAMP_CLASS_EXPORT
 			}

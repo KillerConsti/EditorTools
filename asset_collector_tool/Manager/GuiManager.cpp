@@ -62,6 +62,10 @@
 #include <fstream>
 #include <filesystem>
 #include <asset_collector_tool\view\IndicatorView.h>
+#include <qsf\job\JobArguments.h>
+#include <qsf_editor/asset/AssetEditHelper.h>
+#include <qsf/asset/AssetProxy.h>
+#include <qsf/asset/project/AssetPackage.h>
 //[-------------------------------------------------------]
 //[ Namespace                                             ]
 //[-------------------------------------------------------]
@@ -90,6 +94,7 @@ namespace user
 		{
 			mWaitUntilEditorReady.unregister();
 			mOnPreNewEmptyMapMessageProxy.unregister();
+			mAssetReadyForUpdate.unregister();
 
 		}
 
@@ -97,6 +102,42 @@ namespace user
 		{
 			if (instance == nullptr)
 				instance = new GUIManager();
+		}
+
+		void GUIManager::StartTimerUpdateAsset(uint64 GlobalAssetId, uint64 EntityId)
+		{
+			mUpdateAsset = *new UpdateAsset;
+			mUpdateAsset.mEntityId = EntityId;
+			mUpdateAsset.mGlobalAssetId = GlobalAssetId;
+			mAssetReadyForUpdate.registerAt(em5::Jobs::ANIMATION_VEHICLE, boost::bind(&GUIManager::WaitUntilUpdateAsset, this, _1));
+
+		}
+
+		void GUIManager::WaitUntilUpdateAsset(const qsf::JobArguments & jobArguments)
+		{
+			mUpdateAsset.Time += jobArguments.getSecondsPassed();
+			if (mUpdateAsset.Time > 3.f)
+			{
+				auto mAssetEditHelper = std::shared_ptr<qsf::editor::AssetEditHelper>(new qsf::editor::AssetEditHelper());
+				std::string TargetAssetName = qsf::AssetProxy(mUpdateAsset.mGlobalAssetId).getAssetPackage()->getName();
+				mAssetEditHelper->tryEditAsset(qsf::AssetProxy(mUpdateAsset.mGlobalAssetId).getGlobalAssetId(), TargetAssetName);
+				//if (!mAssetEditHelper->setAssetUploadData(mUpdateAsset.mGlobalAssetId, true, true))
+				if(!mAssetEditHelper->editAsset(mUpdateAsset.mGlobalAssetId, TargetAssetName))
+				{
+					QSF_LOG_PRINTS(INFO,"couldnt update colormap?")
+				}
+				if (mAssetEditHelper->isReady())
+				{
+					QSF_LOG_PRINTS(INFO, "mAssetEditHelper isnt ready?")
+				}
+				if (mAssetEditHelper->submit())
+				{
+					QSF_LOG_PRINTS(INFO, "error occured when submitting colormap")
+				}
+				//mAssetEditHelper->editAsset(mUpdateAsset.mGlobalAssetId, TargetAssetName)
+				QSF_LOG_PRINTS(INFO, "submitted colormap")
+				mAssetReadyForUpdate.unregister();
+			}
 		}
 
 		void GUIManager::onPreNewEmptyMap(const qsf::MessageParameters & parameters)
